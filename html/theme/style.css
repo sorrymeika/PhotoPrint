@@ -1,0 +1,38 @@
+﻿html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video { margin: 0; padding: 0; border: 0; font-size: 100%; font: inherit; vertical-align: baseline; }
+article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section { display: block; }
+body { line-height: 1; }
+ol, ul { list-style: none; }
+blockquote, q { quotes: none; }
+blockquote:before, blockquote:after, q:before, q:after { content: ''; content: none; }
+table { border-collapse: collapse; border-spacing: 0; }
+
+body { font-family: 微软雅黑,Arial,Verdana; color: #4c4c4c; }
+a { color: #4c4c4c; text-decoration: none; }
+a:hover { color: #999; }
+
+.clearfix:after { visibility: hidden; display: block; font-size: 0; content: ""; clear: both; height: 0; }
+
+.header { padding-top: .1px; border-bottom: 1px solid #ccc; width: 1130px; margin: 0 auto; }
+.logowrap { margin: 53px 0 35px 0; float: left; _display: inline; }
+.logo { width: 274px; height: 52px; display: block; }
+
+.navwrap { margin: 53px 0 35px 0; text-align: right; }
+.navtop { font-size: 12px; }
+.nav { font-size: 14px; margin-top: 10px; }
+.nav li { display: inline-block; padding: 0 10px; border-left: 1px solid #dadada; height: 20px; line-height: 20px; }
+.nav li.last { padding-right: 0; }
+
+.ico_cart .ico { display: inline-block; width: 14px; height: 12px; background: url(images/site.png) no-repeat -7px -10px; margin: 0 3px; }
+
+.main { width: 1130px; margin: 0 auto; }
+
+.aboutwrap { text-align: center; margin: 160px auto 92px auto; }
+.aboutwrap .about_hd { font-weight: bold; color: #0e0e0e; font-size: 19px; margin-top: 40px;}
+.aboutwrap h1.about_hd { font-size: 40px; margin-top: 0; }
+.aboutwrap .about_bd { line-height: 23px; margin-top: 10px; }
+
+.footer { font-size: 14px; text-align: center; background: #f3f3f3; padding: 49px 0; }
+.footer .ftnav li { display: inline-block; padding: 0 10px; border-left: 1px solid #dadada; height: 20px; line-height: 20px; }
+.footer .ftnav li.last { border-right: 1px solid #dadada; }
+.footer .copyright { margin-top: 26px; }
+
