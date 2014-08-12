@@ -26,6 +26,27 @@ a:hover { color: #999; }
 
 .main { width: 1130px; margin: 0 auto; }
 
+.m_header {}
+
+.m_recommend { padding: 149px 0 131px 0; }
+.m_recommend li { float: left; width: 189px; height:307px; position: relative; }
+.m_recommend li .view { width: 100%; height: 100%; overflow: hidden; display: block; background:rgba(0,0,0,.8); opacity: 0; color:#fff; position: absolute; top: 0; left: 0; }
+.m_recommend li .view:hover {  opacity: 1; }
+.m_recommend li .view span { display: block; width: 111px; height: 111px; border: 1px solid #fff; margin:78px auto; text-align: center; }
+.m_recommend li .view b {  display: block; margin: 37px auto 4px auto; font-weight: bold; font-size: 18px; padding: 4px 0; border-bottom: 1px solid #fff; width: 80%; }
+.m_recommend li .view em { display: block; font-size: 12px; }
+.m_recommend li .img { width: 100%; height: 232px; overflow: hidden; }
+.m_recommend li .img img { display: block;  }
+.m_recommend li .con { display: block; height: 47px; line-height: 24px; margin: 0 37px; }
+
+.m_appwrap { background:#f3f3f3; }
+.m_app { width:1034px; height: 486px; background:#f3f3f3 url(images/appdl.jpg) no-repeat; position: relative; margin: 0px auto; }
+.m_appdl_btn { position: absolute; display: block; }
+
+.m_learn { width: 1130px; }
+.m_learn .item { margin: 58px 0 100px 114px; float: left; }
+.m_learn .item.last { margin: 58px 114px 100px 0; float: right; }
+
 .aboutwrap { text-align: center; margin: 160px auto 92px auto; }
 .aboutwrap .about_hd { font-weight: bold; color: #0e0e0e; font-size: 19px; margin-top: 40px;}
 .aboutwrap h1.about_hd { font-size: 40px; margin-top: 0; }
