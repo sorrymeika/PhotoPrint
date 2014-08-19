@@ -52,6 +52,13 @@ a:hover { color: #999; }
 .aboutwrap h1.about_hd { font-size: 40px; margin-top: 0; }
 .aboutwrap .about_bd { line-height: 23px; margin-top: 10px; }
 
+.dialog { position: absolute; top: 0; left: 0; background: #f9f9f9; margin: 0 auto;  }
+.dialog_close { background: url(images/site.png) no-repeat 0px -50px; width: 50px; height: 50px; }
+.dialog_cont { }
+.avatar_upload {}
+.avatar_upload .avatar_hd { margin:100px auto 0 auto; text-align:center; }
+.avatar_upload .avatar_hd .hd { font-size:30px; font-weight:bold; }
+
 .footer { font-size: 14px; text-align: center; background: #f3f3f3; padding: 49px 0; }
 .footer .ftnav li { display: inline-block; padding: 0 10px; border-left: 1px solid #dadada; height: 20px; line-height: 20px; }
 .footer .ftnav li.last { border-right: 1px solid #dadada; }
