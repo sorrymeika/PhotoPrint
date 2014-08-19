@@ -71,9 +71,37 @@ a:hover { color: #999; }
 .userinfo .hd { display: block; font-size: 17px; margin-top:26px; font-weight: bold; color:#212121; }
 .userinfo .message { line-height:26px; margin-top:18px; color:#2f2f2f; }
 
+.ucenterwrap { margin: 70px auto 64px auto; }
+
 .ucnav { margin:67px 0 96px 0; }
 .ucnav li {display: inline-block; width:120px; height:110px;margin: 0 64px;  }
 .ucnav li .ico{ display: inline-block; width:120px; height:110px; width:77px; height: 70px; text-align: center; }
 .ucnav li span{ display: block;  }
 
+.ucsidebar { width: 300px; text-align: center; float: left; }
+.ucsidebar .ico {  width:77px; height: 70px; background: #fff url(images/site.png) no-repeat 0px -100px; display: block; margin: 0 auto; }
+.ucsidebar .hd { margin-top:27px; }
+.ucsidebar li .ico { background-position: -150px 0px; width: 50px; height: 50px; margin-top:42px; }
+.ucsidebar li.curr { color:#fe3d04; }
 
+.uccontent { overflow: hidden; width: 830px; float: left; }
+.uccontent .hd { overflow: hidden; font-weight: bold; font-size:19px; line-height:31px; }
+.uccontent .creations { margin-top:35px; }
+
+.creations .img { width: 160px; height: 160px; }
+.creations .btn_del { background: #fff url(images/site.png) no-repeat -240px 0px; width: 60px; height: 30px; border: 0; cursor: pointer; }
+
+.tablelist {  width: 100%; }
+.tablelist th { border-bottom:1px solid #101322; height:26px; font-size: 13px; }
+.tablelist td { text-align: center; padding:20px 0; vertical-align: middle; line-height: 20px; }
+
+.page_list {border-top:1px solid #101322;  text-align: center; padding-top: 28px; }
+.page_list .num_list li { display: inline-block; padding: 0 5px; }
+
+.toolbar { margin: 20px 0 5px 0;}
+.btn { background:#0e1422; color:#fff; height:27px; border: 0; padding: 0 10px; }
+
+.listbox ul li { float: left; width: 25%; margin: 38px 0; }
+.listbox ul li.line { float: none; clear: both; height: 0px; width: 100%; border-bottom: 1px dotted #101322; margin: 0; padding: 0; }
+.listbox ul li p { margin: 0 auto; width:155px; font-size: 12px; text-align: center; line-height:18px; }
+.listbox ul li .img { width: 66px; height: 98px; border: 1px solid #5a5a5c; margin: 0 auto 5px auto; }

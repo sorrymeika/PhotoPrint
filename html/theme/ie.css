@@ -1,2 +1,2 @@
 ﻿.clearfix { *zoom: 1; }
-.nav li,.footer .ftnav li,.ucnav li { *display: inline;*zoom: 1; }
+.nav li,.footer .ftnav li,.ucnav li,.page_list .num_list li { *display: inline;*zoom: 1; }
