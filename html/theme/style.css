@@ -64,3 +64,16 @@ a:hover { color: #999; }
 .footer .ftnav li.last { border-right: 1px solid #dadada; }
 .footer .copyright { margin-top: 26px; }
 
+.ucwrap {}
+.ucwrap .userinfo { margin-top: 98px; text-align: center; }
+.userinfo .avatars { width: 55px; height: 55px; border: 1px solid #e2e2e2; padding: 2px; margin: 0 auto; }
+.userinfo .avatars img { width: 55px; height: 55px; display: block; color:#fff; }
+.userinfo .hd { display: block; font-size: 17px; margin-top:26px; font-weight: bold; color:#212121; }
+.userinfo .message { line-height:26px; margin-top:18px; color:#2f2f2f; }
+
+.ucnav { margin:67px 0 96px 0; }
+.ucnav li {display: inline-block; width:120px; height:110px;margin: 0 64px;  }
+.ucnav li .ico{ display: inline-block; width:120px; height:110px; width:77px; height: 70px; text-align: center; }
+.ucnav li span{ display: block;  }
+
+
