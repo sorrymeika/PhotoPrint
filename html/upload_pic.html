@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link href="theme/style.css" rel="Stylesheet" />
+    <!--[if lt IE 9]><link href="theme/ie.css" rel="Stylesheet" /><![endif]-->
+</head>
+<body>
+    <div class="dialog img_upload_dialog">
+        <div class="dialog_close"></div>
+        <div class="dialog_cont">
+            <div class="dlgform clearfix img_upload_wrap">
+                <div class="dlgform_hd">
+                    <div class="hd">添加图片</div>
+                    <div class="msg">请确认您所上传图像有使用权</div>
+                </div>
+                <div class="clearfix">
+                    <div class="dlgform_bd img_upload_bd">
+                        <div class="dlgform_con">
+                            <div class="dlgform_sub_hd"><b>上传</b> <em>你的图片</em> </div>
+                            <div class="dlgform_sub_bd">
+                                <form class="select_pic btn" enctype="multipart/form-data" action="/upload">
+                                <i class="ico"></i>选择您上传的图像
+                                <input class="file" type="file" name="" />
+                                </form>
+                                <div class="check_accept">
+                                    <input type="checkbox" value="1" />
+                                    我已具有这些图片的使用权</div>
+                            </div>
+                            <div class="actions">
+                                <div class="btn_dlg_l"><i class="ico"></i>确定</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dlgform_bd img_list_bd">
+                        <div class="dlgform_sub_hd"><b>画廊内所有图片</b></div>
+                        <div class="actions">
+                            <div class="btn_dlg_l"><i class="ico"></i>取消</div>
+                            <div class="btn_dlg_r"><i class="ico"></i>确定</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</body>
+</html>
