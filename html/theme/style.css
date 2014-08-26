@@ -65,8 +65,8 @@ a:hover { color: #999; }
 .dlgform_sub_hd em { font-size:12px; line-height:22px;}
 .dlgform_sub_bd { text-align: center; }
 
-.btn_dlg_l { padding-left: 20px;background:#999; display: inline-block; }
-.btn_dlg_r { padding-right: 20px; display: inline-block; background:#0e1422; }
+.btn_dlg_l { padding-left: 10px;background:#999; display: inline-block; }
+.btn_dlg_r { padding-right: 10px; display: inline-block; background:#0e1422; }
 
 .avatar_dialog { width: 1351px; height:668px;}
 .avatar_upload { width: 1136px; height: 557px; padding-top: 100px; margin: 0 auto; }
@@ -179,6 +179,8 @@ a:hover { color: #999; }
 
 .prod_selector { margin-top: 28px; font-size: 12px; }
 .prod_selector li {height: 33px; line-height: 33px; }
+.prod_selector span { margin-right: 12px;}
+.prod_selector .num { width: 60px; text-align: center; }
 
 .prod_main_info .img_smallist{ margin-top: 13px; }
 .prod_main_info .img_smallist li { height: 50px; width: 50px; background:#ddd; }
@@ -186,3 +188,60 @@ a:hover { color: #999; }
 .prod_main_info .actions { margin-top: 25px; }
 .prod_main_info .actions .btn_dlg_l,.prod_main_info .actions .btn_dlg_r { width: 120px; }
 
+.bigtitle { font-weight: bold; font-size: 20px; }
+.bigtitle .cn { padding-bottom: 6px; border-bottom: 1px solid #e1e1e1; }
+.bigtitle .en { padding-top: 6px; }
+
+.prod_details { margin-top: 40px; }
+
+.other_list { margin-top: 50px; overflow: hidden; margin-bottom: 80px; }
+.other_list ul { width: 120%; }
+.other_list li { float: left; width: 275px; margin-right: 37px; _display: inline; }
+.other_list .img,.other_list .img img {  width: 275px; height: 275px; background:#ddd; }
+.other_list .name { padding: 10px 0; line-height: 20px; font-size: 14px; text-align: center; }
+
+.stepswrap { margin-top:58px; padding-bottom:65px; }
+.steps_hd { margin-left:20px; height: 50px; }
+.steps_hd li { float: left; height:50px; line-height: 50px; margin-right:17px; _display: inline; }
+.steps_hd li i { height:50px; width: 50px; display: inline-block; text-align: center; color:#fff; background: url(images/site.png) no-repeat -550px 0px; }
+.steps_hd li.curr i { background-position:  -450px 2px; }
+.steps_bd{ margin-top: 45px;  }
+
+.reg_form { margin-left:28px; }
+.reg_hd .hd { font-weight: bold; font-size: 19px; display: block; }
+.reg_hd .msg { display: block; margin-top: 13px; font-size: 12px; color:#555; }
+.reg_bd { margin-top: 10px; }
+
+.form_item.l { float: left; margin-right: 24px; }
+.form_item { font-size: 13px; }
+.form_item dt { margin-top: 20px; color:#000; height: 22px; overflow: visible; }
+.form_item dd { margin-top: 4px; }
+.form_item dd .text { width:295px; height:21px; border: 1px solid #a4a2a3; }
+
+.error_tip { background:#fff; color:#040404; display: inline-block; height: 18px; line-height: 18px; margin-top: -3px; margin-left: 15px; position:absolute; }
+.error_tip i { display: inline-block; background: url(images/site.png) no-repeat -620px 0px; width: 18px; height: 18px; vertical-align: -4px; margin-right: 3px; }
+
+.check_accept { margin-top: 32px; padding-top: 20px; border-top: 1px solid #ccc; }
+.check_accept label { text-decoration: underline;margin-right: 10px; }
+.check_accept .btn_dlg_r { vertical-align: -10px;  }
+
+.loginwrap { margin-top: 60px; padding-bottom: 77px; }
+.login_blk { float: left; _display: inline; margin: 0 0 0 16px; width: 600px; }
+.login_hd { font-size:20px; font-weight: bold; padding-bottom:13px; }
+.login_bd { border: 1px solid #ddd; border-top: 1px solid #0e1420; padding-top:27px; }
+.login_con { border-top: 1px dotted #0e1420; padding-bottom:62px; }
+.login_account { margin-top: 37px; margin-left:50px; }
+.login_account li { margin-top: 15px; }
+.login_account .text { width: 298px; border: 1px solid #cecece; height: 30px; background: url(images/text_bg.png); color: #a0a0a0; text-indent: 10px; }
+.login_con .actions {margin-left:50px; margin-top:26px; width: 300px;}
+.login_con .actions .forgot { float: left; margin-top: 10px; }
+.login_con .actions .btn_dlg_r { float: right; }
+
+.join_blk {float: left; width:441px; margin-left:64px; _display: inline; }
+.join_bd{ border: 3px solid #000; padding-bottom:34px; }
+.join_title { text-align: center; margin-top:69px; font-size:12px; color:#404040; }
+.join_action { text-align: center; margin-top:17px; }
+.join_action .btn_dlg_r {  width:160px; }
+.join_msg_hd, .join_msg { font-size: 12px; margin-left:48px; color:#424242;  }
+.join_msg_hd{ margin-top: 41px; }
+.join_msg { line-height:22px; margin-top:14px; }
