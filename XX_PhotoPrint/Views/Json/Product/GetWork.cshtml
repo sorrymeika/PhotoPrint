@@ -1,0 +1,48 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	Layout = null;
+
+	var js = new JavaScriptSerializer();
+
+	var req = new Req();
+	int workId = req.Int("WorkID", false, "缺少商品编号");
+	if (req.HasError)
+	{
+		Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+		return;
+	}
+
+	var data = SQL.QueryOne("select w.WorkID,w.WorkName,w.WorkDesc,w.ProductID,a.ProductName,a.Price,w.SoldNum,a.BaseInfo,a.Content,a.SubID,b.SubName,c.CategoryID,c.CategoryName from Work w join Product a on w.ProductID=a.ProductID join SubCate b on a.SubID=b.SubID join Category c on b.CategoryID=c.CategoryID where w.WorkID=@p0 and w.Deleted=0 and a.Deleted=0", workId);
+	if (data == null)
+	{
+		Output.Write(js.Serialize(new { success = false, msg = "该商品不存在" }));
+		return;
+	}
+	int productId = (int)data["ProductID"];
+	string baseInfo = (string)data["BaseInfo"];
+	if (!string.IsNullOrEmpty(baseInfo))
+	{
+		data["BaseInfo"] = js.Deserialize<IList<IDictionary<string, object>>>(baseInfo);
+	}
+	else if (baseInfo == "")
+	{
+		data["BaseInfo"] = null;
+	}
+
+	if (!string.IsNullOrEmpty((string)data["Content"]))
+	{
+		data["Content"] = System.Text.RegularExpressions.Regex.Replace(data["Content"].ToString(), @"src=""/", "src=\"http://" + Request.Url.Authority + "/", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+	}
+
+	using (DbService db = new DbService())
+	{
+		data["Colors"] = db.Query("select ColorID,ColorName,ColorCode from Color where ProductID=@p0", productId);
+		data["Styles"] = db.Query("select a.StyleID,StyleName,Rect,ColorID,SizeID,[Print],Content from Style a left join Customization b on a.StyleID=b.StyleID where WorkID=@p0 order by a.StyleID", workId);
+		data["Size"] = db.Query("select SizeID,SizeName,StyleID from ProductSize where ProductID=@p0", productId);
+		data["StyleColorPic"] = db.Query("select PicID,StyleID,ColorID,Picture from StyleColorPic where ProductID=@p0", productId);
+	}
+
+	Output.Write(js.Serialize(new { success = true, data = data }));
+	return;
+}

@@ -1,0 +1,103 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    var js = new System.Web.Script.Serialization.JavaScriptSerializer();
+    Req req = new Req();
+    int parentId = req.Int("pid");
+    int categoryId = req.Int("id");
+
+    if (Request.HttpMethod == "POST")
+    {
+        Layout = null;
+
+        string categoryName = req.String("categoryName", false, "请填写类别名");
+
+        if (req.HasError)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+            return;
+        }
+
+        if (parentId == 0)
+        {
+            if (SQL.QueryScalar<bool>("if exists (select 1 from Category where CategoryName=@p0) select 1 else select 0", categoryName))
+            {
+                Output.Write(js.Serialize(new { success = false, msg = "类别已存在" }));
+                return;
+            }
+            
+            SQL.Execute("update Category set CategoryName=@p0 where CategoryID=@p1", categoryName, categoryId);
+        }
+        else
+        {
+            SQL.Execute("update SubCate set SubName=@p0 where SubID=@p1", categoryName, categoryId);
+        }
+        Output.Write(js.Serialize(new { success = true }));
+        return;
+    }
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string parentName = parentId == 0
+        ? "无"
+        : SQL.QueryScalar<string>("select CategoryName from Category where CategoryID=@p0", parentId);
+
+    var data = SQL.QueryOne(parentId == 0
+        ? "select CategoryID,CategoryName from Category where CategoryID=@p0"
+        : "select SubID as CategoryID,SubName as CategoryName from SubCate where SubID=@p0", categoryId);
+
+    if (data == null)
+    {
+        Output.Write("类别不存在");
+        return;
+    }
+}
+<h1>修改商品分类</h1>
+<div class="form">
+    <table>
+        <tr>
+            <th>父类</th>
+            <td>
+                @parentName
+            </td>
+        </tr>
+        <tr>
+            <th>类别名</th>
+            <td><input id="categoryName" class="text" value="@(data["CategoryName"])" /></td>
+        </tr>
+    </table>
+</div>
+<div class="action">
+    <button id="update" class="button">修改</button>
+    <a class="button" href="categories">取消</a>
+</div>
+<script>
+    seajs.use(['jquery','lib/validation','lib/global.css'],function ($,Validation) {
+        var valid=new Validation([{
+            id: '#categoryName',
+            emptyAble: false,
+            emptyText: '请填写类别名'
+        }]);
+
+        $('#update').click(function () {
+            if(valid.validate()) {
+                $.ajax({
+                    url: 'modifycategory',
+                    type: 'post',
+                    data: {
+                        pid: @parentId,
+                        id: @categoryId,
+                        categoryName: $('#categoryName').val()
+                    },
+                    dataType: 'json',
+                    success: function (res) {
+                        if(res.success) {
+                            alert('修改成功！');
+                            location.href='categories';
+                        } else
+                            alert(res.msg);
+                    }
+                });
+            }
+        });
+    });
+</script>

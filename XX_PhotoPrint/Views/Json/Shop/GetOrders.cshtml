@@ -1,0 +1,86 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    string account = req.String("Account", false, "未输入账号");
+    string auth = req.String("Auth", false, "未输入授权");
+
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+    string sAuth = UserService.GetAuth(account);
+    if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+        return;
+    }
+
+    int uid = UserService.GetUserID(account);
+
+    var data = SQL.Query("select o.OrderID,o.OrderCode,o.Amount,o.Freight,o.AddTime,o.Status,o.Address,o.Discount,o.PaymentID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price,city.CityName,d.ProvName,e.RegionName from OrderInfo o join OrderDetail c on o.OrderID=c.OrderID join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID join City city on o.CityID=city.CityID join Province d on city.ProvID=d.ProvID left join Region e on o.RegionID=e.RegionID where o.UserID=@p0", uid);
+    List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
+    if (data != null && data.Count != 0)
+    {
+        Dictionary<string, object> item;
+        List<Dictionary<string, object>> details;
+        string url = "http://" + Request.Url.Authority + "/Content/";
+        for (int i = 0; i < data.Count; i++)
+        {
+            item = data[i];
+            var order = result.FirstOrDefault(a => (int)a["OrderID"] == (int)item["OrderID"]);
+            if (order != null)
+            {
+                details = (List<Dictionary<string, object>>)order["Details"];
+            }
+            else
+            {
+                order = new Dictionary<string, object>
+                {
+                    { "OrderID", item["OrderID"] },
+                    { "OrderCode", item["OrderCode"] },
+                    { "Status", item["Status"] },
+                    { "Amount", item["Amount"] },
+                    { "Freight", item["Freight"] },
+                    { "Total", (decimal)item["Freight"]+(decimal)item["Amount"] },
+                    { "Address",item["ProvName"].ToString()+ item["CityName"].ToString()+item["RegionName"].ToString()+item["Address"].ToString() },
+                    { "Discount", item["Discount"] },
+                    { "AddTime", item["AddTime"] },
+                    { "PaymentID", item["PaymentID"] },
+                    { "PaymentName", PaymentService.Payments.First(a=>(int)a["PaymentID"]== (int)item["PaymentID"])["PaymentName"] }
+					
+                };
+                details = new List<Dictionary<string, object>>();
+                order["Details"] = details;
+                result.Add(order);
+            }
+            details.Add(new Dictionary<string, object>
+            {
+                { "OrderDetailID", item["OrderDetailID"] },
+                { "UserWorkID", item["UserWorkID"] },
+                { "Qty", item["Qty"] },
+                { "ProductID", item["ProductID"] },
+                { "ProductName", item["ProductName"] },
+                { "Picture", url + item["Picture"] },
+                { "Price", item["Price"] },
+            });
+        }
+    }
+
+    for (var i = 0; i < result.Count; i++)
+    {
+        var details = (List<Dictionary<string, object>>)result[i]["Details"];
+
+        var total = details.Sum(a => (int)a["Qty"] * (decimal)a["Price"]);
+    }
+
+    Output.Write(js.Serialize(new { success = true, data = result, payments = PaymentService.Payments }));
+    return;
+}

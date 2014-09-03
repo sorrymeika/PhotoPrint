@@ -1,0 +1,5 @@
+D:\Projects\AspNet\XX\XX_PhotoPrint\XX_PhotoPrint\obj\Debug\XX_PhotoPrint.csprojResolveAssemblyReference.cache
+D:\Projects\AspNet\XX\XX_PhotoPrint\XX_PhotoPrint\bin\XX_PhotoPrint.dll
+D:\Projects\AspNet\XX\XX_PhotoPrint\XX_PhotoPrint\bin\XX_PhotoPrint.pdb
+D:\Projects\AspNet\XX\XX_PhotoPrint\XX_PhotoPrint\obj\Debug\XX_PhotoPrint.dll
+D:\Projects\AspNet\XX\XX_PhotoPrint\XX_PhotoPrint\obj\Debug\XX_PhotoPrint.pdb

@@ -1,0 +1,41 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    string account = req.String("Account", false, "未输入账号");
+    string auth = req.String("Auth", false, "未输入授权");
+    int cartId = req.Int("CartID", false, "缺少购物车编号");
+    int qty = req.Int("Qty", false, "缺少商品数量");
+
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    if (qty <= 0)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "购买数量不能小于等于0" }));
+        return;
+    }
+
+    auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+    string sAuth = UserService.GetAuth(account);
+    if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+        return;
+    }
+
+    DateTime now = DateTime.Now;
+    int uid = UserService.GetUserID(account);
+
+    SQL.Execute("update Cart set Qty=@p0,EditTime=@p1 where CartID=@p2 and UserID=@p3", qty, now, cartId, uid);
+
+    Output.Write(js.Serialize(new { success = true }));
+    return;
+}

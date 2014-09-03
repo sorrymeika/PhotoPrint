@@ -217,6 +217,7 @@ a:hover { color: #999; }
 .form_item dt { margin-top: 20px; color:#000; height: 22px; overflow: visible; }
 .form_item dd { margin-top: 4px; }
 .form_item dd .text { width:295px; height:21px; border: 1px solid #a4a2a3; }
+.form_item dd .validcode { height:21px; border: 1px solid #a4a2a3; width: 100px; }
 
 .error_tip { background:#fff; color:#040404; display: inline-block; height: 18px; line-height: 18px; margin-top: -3px; margin-left: 15px; position:absolute; }
 .error_tip i { display: inline-block; background: url(images/site.png) no-repeat -620px 0px; width: 18px; height: 18px; vertical-align: -4px; margin-right: 3px; }

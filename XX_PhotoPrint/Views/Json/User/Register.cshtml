@@ -1,0 +1,36 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    string account = req.String("Account", false, "未输入账号");
+    string userName = req.String("UserName", false, "未输入用户名");
+    string password = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(req.String("Password", false, "未输入密码"), "md5");
+
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    int uid = SQL.QueryScalar<int>("select UserID from Users where Account=@p0", account);
+    if (uid != 0)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "账号已注册" }));
+    }
+    else
+    {
+        DateTime date = DateTime.Now;
+        string auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(account + date.ToString("yyyyMMddHHmmssffff") + password, "md5");
+        string md5auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+
+        var result = SQL.Execute("insert into Users (Account,UserName,Password,Auth,RegisterDate,LatestLoginDate) values (@p0,@p1,@p2,@p3,@p4,@p4)", out uid, account, userName, password, md5auth, date);
+        UserService.SetAuth(account, md5auth);
+
+        Output.Write(js.Serialize(new { success = true, auth = auth }));
+    }
+    return;
+}

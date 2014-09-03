@@ -1,0 +1,201 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    Req req = new Req();
+    var js = new System.Web.Script.Serialization.JavaScriptSerializer();
+    int productId = req.Int("id");
+
+    if (Request["action"] == "upload")
+    {
+        Layout = null;
+        int colorId = req.Int("colorId");
+        string images = req.String("images");
+
+        var imageList = js.Deserialize<IList<IDictionary<string, object>>>(images);
+        using (DbService db = new DbService())
+        {
+            int styleId = db.QueryScalar<int>("select StyleID from Style where ProductID=@p0", productId);
+
+            imageList.All(a =>
+            {
+                db.Execute("insert into StyleColorPic (StyleID,ColorID,ProductID,Picture) values (@p0,@p1,@p2,@p3)", styleId, colorId, productId, (string)a["url"]);
+                return true;
+            });
+        }
+
+        Output.Write(js.Serialize(new { success = true }));
+        return;
+    }
+    else if (Request["action"] == "get")
+    {
+        Layout = null;
+        int colorId = req.Int("colorId");
+        var imageList = SQL.Query("select Picture as url from StyleColorPic where ColorID=@p0", colorId);
+
+        Output.Write(js.Serialize(new { success = true, data = imageList }));
+        return;
+    }
+    else if (Request["action"] == "delete")
+    {
+        Layout = null;
+
+        string url = req.FormString("url");
+        SQL.Execute("delete from StyleColorPic where Picture=@p0", url);
+
+        url = url.Replace("http://", "");
+        url = Server.MapPath(url.Substring(url.IndexOf('/')));
+        System.IO.File.Delete(url);
+
+        Output.Write(js.Serialize(new { success = true }));
+        return;
+    }
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+
+    IList<Dictionary<string, object>> data_Colors;
+    int workId;
+    using (DbService db = new DbService())
+    {
+        workId = db.QueryScalar<int>("select WorkID from Work where ProductID=@p0", productId);
+        data_Colors = db.Query("select ColorID,ColorName,ColorCode from Color where ProductID=@p0", productId);
+    }
+}
+<style>
+    .p-color { position: relative; width: 720px; }
+    .p-color .curr { border: 2px solid #c00; }
+    .p-color .p-colors p { cursor: pointer; float: left; background: #ddd; padding: 0 2px 2px 0; margin: 0 0 2px 2px; position: relative; white-space: nowrap; }
+    .p-color .p-colors p i { display: inline-block; vertical-align: middle; margin: 0 2px 2px 2px; width: 14px; height: 14px; }
+    .image-view li { float: left; display: inline; margin: 0 10px 10px 0; width: 100px; height: 90px; position: relative; }
+    .image-view li img { width: 100%; height: auto; }
+    .image-view li em { background: #c00; color: #fff; padding: 2px; position: absolute; right: 0px; top: 0px; display: block; cursor: pointer; }
+</style>
+<h1>商品图片上传</h1>
+<div id="toolbar" class="toolbar"></div>
+<div class="form">
+    <table>
+        <tr>
+            <th>选择颜色</th>
+            <td>
+                <div class="p-color" style="z-index: 100">
+                    <div class="J_colors p-colors">
+                        @if (data_Colors != null)
+                        {
+                            for (int i = 0; i < data_Colors.Count; i++)
+                            {
+                                var item = data_Colors[i];
+                            <p data-name="@item["ColorName"]" data-color="@item["ColorCode"]" data-id="@item["ColorID"]"@(i == 0 ? new MvcHtmlString(" class=\"curr\"") : null)><i style="background-color: @item["ColorCode"];"></i>@item["ColorName"]</p>
+                            }
+                        }
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td><input type="button" id="J_selectImage" class="button" value="选择图片" /></td>
+            <td>
+                <ul id="J_imageView" class="image-view"></ul>
+            </td>
+        </tr>
+    </table>
+</div>
+<div class="action"><a class="button" href="products">完成</a>
+</div>
+<script>
+    seajs.use(['jquery','lib/buttons','kindeditor/kindeditor-min','lib/util','lib/global.css'],function ($,Buttons,K,util) {
+        var buttons=new Buttons('#toolbar',[{
+            text: "修改商品信息",
+            ico: "modify",
+            handle: function () {
+                location.href="modifyproduct?id=@workId"
+            }
+        }]);
+
+        $('.J_colors').delegate('p','click',function () {
+            var $this=$(this);
+            $this.addClass('curr').siblings('.curr').removeClass('curr');
+            var colorId=$this.attr('data-id');
+            $.ajax({
+                url: 'uploadpic?action=get',
+                type: 'post',
+                dataType: 'json',
+                data: {
+                    colorId: colorId
+                },
+                success: function(res){
+                    var div=$('#J_imageView').html("");
+                    if (res.data)
+                        $.each(res.data,function (i,data) {
+                            div.append('<li><img src="'+data.url+'" /><em>删除</em></li>');
+                        });
+                },
+                error: function(){
+                }
+            });
+        });
+
+        $('.J_colors p.curr').trigger('click');
+
+        $('#J_imageView').delegate('em','click',function(){
+            if (!window.confirm("确定删除该图片？"))return;
+
+            var $this=$(this);
+
+            $.ajax({
+                url: 'uploadpic?action=delete',
+                type: 'post',
+                dataType: 'json',
+                data: {
+                    id: @productId,
+                    url: $this.siblings("img").attr('src')
+                },
+                success: function(res){
+                    if (res.success)
+                        $this.parent().remove();
+                },
+                error: function(){
+                }
+            });
+        });
+
+        var editor=K.editor({
+            uploadJson: "/manage/upload",
+            allowFileManager: false
+        });
+
+        $('#J_selectImage').click(function () {
+            seajs.use(['kindeditor/lang/zh_CN','kindeditor/themes/default/default.css'],function () {
+                editor.loadPlugin('multiimage',function () {
+                    editor.plugin.multiImageDialog({
+                        clickFn: function (urlList) {
+                            var div=K('#J_imageView');
+                            $.ajax({
+                                url: 'uploadpic?action=upload',
+                                type: 'post',
+                                dataType: 'json',
+                                data: {
+                                    colorId: $('.J_colors p.curr').attr('data-id'),
+                                    id: @productId,
+                                    images: util.stringify(urlList)
+                                },
+                                success: function(res){
+                                    if(res.success) {
+                                        alert('添加成功');
+                                    } else
+                                        alert(res.msg);
+                                },
+                                error: function(){
+                                }
+                            });
+                            K.each(urlList,function (i,data) {
+                                div.append('<li><img src="'+data.url+'" /><em>删除</em></li>');
+                            });
+                            editor.hideDialog();
+                        }
+                    });
+                });
+            });
+
+        });
+    });
+
+    window._pathname='/manage/product/products';
+</script>

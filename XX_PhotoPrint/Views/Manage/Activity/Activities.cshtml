@@ -1,0 +1,464 @@
+﻿@using XX_PhotoPrint.Service
+@{
+	var js = new System.Web.Script.Serialization.JavaScriptSerializer();
+	Req req = new Req();
+
+	if (Request["action"] == "delete")
+	{
+		Layout = null;
+		int activityId = req.Int("activityId", false, "缺少编号");
+
+		if (req.HasError)
+		{
+			Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+			return;
+		}
+
+		using (DbService db = new DbService())
+		{
+			db.Execute("delete from Activity where ActivityID=@p0", activityId);
+		}
+
+		Output.Write(js.Serialize(new { success = true }));
+		return;
+	}
+	else if (Request["action"] == "add")
+	{
+		Layout = null;
+		string title = req.String("Title", false, "缺少标题");
+		string subTitle = req.String("SubTitle");
+		string memo = req.String("Content", false, "缺少内容");
+		int categoryId = req.Int("CategoryId", false, "缺少类别");
+		string callback = req.String("callback");
+		var picture = req.File("pic");
+
+		if (req.HasError)
+		{
+			Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+			return;
+		}
+
+		title = Json.Encode(new { t = title, s = subTitle });
+		memo = HttpUtility.UrlDecode(memo);
+		DateTime now = DateTime.Now;
+		string src;
+
+		if (picture != null && !string.IsNullOrEmpty(picture.FileName))
+		{
+			src = "upload/" + now.ToString("yyyy") + "/" + (now.Ticks - DateTime.MinValue.Ticks) + picture.FileName.Substring(picture.FileName.LastIndexOf('.'));
+			string savePath = Server.MapPath("~/Content/" + src);
+			string dir = System.IO.Path.GetDirectoryName(savePath);
+			if (!System.IO.Directory.Exists(dir))
+			{
+				System.IO.Directory.CreateDirectory(dir);
+			}
+			picture.SaveAs(savePath);
+		}
+		else
+		{
+			src = "";
+		}
+
+		using (DbService db = new DbService())
+		{
+			db.Execute("insert into Activity (Title,Content,CategoryID,Pic,CreationDate,Deleted) values (@p0,@p1,@p2,@p3,@p4,0)", title, memo, categoryId, src, now);
+		}
+
+		Output.Write(HtmlService.CallbackResult(callback, new { success = true }));
+		return;
+	}
+	else if (Request["action"] == "modify")
+	{
+		Layout = null;
+
+		int activityId = req.Int("activityId", false, "缺少编号");
+		string title = req.String("Title", false, "缺少标题");
+		string subTitle = req.String("SubTitle");
+		string memo = req.String("Content", false, "缺少内容");
+		int categoryId = req.Int("CategoryId", false, "缺少类别");
+		var picture = req.File("pic");
+		string callback = req.String("callback");
+
+		if (req.HasError)
+		{
+			Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+			return;
+		}
+
+		title = Json.Encode(new { t = title, s = subTitle });
+		memo = HttpUtility.UrlDecode(memo);
+		DateTime now = DateTime.Now;
+		string set = "";
+		List<object> paramters = new List<object> { activityId, title, memo, categoryId, now };
+
+		if (picture != null && !string.IsNullOrEmpty(picture.FileName))
+		{
+			string src = "upload/" + now.ToString("yyyy") + "/" + (now.Ticks - DateTime.MinValue.Ticks) + picture.FileName.Substring(picture.FileName.LastIndexOf('.'));
+			string savePath = Server.MapPath("~/Content/" + src);
+			string dir = System.IO.Path.GetDirectoryName(savePath);
+			if (!System.IO.Directory.Exists(dir))
+			{
+				System.IO.Directory.CreateDirectory(dir);
+			}
+			picture.SaveAs(savePath);
+
+			set += ",Pic=@p" + paramters.Count;
+			paramters.Add(src);
+		}
+
+		using (DbService db = new DbService())
+		{
+			db.Execute("update Activity set Title=@p1,Content=@p2,CategoryID=@p3,EditDate=@p4" + set + " where ActivityID=@p0", paramters.ToArray());
+		}
+
+		Output.Write(HtmlService.CallbackResult(callback, new { success = true }));
+		return;
+	}
+	else if (Request["action"] == "get")
+	{
+		Layout = null;
+		int activityId = req.Int("activityId", false, "缺少编号");
+
+		if (req.HasError)
+		{
+			Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+			return;
+		}
+
+		var data = SQL.QueryOne("select * from Activity where ActivityID=@p0", activityId);
+		if (data != null)
+		{
+			var title = Json.Decode(data["Title"].ToString());
+			data["Title"] = title.t;
+			data["SubTitle"] = title.s;
+			data["Pic"] = "http://" + Request.Url.Authority + "/Content/" + data["Pic"];
+		}
+
+		Output.Write(js.Serialize(new { success = true, data = data }));
+		return;
+	}
+	else if (Request["action"] == "search")
+	{
+		Layout = null;
+
+		int categoryId = req.Int("CategoryID");
+		int page = req.Int("Page", defaultValue: 1);
+		int pageSize = req.Int("PageSize", defaultValue: 10);
+		string keywords = req.String("Keywords");
+		string sort = req.String("Sort");
+		bool isAsc = req.Bool("Asc");
+
+		if (req.HasError)
+		{
+			Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+			return;
+		}
+
+		string where = "1=1";
+		List<object> parameters = new List<object>();
+		if (categoryId != 0)
+		{
+			where += " and b.CategoryID=@p" + parameters.Count;
+			parameters.Add(categoryId);
+		}
+		if (!string.IsNullOrEmpty(keywords))
+		{
+			where += " and (Title like '%'+@p" + parameters.Count + "+'%')";
+			parameters.Add(keywords);
+		}
+
+		IDictionary<string, bool> sortDic = new Dictionary<string, bool>{
+            {"ActivityID",false}
+        };
+
+		int total;
+		var data = SQL.QueryPage(new[] { "ActivityID" },
+			"ActivityID,a.CategoryID,Title,Pic,b.CategoryName",
+			"Activity a join ActivityCate b on a.CategoryID=b.CategoryID",
+			where, page, pageSize, parameters.ToArray(), out total, sortDic);
+
+		if (data != null)
+		{
+			data.All(a =>
+			{
+				var title = Json.Decode(a["Title"].ToString());
+				a["Title"] = title.t;
+				a["SubTitle"] = title.s;
+				return true;
+			});
+		}
+
+		Output.Write(js.Serialize(new { success = true, data = data, total = total }));
+		return;
+	}
+	Layout = "~/Views/Shared/_Layout.cshtml";
+
+	SQL.Execute("if not exists (select top 1 1 from ActivityCate where CategoryID=4) insert into ActivityCate (CategoryName) values ('主页广告位2')");
+}
+<h1>广告资讯管理</h1>
+<div id="toolbar" class="toolbar"></div>
+<div id="grid"></div>
+<script>
+	var categories=[{
+		text: '主页广告位',
+		value: 1
+	},{
+		text: '主页广告位2',
+		value: 4
+	},{
+		text: '活动资讯',
+		value: 2
+	},{
+		text: '帮助中心',
+		value: 3
+	}];
+</script>
+<script>
+	seajs.use(['jquery','lib/buttons','lib/popup','lib/grid','lib/global.css'],function ($,Buttons,popup) {
+
+		//添加
+		var dialogAddForm=new popup.Form({
+			url: '?action=add',
+			title: '添加广告资讯',
+			width: 820,
+			controls: {
+				title: {
+					label: '标题',
+					type: 'text',
+					validation: {
+						emptyAble: false,
+						emptyText: '请填写标题'
+					}
+				},
+				subTitle: {
+					label: '副标题',
+					type: 'text'
+				},
+				pic: {
+					label: '图片',
+					type: 'file'
+				},
+				categoryId: {
+					label: '类型',
+					type: 'select',
+					options: categories
+				},
+				content: {
+					label: '内容',
+					labelVAlign: 'top',
+					type: 'editor',
+					width: 400,
+					height: 200,
+					validation: {
+						emptyAble: false,
+						emptyText: '请填写内容'
+					}
+				}
+			},
+			buttons: [{
+				text: '添加',
+				handle: function () {
+					var $memo=dialogAddForm.control('content');
+					dialogAddForm.submit({
+						beforeSend: function () {
+							$memo.val(encodeURIComponent(dialogAddForm.editor('content').html()));
+						},
+						success: function (res) {
+							if(res.success) {
+								dialogAddForm.hide().reset();
+								grid.search();
+							}
+							else {
+								$memo.val(decodeURIComponent($memo.val()));
+								alert(res.msg);
+							}
+						},
+						error: function () {
+							$memo.val(decodeURIComponent($memo.val()));
+						}
+					});
+				}
+			},{
+				text: '取消',
+				handle: function () {
+					dialogAddForm.hide();
+				}
+			}]
+		});
+
+		var dialogModifyForm=new popup.Form({
+			url: '?action=modify',
+			title: '修改广告资讯',
+			width: 820,
+			controls: {
+				activityId: {
+					type: 'hidden'
+				},
+				title: {
+					label: '标题',
+					type: 'text',
+					validation: {
+						emptyAble: false,
+						emptyText: '请填写标题'
+					}
+				},
+				subTitle: {
+					label: '副标题',
+					type: 'text'
+				},
+				pic: {
+					label: '图片',
+					type: 'file'
+				},
+				categoryId: {
+					label: '类别',
+					type: 'select',
+					options: categories
+				},
+				content: {
+					label: '内容',
+					labelVAlign: 'top',
+					type: 'editor',
+					width: 400,
+					height: 200,
+					validation: {
+						emptyAble: false,
+						emptyText: '请填写内容'
+					}
+				}
+			},
+			buttons: [{
+				text: '修改',
+				handle: function () {
+					var $memo=dialogModifyForm.control('content');
+					dialogModifyForm.submit({
+						beforeSend: function () {
+							$memo.val(encodeURIComponent(dialogModifyForm.editor('content').html()));
+						},
+						success: function (res) {
+							if(res.success) {
+								dialogModifyForm.hide().reset();
+								grid.search();
+							}
+							else
+								alert(res.msg);
+						},
+						error: function () {
+							$memo.val(decodeURIComponent($memo.val()));
+						}
+					});
+				}
+			},{
+				text: '取消',
+				handle: function () {
+					dialogModifyForm.hide();
+				}
+			}]
+		});
+
+		//工具栏
+		var buttons=new Buttons('#toolbar',[{
+			text: "添加",
+			ico: "add",
+			disabled: false,
+			handle: function () {
+				dialogAddForm.show();
+			}
+		},{
+			text: "修改",
+			ico: "modify",
+			disabled: true,
+			handle: function () {
+				var data=grid.selectedRow().data;
+				$.ajax({
+					url: '?action=get',
+					type: 'post',
+					data: {
+						activityId: data.ActivityID
+					},
+					dataType: 'json',
+					success: function (res) {
+						if(res.success) {
+							var data=res.data;
+							dialogModifyForm.control("activityId").val(data.ActivityID);
+							dialogModifyForm.control('title').val(data.Title);
+							dialogModifyForm.control('categoryId').val(data.CategoryID);
+							dialogModifyForm.control('subTitle').val(data.SubTitle);
+							dialogModifyForm.editor('content').html(data.Content);
+							dialogModifyForm.show();
+						} else
+							alert(res.msg);
+					}
+				});
+			}
+		},{
+			text: "删除",
+			ico: "delete",
+			disabled: true,
+			handle: function () {
+				if(!window.confirm('确认删除？')) return;
+				var data=grid.selectedRow().data;
+
+				$.ajax({
+					url: '?action=delete',
+					type: 'post',
+					data: {
+						activityId: data.ActivityID
+					},
+					dataType: 'json',
+					success: function (res) {
+						if(res.success) {
+							alert('删除成功！');
+							grid.search();
+						} else
+							alert(res.msg);
+					}
+				});
+
+			}
+		}]);
+
+		var grid=$('#grid').grid({
+			search: {
+				url: "?action=search",
+				beforeSend: function () {
+					buttons.disable(1,2);
+				},
+				data: {
+					categoryId: {
+						label: "类别：",
+						type: 'select',
+						options: categories
+					},
+					keywords: {
+						label: "关键字：",
+						type: 'text'
+					}
+				}
+			},
+			pageEnabled: true,
+			onRowSelect: function (row,data) {
+				buttons.enable(1,2);
+			},
+			columns: [{
+				text: "编号",
+				bind: "ActivityID",
+				width: 5
+			},{
+				text: "标题",
+				bind: "Title",
+				width: 14
+			},{
+				text: "副标题",
+				bind: "SubTitle",
+				width: 10
+			},{
+				text: "类别",
+				bind: "CategoryName",
+				width: 6
+			}]
+		})
+        .search();
+
+	});
+</script>

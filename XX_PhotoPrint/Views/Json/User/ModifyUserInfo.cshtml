@@ -1,0 +1,42 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    string account = req.String("Account", false, "未输入账号");
+    string auth = req.String("Auth", false, "未输入授权");
+    string userName = req.String("UserName", false, "缺少用户姓名");
+    bool gender = req.Bool("Gender");
+    DateTime birthday = req.DateTime("Birthday");
+    string mobile = req.String("Mobile");
+
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+    string sAuth = UserService.GetAuth(account);
+    if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+        return;
+    }
+
+    var user = SQL.QueryOne("select UserID,UserName,Gender,Birthday,Mobile from Users where Account=@p0", account);
+    if (user == null)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "该账号不存在" }));
+        return;
+    }
+
+    int uid = (int)user["UserID"];
+    SQL.Execute("update Users set UserName=@p0,Gender=@p1,Birthday=@p2,Mobile=@p3 where UserID=@p4", userName, gender, birthday, mobile, uid);
+
+    Output.Write(js.Serialize(new { success = true }));
+    return;
+}

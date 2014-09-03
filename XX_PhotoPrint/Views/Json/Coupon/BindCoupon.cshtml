@@ -1,0 +1,66 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    string account = req.String("Account", false, "未输入账号");
+    string auth = req.String("Auth", false, "未输入授权");
+    int couponId = req.Int("CouponID", false, "缺少优惠券编号");
+
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+    string sAuth = UserService.GetAuth(account);
+    if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+        return;
+    }
+
+    int uid = UserService.GetUserID(account);
+
+    var coupon = SQL.QueryOne("select Code,Number,CouponDate from Coupon where CouponID=@p0", couponId);
+    DateTime date = DateTime.Parse((string)coupon["CouponDate"]);
+    if (DateTime.Now >= date)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "优惠券已过期" }));
+        return;
+    }
+
+    bool isBind = SQL.QueryScalar<bool>("if exists (select 1 from CouponCode where UserID=@p0 and CouponID=@p1) select 1 else select 0", uid, couponId);
+    if (isBind)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "已收藏过该优惠券" }));
+        return;
+    }
+
+    int number = (int)coupon["Number"];
+    string code = (string)coupon["Code"];
+    int codeId;
+    if (number <= 1 && !string.IsNullOrEmpty(code))
+    {
+        SQL.Execute("insert into CouponCode (CouponID,Code,UserID,UseTimes) values (@p0,@p1,@p2,0)", out codeId, couponId, code, uid);
+    }
+    else
+    {
+        SQL.Execute("update CouponCode set UserID=@p0 where CodeID=(select top 1 CodeID from CouponCode where (UserID=null or UserID=0) and CouponID=@p1)", uid, couponId);
+        var result = SQL.QueryOne("select CodeID,Code from CouponCode where UserID=@p0 and CouponID=@p1", uid, couponId);
+        if (result == null)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = "优惠券已被领完" }));
+            return;
+        }
+        codeId = (int)result["CodeID"];
+        code = (string)result["Code"];
+    }
+
+    Output.Write(js.Serialize(new { success = true, codeId = codeId, code = code }));
+    return;
+}

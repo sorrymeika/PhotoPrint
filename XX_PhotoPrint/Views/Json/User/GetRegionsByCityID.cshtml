@@ -1,0 +1,15 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    int cityId = req.Int("CityID");
+
+    var regions = SQL.Query("select RegionID,RegionName from Region where CityID=@p0 order by Sort", cityId);
+
+    Output.Write(js.Serialize(new { success = true, regions = regions }));
+    return;
+}

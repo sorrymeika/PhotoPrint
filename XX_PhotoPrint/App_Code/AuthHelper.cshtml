@@ -1,0 +1,40 @@
+﻿@using XX_PhotoPrint.Service;
+@functions{
+	public static bool IsAuth(Req req, out int uid)
+	{
+		string account = req.String("Account", false, "未输入账号");
+		string auth = req.String("Auth", false, "未输入授权");
+
+		if (req.HasError)
+		{
+			Json.Write(new { success = false, msg = req.FirstError, errors = req.GetErrors() }, Response.Output);
+			uid = 0;
+			return false;
+		}
+
+		auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+		string sAuth = UserService.GetAuth(account);
+		if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+		{
+			Json.Write(new { success = false, msg = "授权错误" }, Response.Output);
+			uid = 0;
+			return false;
+		}
+		uid = UserService.GetUserID(account);
+		return uid != 0;
+	}
+
+	public static bool IsAuth(Req req)
+	{
+		int uid;
+		return IsAuth(req, out uid);
+	}
+
+	public static int GetUserID(Req req)
+	{
+		int uid;
+		IsAuth(req, out uid);
+
+		return uid;
+	}
+}

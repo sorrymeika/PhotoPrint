@@ -1,0 +1,113 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	Layout = null;
+
+	var js = new JavaScriptSerializer();
+
+	var req = new Req();
+	string account = req.String("Account", false, "未输入账号");
+	string auth = req.String("Auth", false, "未输入授权");
+	string strCarts = req.String("Carts", false, "缺少购物车编号列表", "^\\d+(,\\d+)*$", "购物车编号列表格式错误");
+	int addressId = req.Int("AddressID", false, "缺少地址编号");
+	int paymentId = req.Int("PaymentID", false, "缺少支付方式编号");
+	int couponId = req.Int("CouponID");
+
+	if (req.HasError)
+	{
+		Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+		return;
+	}
+
+	auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+	string sAuth = UserService.GetAuth(account);
+	if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+	{
+		Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+		return;
+	}
+
+	int uid = UserService.GetUserID(account);
+	var address = SQL.QueryOne("select Receiver,CityID,RegionID,Zip,Address,TelPhone,Mobile from UserAddress where AddressID=@p0 and UserID=@p1", addressId, uid);
+
+	if (address == null)
+	{
+		Output.Write(js.Serialize(new { success = false, msg = "地址信息有误" }));
+		return;
+	}
+
+	strCarts = string.Join(",", strCarts.Split(',').Select(a => int.Parse(a)));
+
+	var data = SQL.Query("select a.CartID,a.UserWorkID,Qty,c.Price from Cart a join UserWork b on a.UserWorkID=b.UserWorkID join Product c on b.ProductID=c.ProductID where a.UserID=@p0 and CartID in (" + strCarts + ")", uid);
+	if (data == null || data.Count == 0)
+	{
+		Output.Write(js.Serialize(new { success = false, msg = "未选择商品" }));
+		return;
+	}
+
+	Dictionary<string, object> item;
+	int qty;
+	decimal amount = 0;
+	decimal price = 0;
+	decimal freight = 0;
+	int[] userWorkIDs = new int[data.Count];
+
+	for (var i = 0; i < data.Count; i++)
+	{
+		item = data[i];
+		qty = (int)item["Qty"];
+		price = (decimal)item["Price"];
+
+		amount += qty * price;
+		userWorkIDs[i] = (int)item["UserWorkID"];
+	}
+
+	int orderid;
+	DateTime now = DateTime.Now;
+	decimal discount = 0;
+
+	if (couponId != 0)
+	{
+		var coupon = SQL.QueryOne("select CouponID,Price,CouponDate,CouponDateFrom from Coupon where CouponID=@p0", couponId);
+		if (coupon == null)
+		{
+			Output.Write(js.Serialize(new { success = false, msg = "优惠券不存在" }));
+			return;
+		}
+		DateTime dtFrom = DateTime.Parse(coupon["CouponDateFrom"].ToString()).Date;
+		DateTime dtTo = DateTime.Parse(coupon["CouponDate"].ToString()).Date;
+
+		if (DateTime.Today >= dtFrom && DateTime.Today <= dtTo)
+		{
+			discount = (decimal)coupon["Price"];
+			amount -= discount;
+		}
+		else
+		{
+			Output.Write(js.Serialize(new { success = false, msg = "优惠券已过期" }));
+			return;
+		}
+	}
+
+	using (DbService db = new DbService())
+	{
+		db.BeginTrans();
+		db.Execute("insert into OrderInfo (OrderCode,UserID,[Status],Receiver,CityID,RegionID,[Address],Mobile,Zip,Amount,Freight,AddTime,Phone,PaymentID,CouponID,Discount) values ('',@p0,0,@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,@p9,@p10,@p11,@p12,@p13)", out orderid, uid, address["Receiver"], address["CityID"], address["RegionID"], address["Address"], address["Mobile"], address["Zip"], amount, freight, now, address["TelPhone"], paymentId, couponId, discount);
+		string id = "0000000000" + orderid;
+		string code = DateTime.Now.ToString("yyMMdd") + id.Substring(id.Length - 10, 10);
+
+		db.Execute("update OrderInfo set OrderCode=@p0 where OrderID=@p1", code, orderid);
+		db.Execute("update UserWork set [Status]=2 where UserWorkID in (" + string.Join(",", userWorkIDs) + ")");
+		db.Execute("delete from Cart where UserID=@p0 and CartID in (" + strCarts + ")", uid);
+
+		for (var i = 0; i < data.Count; i++)
+		{
+			item = data[i];
+			db.Execute("insert into OrderDetail (OrderID,UserWorkID,Qty) values (@p0,@p1,@p2)", orderid, item["UserWorkID"], item["Qty"]);
+		}
+		db.Commit();
+	}
+
+	Output.Write(js.Serialize(new { success = true, orderid = orderid }));
+	return;
+}

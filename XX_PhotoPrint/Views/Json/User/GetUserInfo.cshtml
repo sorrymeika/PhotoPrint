@@ -1,0 +1,37 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	Layout = null;
+
+	var js = new JavaScriptSerializer();
+
+	var req = new Req();
+	string account = req.String("Account", false, "未输入账号");
+	string auth = req.String("Auth", false, "未输入授权");
+
+	if (req.HasError)
+	{
+		Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+		return;
+	}
+
+	auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+	string sAuth = UserService.GetAuth(account);
+	if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+	{
+		Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+		return;
+	}
+
+	var user = SQL.QueryOne("select UserID,UserName,Account,LatestLoginDate,Avatars,Gender,Birthday,Mobile from Users where Account=@p0", account);
+	if (user == null)
+	{
+		Output.Write(js.Serialize(new { success = false, msg = "该账号不存在" }));
+		return;
+	}
+
+	user["Avatars"] = "http://" + Request.Url.Authority + "/Content/" + user["Avatars"];
+
+	Output.Write(js.Serialize(new { success = true, userinfo = user }));
+	return;
+}

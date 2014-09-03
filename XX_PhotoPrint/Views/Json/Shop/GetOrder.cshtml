@@ -1,0 +1,47 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    string account = req.String("Account", false, "未输入账号");
+    string auth = req.String("Auth", false, "未输入授权");
+
+    int orderid = req.Int("OrderID", false, "未输入订单编号");
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+    string sAuth = UserService.GetAuth(account);
+    if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+        return;
+    }
+
+    int uid = UserService.GetUserID(account);
+
+    var data = SQL.QueryOne("select OrderID,OrderCode,Amount,Freight,a.Discount,a.AddTime,a.Status,a.UserID,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName from OrderInfo a join Users b on a.UserID=b.UserID join City c on a.CityID=c.CityID join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID where OrderID=@p0 and a.UserID=@p1", orderid, uid);
+
+    var detailList = SQL.Query("select c.OrderID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID where OrderID=@p0", orderid);
+
+    List<Dictionary<string, object>> details;
+    string url = "http://" + Request.Url.Authority + "/Content/";
+    details = new List<Dictionary<string, object>>();
+    detailList.All(a =>
+    {
+        a["Picture"] = url + a["Picture"];
+        return true;
+    });
+    data["Details"] = detailList;
+    data["PaymentName"] = PaymentService.Payments.First(a => (int)a["PaymentID"] == (int)data["PaymentID"])["PaymentName"];
+    data["Total"] = (decimal)data["Freight"] + (decimal)data["Amount"];
+
+    Output.Write(js.Serialize(new { success = true, data = data, payments = PaymentService.Payments }));
+    return;
+}

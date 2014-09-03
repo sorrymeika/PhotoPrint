@@ -1,0 +1,41 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    string account = req.String("Account", false, "未输入账号");
+    string auth = req.String("Auth", false, "未输入授权");
+    var photoId = req.String("PhotoID", false, "缺少照片编号");
+
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+    string sAuth = UserService.GetAuth(account);
+    if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+        return;
+    }
+
+    int uid = UserService.GetUserID(account);
+
+    var photo = SQL.QueryOne("select Src,AlbumID from Photo where PhotoID=@p0", photoId);
+    if (photo == null)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "该照片不存在" }));
+        return;
+    }
+    int albumId = (int)photo["AlbumID"];
+    int result = SQL.Execute("update PhotoAlbum set Cover=@p0 where AlbumID=@p1 and UserID=@p2", photo["Src"], albumId, uid);
+    bool success = result >= 1;
+
+    Output.Write(js.Serialize(new { success = success, msg = success ? "" : "照片所属相册不存在" }));
+    return;
+}

@@ -1,0 +1,60 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    int categoryId = req.Int("CategoryID");
+    int subId = req.Int("SubID");
+    int page = req.Int("Page");
+    int pageSize = req.Int("PageSize");
+    string keywords = req.String("Keywords");
+    string sort = req.String("Sort");
+    string sortType = req.String("SortType");
+
+    string where = "Deleted=0";
+    System.Collections.ArrayList parameters = new System.Collections.ArrayList();
+    if (subId != 0)
+    {
+        where += " and SubID=@p0";
+        parameters.Add(subId);
+    }
+    else if (categoryId != 0)
+    {
+        where += " and b.CategoryID=@p" + parameters.Count;
+        parameters.Add(categoryId);
+    }
+    if (!string.IsNullOrEmpty(keywords))
+    {
+        where += " and (ProductName like '%'+@p" + parameters.Count + "+'%' or Tag like '%'+@p" + parameters.Count + "+'%')";
+        parameters.Add(categoryId);
+    }
+
+    IDictionary<string, bool> sortDic = new Dictionary<string, bool>{
+        {"Sort",false}
+    };
+    if ("sold".Equals(sort, StringComparison.OrdinalIgnoreCase))
+    {
+        sortDic.Add("SoldNum", sortType == "asc");
+    }
+    else if ("name".Equals(sort, StringComparison.OrdinalIgnoreCase))
+    {
+        sortDic.Add("ProductName", sortType == "asc");
+    }
+
+    int total;
+    var data = SQL.QueryPage(new[] { "ProductID" },
+         "ProductID,ProductName,ProductCode,Picture,Price,SoldNum,a.SubID,b.SubName,c.CategoryID,c.CategoryName",
+         "Product a join SubCate b on a.SubID=b.SubID join Category c on b.CategoryID=c.CategoryID",
+         where,
+         page,
+         pageSize,
+         parameters.ToArray(),
+         out total,
+         sortDic);
+
+    ViewBag.result = js.Serialize(new { success = true, total = total, data = data });
+}
+@ViewBag.result

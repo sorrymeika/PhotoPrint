@@ -1,0 +1,22 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	Layout = null;
+
+	var js = new JavaScriptSerializer();
+
+	var categories = SQL.Query("select CategoryID,CategoryName from Category order by Sort");
+	var subcates = SQL.Query("select SubID,SubName,CategoryID from SubCate order by Sort");
+
+	if (subcates != null)
+	{
+		for (var i = 0; i < categories.Count; i++)
+		{
+			int categoryId = (int)categories[i]["CategoryID"];
+			categories[i]["subcates"] = subcates.Where(a => (int)a["CategoryID"] == categoryId);
+		}
+	}
+
+	Output.Write(js.Serialize(new { success = true, categories = categories }));
+	return;
+}

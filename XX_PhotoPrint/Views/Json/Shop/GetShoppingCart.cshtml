@@ -1,0 +1,47 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    string account = req.String("Account", false, "未输入账号");
+    string auth = req.String("Auth", false, "未输入授权");
+
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+    string sAuth = UserService.GetAuth(account);
+    if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+        return;
+    }
+
+    int uid = UserService.GetUserID(account);
+
+    IList<Dictionary<string, object>> data;
+    string url = "http://" + Request.Url.Authority + "/Content/";
+    using (DbService db = new DbService())
+    {
+        data = db.Query("select a.CartID,a.UserWorkID,a.Qty,b.ProductID,c.ProductName,b.Picture,c.Price from Cart a join UserWork b on a.UserWorkID=b.UserWorkID join Product c on b.ProductID=c.ProductID where a.UserID=@p0 and c.Deleted=0", uid);
+        if (data != null)
+        {
+            Dictionary<string, object> item;
+            for (var i = 0; i < data.Count; i++)
+            {
+                item = data[i];
+                item["Picture"] = url + item["Picture"];
+                item["Styles"] = db.Query("select a.StyleID,StyleName,Rect,b.ColorID,c.ColorName,b.SizeID,SizeName from Style a left join UserCustomization b on a.StyleID=b.StyleID left join Color c on b.ColorID=c.ColorID left join ProductSize d on b.SizeID=d.SizeID where UserWorkID=@p0 order by a.StyleID", item["UserWorkID"]);
+            }
+        }
+    }
+
+    Output.Write(js.Serialize(new { success = true, data = data }));
+    return;
+}

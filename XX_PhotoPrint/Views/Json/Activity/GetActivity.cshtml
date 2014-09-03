@@ -1,0 +1,35 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	Layout = null;
+
+	var js = new JavaScriptSerializer();
+	var req = new Req();
+
+
+	Layout = null;
+	int activityId = req.Int("activityId", false, "缺少编号");
+
+	if (req.HasError)
+	{
+		Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+		return;
+	}
+
+	var data = SQL.QueryOne("select ActivityID,a.CategoryID,Title,Pic,Content,b.CategoryName from Activity a join ActivityCate b on a.CategoryID=b.CategoryID where ActivityID=@p0", activityId);
+	if (data != null)
+	{
+		var title = Json.Decode(data["Title"].ToString());
+		data["Title"] = title.t;
+		data["SubTitle"] = title.s;
+		data["Pic"] = "http://" + Request.Url.Authority + "/Content/" + data["Pic"];
+
+		if (!string.IsNullOrEmpty((string)data["Content"]))
+		{
+			data["Content"] = System.Text.RegularExpressions.Regex.Replace(data["Content"].ToString(), @"src=""/", "src=\"http://" + Request.Url.Authority + "/", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+		}
+	}
+
+	Output.Write(js.Serialize(new { success = true, data = data }));
+	return;
+}

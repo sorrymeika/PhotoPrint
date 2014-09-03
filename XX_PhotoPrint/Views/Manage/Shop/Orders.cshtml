@@ -1,0 +1,212 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    var js = new JavaScriptSerializer();
+    var req = new Req();
+
+    if (Request["action"] == "get")
+    {
+        Layout = null;
+
+        int page = req.Int("Page", defaultValue: 1);
+        int pageSize = req.Int("PageSize", defaultValue: 10);
+        string keywords = req.String("keywords");
+        string dateFrom = req.String("dateFrom");
+        string dateTo = req.String("dateTo");
+
+        if (req.HasError)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+            return;
+        }
+
+        int uid = req.Int("uid");
+
+        IDictionary<string, bool> sortDic = new Dictionary<string, bool>{
+            {"OrderID",false}
+        };
+
+        string where = "1=1";
+        List<object> parameters = new List<object>();
+
+        if (!string.IsNullOrEmpty(req.String("status")))
+        {
+            where += " and Status=@p0";
+            parameters.Add(req.Int("status"));
+        }
+        if (!string.IsNullOrEmpty(keywords))
+        {
+            where += " and (OrderCode=@p" + parameters.Count + ")";
+            parameters.Add(keywords);
+        }
+        if (!string.IsNullOrEmpty(dateFrom) && !string.IsNullOrEmpty(dateTo))
+        {
+            where += " and (AddTime between @p" + parameters.Count + " and @p" + (parameters.Count + 1) + ")";
+            parameters.Add(DateTime.Parse(dateFrom + " 00:00:00"));
+            parameters.Add(DateTime.Parse(dateTo + " 23:59:59"));
+        }
+        if (uid != 0)
+        {
+            where += " and (a.UserID=@p" + parameters.Count + ")";
+            parameters.Add(uid);
+        }
+
+        int total;
+        var data = SQL.QueryPage(new[] { "OrderID" },
+            "OrderID,OrderCode,Amount,Freight,AddTime,Status,a.UserID,Account",
+            "OrderInfo a join Users b on a.UserID=b.UserID",
+            where,
+            page,
+            pageSize, parameters.ToArray(), out total, sortDic);
+
+        if (data == null || data.Count == 0)
+        {
+            Output.Write(js.Serialize(new { success = true, data = data, total = total }));
+            return;
+        }
+
+        var detailList = SQL.Query("select c.OrderID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID where OrderID in (" + string.Join(",", data.Select(a => a["OrderID"])) + ")");
+
+        List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
+        if (data != null && data.Count != 0)
+        {
+            Dictionary<string, object> order;
+            List<Dictionary<string, object>> details;
+            string url = "http://" + Request.Url.Authority + "/Content/";
+            for (int i = 0; i < data.Count; i++)
+            {
+                order = data[i];
+                details = new List<Dictionary<string, object>>();
+                order["children"] = details;
+
+                var items = detailList.Where(a => (int)a["OrderID"] == (int)order["OrderID"]);
+
+                foreach (var item in items)
+                {
+                    details.Add(new Dictionary<string, object>
+                    {
+                        { "OrderDetailID", item["OrderDetailID"] },
+                        { "UserWorkID", item["UserWorkID"] },
+                        { "Qty", item["Qty"] },
+                        { "ProductID", item["ProductID"] },
+                        { "ProductName", item["ProductName"] },
+                        { "Picture", url + item["Picture"] },
+                        { "Price", item["Price"] },
+                    });
+                }
+
+            }
+        }
+
+        Output.Write(js.Serialize(new { success = true, data = data, total = total }));
+        return;
+    }
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h1>订单管理</h1>
+<div id="toolbar" class="toolbar"></div>
+<div class="search"><i>订单状态：</i><select id="status">
+    <option value="">选择状态</option>
+    <option value="-1">已取消</option>
+    <option value="0">未付款</option>
+    <option value="1">已付款</option>
+    <option value="4">已完成</option>
+</select>
+    <i>订单日期 从：</i> <input id="dateFrom" class="text" />
+    <i>到</i><input id="dateTo" class="text" />
+    <i>订单编码：</i><input id="keywords" type="text" class="text" />
+    <button id="search" class="button">搜索</button>
+</div>
+<div id="grid"></div>
+<script>
+    seajs.use(['jquery','lib/buttons','lib/grid','lib/jquery.datepicker','lib/global.css','lib/jquery.datepicker.css'],function ($,B) {
+
+        var uid=/(\?|&)uid=(\d+)/.test(location.search)?location.search.match(/(\?|&)uid=(\d+)/)[2]:'';
+
+        //工具栏
+        var buttons=new B('#toolbar',[{
+            text: "订单详情",
+            ico: "modify",
+            disabled: true,
+            handle: function () {
+                var data=grid.selectedRow().data;
+                location.href="order?orderid="+data.OrderID;
+            }
+        }]);
+
+        $('#dateFrom').datePicker({
+            clickInput: true
+        });
+        $('#dateTo').datePicker({
+            clickInput: true
+        });
+
+        //订单列表
+        var orderStatus={
+            '-3': "已退款",
+            '-2': "退款中",
+            '-1': "已取消",
+            0: "未付款",
+            1: "已付款",
+            2: "已确认制作中",
+            3: "已发货",
+            4: "交易完成"
+        };
+
+        var grid=$('#grid').grid({
+            pageEnabled: true,
+            onRowSelect: function (row,data) {
+                buttons.enable(0);
+            },
+            columns: [{
+                text: "编号",
+                bind: "OrderID",
+                width: 5
+            },{
+                text: "订单编码",
+                bind: "OrderCode",
+                width: 15
+            },{
+                text: "订单金额",
+                bind: "Amount",
+                width: 10
+            },{
+                text: "订单运费",
+                bind: "Freight",
+                width: 6
+            },{
+                text: "下单日期",
+                bind: "AddTime",
+                width: 10
+            },{
+                text: "订单状态",
+                bind: "Status",
+                render: function (cell,data) {
+                    cell.html(orderStatus[data.Status]);
+                },
+                width: 5
+            }]
+        }),
+        search=function (page) {
+            grid.load("orders?action=get",{
+                page: page||1,
+                pageSize: 10,
+                status: $('#status')[0].value,
+                keywords: $('#keywords').val(),
+                dateFrom: $('#dateFrom').val(),
+                dateTo: $('#dateTo').val(),
+                uid: uid
+            },function () {
+                buttons.disable(0);
+            });
+            //uid="";
+        };
+
+        $('#search').click(function () {
+            search();
+        });
+
+        search();
+    });
+</script>

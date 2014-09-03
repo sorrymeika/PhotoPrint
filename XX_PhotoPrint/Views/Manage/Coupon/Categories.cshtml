@@ -1,0 +1,232 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    var js = new System.Web.Script.Serialization.JavaScriptSerializer();
+    Req req = new Req();
+
+    if ("get".Equals(Request["action"], StringComparison.OrdinalIgnoreCase))
+    {
+        Layout = null;
+
+
+        var categories = SQL.Query("select CategoryID,CategoryName from CouponCate order by CategoryID");
+
+        Output.Write(js.Serialize(new { success = true, data = categories }));
+        return;
+    }
+    else if ("add".Equals(Request["action"]))
+    {
+        Layout = null;
+
+        string categoryName = req.String("categoryName", false, "请填写类别名");
+
+        if (req.HasError)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+            return;
+        }
+
+        if (SQL.QueryScalar<bool>("if exists (select 1 from CouponCate where CategoryName=@p0) select 1 else select 0", categoryName))
+        {
+            Output.Write(js.Serialize(new { success = false, msg = "类别已存在" }));
+            return;
+        }
+
+        SQL.Execute("insert into CouponCate (CategoryName) values (@p0)", categoryName);
+
+        Output.Write(js.Serialize(new { success = true }));
+        return;
+    }
+    else if ("modify".Equals(Request["action"]))
+    {
+        Layout = null;
+
+        int categoryId = req.Int("categoryId", false, "请填写类别编号");
+        string categoryName = req.String("categoryName", false, "请填写类别名");
+
+        if (req.HasError)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+            return;
+        }
+
+        if (SQL.QueryScalar<bool>("if exists (select 1 from CouponCate where CategoryName=@p0) select 1 else select 0", categoryName))
+        {
+            Output.Write(js.Serialize(new { success = false, msg = "类别已存在" }));
+            return;
+        }
+
+        SQL.Execute("update CouponCate set CategoryName=@p0 where CategoryID=@p1", categoryName, categoryId);
+
+        Output.Write(js.Serialize(new { success = true }));
+        return;
+    }
+    else if ("delete".Equals(Request["action"]))
+    {
+        Layout = null;
+
+        int categoryId = req.Int("categoryId", false, "请填写类别编号");
+
+        if (req.HasError)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+            return;
+        }
+
+        bool exists = SQL.QueryScalar<bool>("if exists (select 1 from Coupon where CategoryID=@p0) select 1 else select 0", categoryId);
+        if (exists)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = "该类下有优惠券，无法删除" }));
+            return;
+        }
+
+        SQL.Execute("delete from CouponCate where CategoryID=@p0", categoryId);
+
+        Output.Write(js.Serialize(new { success = true }));
+        return;
+    }
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h1>优惠券分类</h1>
+<div id="toolbar" class="toolbar"></div>
+<div id="grid"></div>
+<script>
+    seajs.use(['jquery','lib/buttons','lib/popup','lib/grid','lib/global.css'],function ($,Buttons,popup) {
+        var addDialog=new popup.Form({
+            title: '添加分类',
+            url: 'categories?action=add',
+            width: 400,
+            controls: {
+                categoryName: {
+                    label: '分类名称',
+                    type: 'text',
+                    className: 'text_normal',
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写分类名称'
+                    }
+                }
+            },
+            buttons: [{
+                text: '添加',
+                handle: function () {
+                    addDialog.submit(function (res) {
+                        if(res.success) {
+                            addDialog.hide().reset();
+                            grid.search();
+                        }
+                        else
+                            alert(res.msg);
+                    });
+                }
+            },{
+                text: '取消',
+                handle: function () {
+                    addDialog.hide();
+                }
+            }]
+        });
+
+        var modifyDialog=new popup.Form({
+            title: '修改分类',
+            url: 'categories?action=modify',
+            width: 400,
+            controls: {
+                categoryId: {
+                    type: 'hidden'
+                },
+                categoryName: {
+                    label: '分类名称',
+                    type: 'text',
+                    className: 'text_normal',
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写分类名称'
+                    }
+                }
+            },
+            buttons: [{
+                text: '修改',
+                handle: function () {
+                    modifyDialog.submit(function (res) {
+                        if(res.success) {
+                            modifyDialog.hide().reset();
+                            grid.search();
+                        }
+                        else
+                            alert(res.msg);
+                    });
+                }
+            },{
+                text: '取消',
+                handle: function () {
+                    modifyDialog.hide();
+                }
+            }]
+        });
+
+        var buttons=new Buttons('#toolbar',[{
+            text: "添加",
+            ico: "add",
+            disabled: false,
+            handle: function () {
+                addDialog.show();
+            }
+        },{
+            text: "修改",
+            ico: "modify",
+            disabled: true,
+            handle: function () {
+                var data=grid.selectedRow().data;
+                modifyDialog.control('categoryId').val(data.CategoryID);
+                modifyDialog.show().control('categoryName').val(data.CategoryName);
+            }
+        },{
+            text: "删除",
+            ico: "delete",
+            disabled: true,
+            handle: function () {
+                if(!window.confirm('确认删除？')) return;
+
+                var data=grid.selectedRow().data;
+
+                $.ajax({
+                    url: 'categories?action=delete',
+                    type: 'post',
+                    data: {
+                        categoryId: data.CategoryID
+                    },
+                    dataType: 'json',
+                    success: function (res) {
+                        if(res.success) {
+                            alert('删除成功！');
+                            grid.search();
+                        } else
+                            alert(res.msg);
+                    }
+                });
+            }
+        }]);
+
+        var grid=$('#grid').grid({
+            search: {
+                url: "categories?action=get",
+                beforeSend: function () {
+                    buttons.disable(1,2);
+                }
+            },
+            onRowSelect: function (row,data) {
+                buttons.enable(1,2);
+            },
+            columns: [{
+                text: "编号",
+                bind: "CategoryID",
+                width: 2
+            },{
+                text: "类别名",
+                bind: "CategoryName",
+                width: 10
+            }]
+        })
+        .search();
+    });
+</script>

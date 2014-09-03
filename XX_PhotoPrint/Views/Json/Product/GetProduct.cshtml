@@ -1,0 +1,39 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    int productId = req.Int("ProductID", false, "缺少商品编号");
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    var data = SQL.QueryOne("select ProductID,ProductName,ProductCode,Price,SoldNum,a.SubID,b.SubName,c.CategoryID,c.CategoryName,BaseInfo,Content from Product a join SubCate b on a.SubID=b.SubID join Category c on b.CategoryID=c.CategoryID where ProductID=@p0 and Deleted=0", productId);
+    if (data == null)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "该商品不存在" }));
+        return;
+    }
+    string baseInfo = (string)data["BaseInfo"];
+    if (!string.IsNullOrEmpty(baseInfo))
+    {
+        data["BaseInfo"] = js.Deserialize<IList<IDictionary<string, object>>>(baseInfo);
+    }
+    else if (baseInfo == "")
+    {
+        data["BaseInfo"] = null;
+    }
+
+    data["Colors"] = SQL.Query("select ColorID,ColorName,ColorCode from Color where ProductID=@p0", productId);
+    data["Styles"] = SQL.Query("select StyleID,StyleName,Rect from Style where ProductID=@p0", productId);
+    data["Size"] = SQL.Query("select SizeID,SizeName,StyleID from ProductSize where ProductID=@p0", productId);
+    data["StyleColorPic"] = SQL.Query("select PicID,StyleID,ColorID,Picture from StyleColorPic where ProductID=@p0", productId);
+
+    Output.Write(js.Serialize(new { success = false, data = data }));
+    return;
+}

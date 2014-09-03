@@ -1,0 +1,75 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    int categoryId = req.Int("CategoryID");
+    int subId = req.Int("SubID");
+    int page = req.Int("Page", defaultValue: 1);
+    int pageSize = req.Int("PageSize", defaultValue: 10);
+    string keywords = req.String("Keywords");
+    string sort = req.String("Sort");
+    string sortType = req.String("SortType");
+
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    string where = "a.Deleted=0 and b.Deleted=0";
+    List<object> parameters = new List<object>();
+    if (subId != 0)
+    {
+        where += " and d.SubID=@p0";
+        parameters.Add(subId);
+    }
+    else if (categoryId != 0)
+    {
+        where += " and d.CategoryID=@p" + parameters.Count;
+        parameters.Add(categoryId);
+    }
+    if (!string.IsNullOrEmpty(keywords))
+    {
+        where += " and (ProductName like '%'+@p" + parameters.Count + "+'%' or Tag like '%'+@p" + parameters.Count + "+'%' or WorkName like '%'+@p" + parameters.Count + "+'%')";
+        parameters.Add(keywords);
+    }
+
+    IDictionary<string, bool> sortDic = new Dictionary<string, bool>{
+        {"b.Sort",false}
+    };
+    if ("sold".Equals(sort, StringComparison.OrdinalIgnoreCase))
+    {
+        sortDic.Add("SoldNum", sortType == "asc");
+    }
+    else if ("date".Equals(sort, StringComparison.OrdinalIgnoreCase))
+    {
+        sortDic.Add("CreationTime", sortType == "asc");
+    }
+    else
+    {
+        sortDic.Add("CreationTime", false);
+    }
+
+    int total;
+    var data = SQL.QueryPage(new[] { "WorkID" },
+        "WorkID,WorkName,a.ProductID,b.ProductName,a.Picture,b.Price,b.SubID,d.SubName,d.CategoryID,c.CategoryName",
+        "Work a join Product b on a.ProductID=b.ProductID join SubCate d on b.SubID=d.SubID join Category c on d.CategoryID=c.CategoryID",
+        where, page, pageSize, parameters.ToArray(), out total, sortDic);
+
+    string url = "http://" + Request.Url.Authority + "/Content/";
+    if (data != null)
+    {
+        data.All(a =>
+        {
+            a["Picture"] = url + a["Picture"];
+            return true;
+        });
+    }
+
+    Output.Write(js.Serialize(new { success = true, data = data, total = total }));
+    return;
+}

@@ -1,0 +1,138 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	if (Request["action"] == "get")
+	{
+		Layout = null;
+		JavaScriptSerializer js = new JavaScriptSerializer();
+		Req req = new Req();
+
+		int page = req.Int("page", defaultValue: 1);
+		int pageSize = req.Int("pageSize", defaultValue: 10);
+		DateTime regDtFrom = req.DateTime("regDtFrom");
+		DateTime regDtTo = req.DateTime("regDtTo");
+		string keywords = req.String("keywords");
+		string sort = req.String("sort");
+		bool isAsc = req.Bool("asc");
+
+		if (req.HasError)
+		{
+			Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+			return;
+		}
+
+		string where = "1=1";
+		List<object> parameters = new List<object>();
+		Dictionary<string, bool> sortDict = new Dictionary<string, bool>();
+
+		if (regDtFrom != DateTime.MinValue && regDtTo != DateTime.MinValue)
+		{
+			where += " and RegisterDate between @p0 and @p1";
+			parameters.Add(regDtFrom);
+			parameters.Add(regDtTo);
+		}
+
+		if (!string.IsNullOrEmpty(keywords))
+		{
+			where += " and (UserName like '%'+@p" + parameters.Count + "+'%' or Account like '%'+@p" + parameters.Count + "+'%')";
+			parameters.Add(keywords);
+		}
+
+		if (!string.IsNullOrEmpty(sort))
+		{
+			sortDict.Add(sort, isAsc);
+		}
+		else
+		{
+			sortDict.Add("RegisterDate", false);
+		}
+
+		int total;
+		var data = SQL.QueryPage(new[] { "UserID" },
+			"UserID,Account,UserName,RegisterDate,LatestLoginDate",
+			"Users",
+			where,
+			page,
+			pageSize,
+			parameters.ToArray(),
+			out total,
+			sortDict);
+
+		Output.Write(js.Serialize(new { success = true, total = total, data = data }));
+		return;
+	}
+
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h1>用户管理</h1>
+<div id="toolbar" class="toolbar"></div>
+<div class="search"><i>注册日期 从：</i> <input id="regDtFrom" class="text" />
+	<i>到</i><input id="regDtTo" class="text" />
+	<i>关键字：</i><input id="keywords" type="text" class="text" />
+	<button id="search" class="button">搜索</button>
+</div>
+<div id="grid"></div>
+<script>
+	seajs.use(['jquery','lib/buttons','lib/grid','lib/jquery.datepicker','lib/global.css','lib/jquery.datepicker.css'],function ($,B) {
+		//工具栏
+		var buttons=new B('#toolbar',[{
+			text: "用户订单",
+			ico: "view",
+			disabled: true,
+			handle: function () {
+				var data=grid.selectedRow().data;
+				location.href="/manage/shop/orders?uid="+data.UserID;
+			}
+		}]);
+
+		$('#regDtFrom').datePicker({
+			clickInput: true
+		});
+		$('#regDtTo').datePicker({
+			clickInput: true
+		});
+
+		var grid=$('#grid').grid({
+			pageEnabled: true,
+			onRowSelect: function () {
+				buttons.enable(0);
+			},
+			columns: [{
+				text: "编号",
+				bind: "UserID",
+				width: 10
+			},{
+				text: "姓名",
+				bind: "UserName",
+				width: 10
+			},{
+				text: "邮箱",
+				bind: "Account",
+				width: 10
+			},{
+				text: "注册时间",
+				bind: "RegisterDate",
+				sortable: true,
+				width: 10
+			},{
+				text: "最后登录时间",
+				bind: "LatestLoginDate",
+				sortable: true,
+				width: 10
+			}]
+		}),
+		search=function (page) {
+			grid.load("/manage/user/users?action=get",{
+				page: page,
+				pageSize: 10,
+				regDtFrom: $('#regDtFrom').val(),
+				regDtTo: $('#regDtTo').val(),
+				keywords: $('#keywords').val()
+			},function () {
+				buttons.disable(0);
+			});
+		};
+
+		search(1);
+	});
+</script>

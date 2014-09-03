@@ -1,0 +1,46 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    string account = req.String("Account", false, "未输入账号");
+    string auth = req.String("Auth", false, "未输入授权");
+    int status = req.Int("Status", false, "缺少作品状态");
+    int categoryId = req.Int("CategoryID");
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+    string sAuth = UserService.GetAuth(account);
+    if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+        return;
+    }
+
+    int uid = UserService.GetUserID(account);
+    string sql = "select UserWorkID,a.ProductID,b.ProductName,a.Picture,b.Price from UserWork a join Product b on a.ProductID=b.ProductID where UserID=@p0 and [Status]=@p1 and b.Deleted=0";
+    List<object> parameters = new List<object> { uid, status };
+    if (categoryId != 0)
+    {
+        sql += " and b.CategoryID=@p2";
+        parameters.Add(categoryId);
+    }
+
+    var data = SQL.Query(sql, parameters.ToArray());
+    string url = "http://" + Request.Url.Authority + "/Content/";
+    data.All(a =>
+    {
+        a["Picture"] = url + a["Picture"];
+        return true;
+    });
+
+    Output.Write(js.Serialize(new { success = true, data = data }));
+    return;
+}

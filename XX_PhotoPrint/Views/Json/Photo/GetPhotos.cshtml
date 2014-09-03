@@ -1,0 +1,49 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	Layout = null;
+
+	var js = new JavaScriptSerializer();
+
+	var req = new Req();
+	string account = req.String("Account", false, "未输入账号");
+	string auth = req.String("Auth", false, "未输入授权");
+
+	if (req.HasError)
+	{
+		Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+		return;
+	}
+
+	auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+	string sAuth = UserService.GetAuth(account);
+	if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+	{
+		Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+		return;
+	}
+
+	int uid = UserService.GetUserID(account);
+	int albumId = req.Int("AlbumID");
+	string sql = "select PhotoID,Src,a.Description,a.EditDate,a.AlbumID,AlbumName from Photo a inner join PhotoAlbum b on a.AlbumID=b.AlbumID where UserID=@p0";
+	System.Collections.ArrayList parameters = new System.Collections.ArrayList();
+	parameters.Add(uid);
+	if (albumId != 0)
+	{
+		sql += " and a.AlbumID=@p1";
+		parameters.Add(albumId);
+	}
+
+	var data = SQL.Query(sql, parameters.ToArray());
+	if (data != null)
+	{
+		IDictionary<string, object> item;
+		for (int i = 0; i < data.Count; i++)
+		{
+			item = data[i];
+			item["Src"] = "http://" + Request.Url.Authority + "/Content/" + item["Src"];
+		}
+	}
+	Output.Write(js.Serialize(new { success = true, data = data }));
+	return;
+}

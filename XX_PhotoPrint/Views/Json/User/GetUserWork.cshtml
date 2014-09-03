@@ -1,0 +1,45 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    int wordId = req.Int("UserWorkID", false, "缺少作品编号");
+    string account = req.String("Account", false, "未输入账号");
+    string auth = req.String("Auth", false, "未输入授权");
+
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+    string sAuth = UserService.GetAuth(account);
+    if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+        return;
+    }
+
+    int uid = UserService.GetUserID(account);
+
+    var data = SQL.QueryOne("select w.UserWorkID,WorkID,w.ProductID,a.ProductName from UserWork w join Product a on w.ProductID=a.ProductID join SubCate b on a.SubID=b.SubID join Category c on b.CategoryID=c.CategoryID where w.WorkID=@p0 and w.UserID=@p1  and a.Deleted=0", wordId, uid);
+    if (data == null)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "该作品不存在" }));
+        return;
+    }
+
+    int productId = (int)data["ProductID"];
+
+    data["Styles"] = SQL.Query("select a.StyleID,StyleName,Rect,ColorID,SizeID,[Print],Content from Style a left join UserCustomization b on a.StyleID=b.StyleID where UserWorkID=@p0 order by a.StyleID", wordId);
+    data["Size"] = SQL.Query("select SizeID,SizeName,StyleID from ProductSize where ProductID=@p0", productId);
+    data["Colors"] = SQL.Query("select ColorID,ColorName,ColorCode from Color where ProductID=@p0", productId);
+    data["StyleColorPic"] = SQL.Query("select PicID,StyleID,ColorID,Picture from StyleColorPic where ProductID=@p0", productId);
+
+    Output.Write(js.Serialize(new { success = false, data = data }));
+    return;
+}

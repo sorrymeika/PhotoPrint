@@ -1,0 +1,94 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	if (Request["action"] == "modify")
+	{
+		Layout = null;
+
+		var js = new JavaScriptSerializer();
+
+		var req = new Req();
+		string email = req.String("email", false, "请填写邮箱地址");
+		string password = req.String("password", false, "缺少密码");
+		string smtp = req.String("smtp", false, "请设置smtp服务器");
+
+		if (req.HasError)
+		{
+			Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+			return;
+		}
+
+		using (DbService db = new DbService())
+		{
+			string sql = "if exists (select 1 from Settings where Name=@p0) begin update Settings set Value=@p1 where Name=@p0 end else begin insert into Settings (Name,Value) values (@p0,@p1) end";
+			db.Execute(sql, "email", email);
+			db.Execute(sql, "password", password);
+			db.Execute(sql, "smtp", smtp);
+		}
+
+		Output.Write(js.Serialize(new { success = true }));
+		return;
+	}
+	Layout = "~/Views/Shared/_Layout.cshtml";
+
+	SQL.Execute(@"IF NOT EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[Settings]') AND xtype = 'U')
+begin
+create table Settings(
+Name varchar(20) primary key,
+Value varchar(500)
+)
+end");
+
+
+	var data = SQL.Query("select Name,Value from Settings where Name in ('email','password','smtp')");
+	
+}
+<div id="form"></div>
+<script>
+	seajs.use(['jquery','lib/form','lib/global.css'],function ($) {
+		var form=$('#form').form({
+			title: "设置发送找回密码等邮件的邮箱",
+			url: '?action=modify',
+			controls: {
+				email: {
+					label: '邮箱地址',
+					type: 'text',
+					validation: {
+						emptyAble: false,
+						emptyText: '请填写邮箱地址'
+					},
+					value: "@(data == null || data.FirstOrDefault(a => a["Name"].ToString() == "email") == null ? null : data.FirstOrDefault(a => a["Name"].ToString() == "email")["Value"])"
+				},
+				password: {
+					label: '邮箱密码',
+					type: 'text',
+					validation: {
+						emptyAble: false,
+						emptyText: '请填写邮箱密码'
+					},
+					value: "@(data == null || data.FirstOrDefault(a => a["Name"].ToString() == "password") == null ? null : data.FirstOrDefault(a => a["Name"].ToString() == "password")["Value"])"
+				},
+				smtp: {
+					label: 'smtp服务器',
+					type: 'text',
+					validation: {
+						emptyAble: false,
+						emptyText: '请设置smtp服务器'
+					},
+					value: "@(data == null || data.FirstOrDefault(a => a["Name"].ToString() == "smtp") == null ? null : data.FirstOrDefault(a => a["Name"].ToString() == "smtp")["Value"])"
+				}
+			},
+			buttons: [{
+				text: '设置',
+				handle: function () {
+					form.submit(function (res) {
+						if(res.success)
+							alert('设置成功！');
+						else
+							alert(res.msg);
+					});
+				}
+			}]
+		});
+	});
+</script>

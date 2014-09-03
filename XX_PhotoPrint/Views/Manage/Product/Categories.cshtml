@@ -1,0 +1,106 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    if ("post".Equals(Request["method"], StringComparison.OrdinalIgnoreCase))
+    {
+        Layout = null;
+
+        var js = new System.Web.Script.Serialization.JavaScriptSerializer();
+        Req req = new Req();
+
+        var categories = SQL.Query("select CategoryID,CategoryName from Category order by CategoryID");
+        var subcates = SQL.Query("select SubID,SubName,CategoryID from SubCate order by SubID");
+
+        Output.Write(js.Serialize(new
+        {
+            success = true,
+            data = categories == null ? null : categories.Select(a => new
+            {
+                CategoryID = a["CategoryID"],
+                CategoryName = a["CategoryName"],
+                ParentID = 0,
+                children = subcates == null ? null
+                    : subcates.Where(b => (int)b["CategoryID"] == (int)a["CategoryID"])
+                        .Select(b => new
+                        {
+                            ParentID = b["CategoryID"],
+                            CategoryID = b["SubID"],
+                            CategoryName = b["SubName"]
+                        })
+            })
+        }));
+        return;
+    }
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h1>商品分类</h1>
+<div id="toolbar" class="toolbar"></div>
+<div id="grid"></div>
+<script>
+    seajs.use(['jquery','lib/buttons','lib/grid','lib/global.css'],function ($,Buttons) {
+        var buttons=new Buttons('#toolbar',[{
+            text: "添加",
+            ico: "add",
+            disabled: false,
+            handle: function () {
+                location.href="addcategory";
+            }
+        },{
+            text: "修改",
+            ico: "modify",
+            disabled: true,
+            handle: function () {
+                var data=grid.selectedRow().data;
+                location.href="modifycategory?id="+data.CategoryID+'&pid='+data.ParentID;
+            }
+        },{
+            text: "删除",
+            ico: "delete",
+            disabled: true,
+            handle: function () {
+                if(!window.confirm('确认删除？')) return;
+
+                var data=grid.selectedRow().data;
+
+                $.ajax({
+                    url: 'deletecategory',
+                    type: 'post',
+                    data: {
+                        pid: data.ParentID,
+                        id: data.CategoryID,
+                        categoryName: $('#categoryName').val()
+                    },
+                    dataType: 'json',
+                    success: function (res) {
+                        if(res.success) {
+                            alert('删除成功！');
+                            load();
+                        } else
+                            alert(res.msg);
+                    }
+                });
+
+            }
+        }]);
+
+        var grid=$('#grid').grid({
+            type: 'tree',
+            onRowSelect: function (row,data) {
+                buttons.enable(1,2);
+            },
+            columns: [{
+                text: "编号",
+                bind: "CategoryID",
+                width: 2
+            },{
+                text: "类别名",
+                bind: "CategoryName",
+                width: 10
+            }]
+        });
+
+        function load() {
+            grid.load("categories?method=post",{},function (res) { });
+        }
+        load();
+    });
+</script>

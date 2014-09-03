@@ -1,0 +1,83 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    if (Request["action"] == "modify")
+    {
+        Layout = null;
+
+        var js = new JavaScriptSerializer();
+
+        var req = new Req();
+        string password = req.Password("password", "缺少旧密码");
+        string newpassword = req.Password("newpassword", "缺少新密码");
+
+        if (req.HasError)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+            return;
+        }
+
+        bool exists = SQL.QueryScalar<bool>("if exists (select 1 from Admin where Password=@p0) select 1 else select 0", password);
+        if (!exists)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = "旧密码不正确" }));
+            return;
+        }
+
+        SQL.Execute("update Admin set Password=@p0 where AdminName='admin'", newpassword);
+
+        Output.Write(js.Serialize(new { success = true }));
+        return;
+    }
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div id="form"></div>
+<script>
+    seajs.use(['jquery','lib/form','lib/global.css'],function ($) {
+        var form=$('#form').form({
+            title: "修改管理员密码",
+            url: 'modifypwd?action=modify',
+            controls: {
+                password: {
+                    label: '旧密码',
+                    type: 'password',
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写旧密码'
+                    }
+                },
+                newpassword: {
+                    label: '新密码',
+                    type: 'password',
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写新密码'
+                    }
+                },
+                newpassword1: {
+                    label: '重复密码',
+                    type: 'password',
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请重复密码',
+                        compare: 'newpassword',
+                        compareText: '两次密码不一致'
+                    }
+                }
+            },
+            buttons: [{
+                text: '修改',
+                handle: function () {
+                    form.submit(function (res) {
+                        if(res.success)
+                            alert('修改成功！');
+                        else
+                            alert(res.msg);
+
+                        form.reset();
+                    });
+                }
+            }]
+        });
+    });
+</script>

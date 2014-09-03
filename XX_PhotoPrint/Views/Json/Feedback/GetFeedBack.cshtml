@@ -1,0 +1,17 @@
+﻿@using XX_PhotoPrint.Service;
+@{
+	Layout = null;
+
+	Req req = new Req();
+
+	int uid;
+	if (!AuthHelper.IsAuth(req, out uid))
+	{
+		return;
+	}
+
+	var data = SQL.Query("select * from FeedBack where UserID=@p0", uid);
+
+	Json.Write(new { success = true, data = data }, Output);
+	return;
+}

@@ -1,0 +1,39 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	Layout = null;
+
+	var js = new JavaScriptSerializer();
+	var req = new Req();
+	int categoryId = req.Int("CategoryID");
+	int page = req.Int("Page", defaultValue: 1);
+	int pageSize = req.Int("PageSize", defaultValue: 10);
+
+	string where = "CouponDate>=@p0";
+	System.Collections.ArrayList parameters = new System.Collections.ArrayList{
+        DateTime.Now
+    };
+	if (categoryId != 0)
+	{
+		where += " and a.CategoryID=@p0";
+		parameters.Add(categoryId);
+	}
+
+	Dictionary<string, bool> sorts = new Dictionary<string, bool>{
+        {"CouponID",false},
+    };
+
+	int total;
+	var data = SQL.QueryPage(new[] { "CouponID" },
+		"CouponID,Code,a.CategoryID,Title,Memo,CouponDateFrom,CouponDate as CouponDateTo,Price,CategoryName",
+		"Coupon a join CouponCate b on a.CategoryID=b.CategoryID",
+		where,
+		page,
+		pageSize,
+		parameters.ToArray(),
+		out total,
+		sorts);
+
+	Output.Write(js.Serialize(new { success = true, total = total, data = data }));
+	return;
+}

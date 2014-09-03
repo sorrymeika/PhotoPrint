@@ -1,0 +1,89 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    string account = req.String("Account", false, "未输入账号");
+    string auth = req.String("Auth", false, "未输入授权");
+    int albumId = req.Int("AlbumID", false, "缺少相册编号");
+    var description = req.String("Description");
+    int photoId = req.Int("PhotoID", false, "缺少照片编号");
+
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+    string sAuth = UserService.GetAuth(account);
+    if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+        return;
+    }
+
+    int uid = UserService.GetUserID(account);
+    var album = SQL.QueryOne("select Cover from PhotoAlbum where UserID=@p0 and AlbumID=@p1", uid, albumId);
+    if (album == null)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "相册不存在" }));
+        return;
+    }
+
+    var data = SQL.QueryOne("select Src,AlbumID from Photo where PhotoID=@p0", photoId);
+    if (data == null)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "照片不存在" }));
+        return;
+    }
+    int origAlbumID = (int)data["AlbumID"];
+    Dictionary<string, object> origAlbum = null;
+    if (origAlbumID != albumId)
+    {
+        origAlbum = SQL.QueryOne("select Cover from PhotoAlbum where UserID=@p0 and AlbumID=@p1", uid, origAlbumID);
+        if (origAlbum == null)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = "原相册不存在" }));
+            return;
+        }
+    }
+
+    var photo = req.File("Photo");
+    var origSrc = (string)data["Src"];
+    string src;
+
+    DateTime date = DateTime.Now;
+    if (photo != null && photo.ContentLength != 0)
+    {
+        src = "Photo/" + date.ToString("yyyy-MM") + "/" + albumId + "_" + date.Ticks + photo.FileName.Substring(photo.FileName.LastIndexOf('.'));
+        string savePath = Server.MapPath("~/Content/" + src);
+        photo.SaveAs(savePath);
+
+        string cover = (string)album["Cover"];
+        if (string.IsNullOrEmpty(cover))
+        {
+            SQL.Execute("update PhotoAlbum set Cover=@p0 where AlbumID=@p1", src, albumId);
+        }
+        if (origAlbumID != albumId && origAlbum != null)
+        {
+            cover = (string)origAlbum["Cover"];
+            if (cover == origSrc)
+            {
+                SQL.Execute("update PhotoAlbum set Cover='' where AlbumID=@p0", origAlbumID);
+            }
+        }
+    }
+    else
+    {
+        src = origSrc;
+    }
+
+    SQL.Execute("update Photo set AlbumID=@p0,Src=@p1,Description=@p2,EditDate=@p3 where PhotoID=@p4", albumId, src, description, DateTime.Now, photoId);
+
+    Output.Write(js.Serialize(new { success = true, src = "http://" + Request.Url.Authority + "/Content/" + src }));
+    return;
+}

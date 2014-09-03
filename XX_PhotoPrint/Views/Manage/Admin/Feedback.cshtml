@@ -1,0 +1,116 @@
+﻿@using XX_PhotoPrint.Service
+@{
+	var js = new System.Web.Script.Serialization.JavaScriptSerializer();
+	Req req = new Req();
+
+	if (Request["action"] == "search")
+	{
+		Layout = null;
+
+		int page = req.Int("Page", defaultValue: 1);
+		int pageSize = req.Int("PageSize", defaultValue: 10);
+		string keywords = req.String("Keywords");
+		string sort = req.String("Sort");
+		bool isAsc = req.Bool("Asc");
+		string dateFrom = req.String("dateFrom");
+		string dateTo = req.String("dateTo");
+
+		if (req.HasError)
+		{
+			Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+			return;
+		}
+
+		string where = "1=1";
+		List<object> parameters = new List<object>();
+		if (!string.IsNullOrEmpty(keywords))
+		{
+			where += " and (Content like '%'+@p" + parameters.Count + "+'%')";
+			parameters.Add(keywords);
+		}
+
+		if (!string.IsNullOrEmpty(dateFrom) && !string.IsNullOrEmpty(dateTo))
+		{
+			where += " and (a.FeedBackTime between @p" + parameters.Count + " and @p" + (parameters.Count + 1) + ")";
+			parameters.Add(DateTime.Parse(dateFrom + " 00:00:00"));
+			parameters.Add(DateTime.Parse(dateTo + " 23:59:59"));
+		}
+
+		IDictionary<string, bool> sortDic = new Dictionary<string, bool>{
+            {"FeedBackTime",false}
+        };
+
+		int total;
+		var data = SQL.QueryPage(new[] { "FeedBackID" },
+			"FeedBackID,a.UserID,Content,FeedBackTime,b.UserName,b.Account",
+			"FeedBack a join Users b on a.UserID=b.UserID",
+			where, page, pageSize, parameters.ToArray(), out total, sortDic);
+
+		Output.Write(js.Serialize(new { success = true, data = data, total = total }));
+		return;
+	}
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h1>用户反馈管理</h1>
+<div id="toolbar" class="toolbar"></div>
+<div id="grid"></div>
+<script>
+	seajs.use(['jquery','lib/buttons','lib/popup','lib/grid','lib/global.css'],function ($,Buttons,popup) {
+
+		//工具栏
+		var buttons=new Buttons('#toolbar',[{
+			text: "查看",
+			ico: "modify",
+			disabled: true,
+			handle: function () {
+				var data=grid.selectedRow().data;
+				alert(data.Content);
+			}
+		}]);
+
+		//优惠券列表
+		var grid=$('#grid').grid({
+			search: {
+				url: "?action=search",
+				beforeSend: function () {
+					buttons.disable(0);
+				},
+				data: {
+					dateFrom: {
+						label: '反馈时间 从',
+						type: 'calendar'
+					},
+					dateTo: {
+						label: '到',
+						type: 'calendar'
+					},
+					keywords: {
+						label: "关键字：",
+						type: 'text'
+					}
+				}
+			},
+			pageEnabled: true,
+			rowHeight: 100,
+			onRowSelect: function () {
+				buttons.enable(0);
+			},
+			columns: [{
+				text: "编号",
+				bind: "FeedBackID",
+				width: 5
+			},{
+				text: "反馈内容",
+				bind: "Content",
+				width: 14
+			},{
+				text: "反馈用户",
+				width: 6,
+				render: function (cell,data) {
+					cell.append(data.FeedBackTime+"<br>&nbsp;姓名："+data.UserName+"<br>&nbsp;账号："+data.Account);
+				}
+			}]
+		}).search();
+
+	});
+</script>

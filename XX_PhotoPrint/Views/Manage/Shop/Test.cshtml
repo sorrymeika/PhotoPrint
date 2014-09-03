@@ -1,0 +1,624 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h1>订单管理</h1>
+<div id="toolbar" class="toolbar"></div>
+<div id="form" class="form"></div>
+<div id="con" class="form"></div>
+<script>
+	seajs.use(['jquery','lib/buttons','lib/util','lib/form','lib/jquery.datepicker','lib/global.css','lib/jquery.datepicker.css'],function ($,B,util,Form) {
+
+		new Form('#form',{
+			title: '测试',
+			controls: [{
+				type: 'text',
+				name: 'id',
+				label: '编号',
+				validation: {
+					emptyAble: false,
+					emptyText: 'asdf'
+				}
+			},{
+				type: 'editor',
+				name: 'content',
+				label: '内容'
+			},{
+				type: 'select',
+				name: 'categoryId',
+				label: '类别',
+				options: [{
+					text: 'asdf',
+					value: 1
+				}]
+			}],
+			buttons: [{
+				text: '提交',
+				handle: function () {
+					alert(1);
+				}
+			}]
+		});
+
+		var auth="44F8605C78E662B28858E35EC3D9E2AD",
+            account='asdf@@asd.com',
+            content=$('#con'),
+            cityId=2003,
+            regionId=2039,
+            deleteAddressId=1,
+            addressId=2,
+            workId=4,
+            productId=5,
+            styleId=4,
+            colorId=6,
+            sizeId=5,
+            paymentId=1,
+            carts;
+
+		new B('#toolbar',[{
+			text: "注册",
+			handle: function () {
+				$.ajax({
+					url: "/json/user/register",
+					type: 'POST',
+					data: {
+						account: account,
+						userName: 'asdf',
+						password: '123456'
+					},
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+						auth=res.auth;
+						util.setCookie('auth',auth);
+					},
+					error: function (xhr) {
+					}
+				});
+			}
+		},{
+			text: "登录",
+			handle: function () {
+				$.ajax({
+					url: "/json/user/login",
+					type: 'POST',
+					data: {
+						account: account,
+						password: '123456'
+					},
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+						auth=res.userinfo.Auth;
+						util.setCookie('auth',auth);
+					},
+					error: function (xhr) {
+					}
+				});
+			}
+		},{
+			text: "添加反馈",
+			handle: function () {
+				$.ajax({
+					url: "/json/FeedBack/AddFeedBack",
+					type: 'POST',
+					data: {
+						account: account,
+						auth: util.getCookie('auth'),
+						content: '内容反抗反馈'
+					},
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					},
+					error: function (xhr) {
+					}
+				});
+			}
+		},{
+			text: "添加相册",
+			handle: function () {
+				$.ajax({
+					url: "/json/Photo/AddAlbum",
+					type: 'POST',
+					data: {
+						account: account,
+						auth: util.getCookie('auth'),
+						AlbumName: '相册名称',
+						Description: '相册描述'
+					},
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					},
+					error: function (xhr) {
+					}
+				});
+			}
+		},{
+			text: "获取相册",
+			handle: function () {
+				$.ajax({
+					url: "/json/Photo/GetAlbums",
+					type: 'POST',
+					data: {
+						account: account,
+						auth: util.getCookie('auth')
+					},
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					},
+					error: function (xhr) {
+					}
+				});
+			}
+		},{
+			text: "上传照片",
+			handle: function () {
+				var form=$('#form').html('').form({
+					title: '上传照片',
+					url: "/json/Photo/AddPhoto",
+					controls: [{
+						type: 'text',
+						name: 'account',
+						value: account
+					},{
+						type: 'text',
+						name: 'auth',
+						value: util.getCookie('auth')
+					},{
+						type: 'text',
+						name: 'AlbumID',
+						value: 1
+					},{
+						type: 'text',
+						name: 'Description',
+						value: "描述"
+					},{
+						type: 'file',
+						name: 'Photo'
+					}],
+					buttons: [{
+						text: '提交',
+						handle: function () {
+							form.submit(function (res) {
+								content.html(util.stringify(res));
+							});
+						}
+					}]
+				});
+			}
+		},{
+			text: "获取照片",
+			handle: function () {
+				$.ajax({
+					url: "/json/Photo/GetPhotos",
+					type: 'POST',
+					data: {
+						account: account,
+						auth: util.getCookie('auth'),
+						AlbumID: 1
+					},
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					},
+					error: function (xhr) {
+					}
+				});
+			}
+		},{
+			text: "获取用户信息",
+			handle: function () {
+				$.ajax({
+					url: "/json/user/getuserinfo",
+					type: 'POST',
+					data: {
+						account: account,
+						auth: util.getCookie('auth')
+					},
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					},
+					error: function (xhr) {
+					}
+				});
+			}
+		},{
+			text: "获取城市",
+			handle: function () {
+				$.ajax({
+					url: "/json/user/getcities",
+					type: 'POST',
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		},{
+			text: "获取地区",
+			handle: function () {
+				$.ajax({
+					url: "/json/user/GetRegionsByCityID",
+					type: 'POST',
+					data: {
+						cityId: cityId
+					},
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		},{
+			text: "获得地址",
+			handle: function () {
+				$.ajax({
+					url: "/json/user/GetAddress",
+					type: 'POST',
+					data: {
+						account: account,
+						auth: util.getCookie('auth')
+					},
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		},{
+			text: "添加地址",
+			handle: function () {
+				$.ajax({
+					url: "/json/user/addaddress",
+					type: 'POST',
+					data: {
+						account: account,
+						auth: util.getCookie('auth'),
+						cityId: cityId,
+						regionId: regionId,
+						zip: '111111',
+						address: '浦东大道2000号',
+						receiver: '孙路',
+						telPhone: '',
+						mobile: '12348795201'
+					},
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		},{
+			text: "删除地址",
+			handle: function () {
+				$.ajax({
+					url: "/json/user/deleteaddress",
+					type: 'POST',
+					data: {
+						account: account,
+						auth: util.getCookie('auth'),
+						addressId: deleteAddressId
+					},
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		},{
+			text: "修改地址",
+			handle: function () {
+				$.ajax({
+					url: "/json/user/modifyaddress",
+					type: 'POST',
+					data: {
+						account: account,
+						auth: util.getCookie('auth'),
+						addressId: addressId,
+						cityId: cityId,
+						regionId: regionId,
+						zip: '333333',
+						address: '浦东大道500号',
+						receiver: '孙路',
+						telPhone: '',
+						mobile: '13348795201'
+					},
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		},{
+			text: "设置常用地址",
+			handle: function () {
+				$.ajax({
+					url: "/json/user/SetCommonUseAddress",
+					type: 'POST',
+					data: {
+						account: account,
+						auth: util.getCookie('auth'),
+						addressId: addressId
+					},
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		},{
+			text: "上传头像",
+			handle: function () {
+				var form=$('#form').html('').form({
+					title: '上传头像',
+					url: "/json/user/UploadAvatars",
+					controls: [{
+						type: 'text',
+						name: 'account',
+						value: account
+					},{
+						type: 'text',
+						name: 'auth',
+						value: util.getCookie('auth')
+					},{
+						type: 'file',
+						name: 'Avatars'
+					}],
+					buttons: [{
+						text: '提交',
+						handle: function () {
+							form.submit(function (res) {
+								content.html(util.stringify(res));
+							});
+						}
+					}]
+				});
+			}
+		},{
+			text: "设置用户信息",
+			handle: function () {
+				$.ajax({
+					url: "/json/user/ModifyUserInfo",
+					type: 'POST',
+					data: {
+						account: account,
+						auth: util.getCookie('auth'),
+						userName: "asdf",
+						gender: 0,
+						birthday: '2013-03-08',
+						mobile: '13998738123'
+					},
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		},{
+			text: "获取商品类别",
+			handle: function () {
+				$.ajax({
+					url: "/json/product/GetCategories",
+					type: 'POST',
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		},{
+			text: "搜索商品",
+			handle: function () {
+				$.ajax({
+					url: "/json/product/GetWorks",
+					data: {
+						page: 1,
+						pageSize: 10,
+						keywords: 'asdfasdf',
+						subId: 2
+					},
+					type: 'POST',
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		},{
+			text: "获取单个商品",
+			handle: function () {
+				$.ajax({
+					url: "/json/product/GetWork",
+					data: {
+						workId: workId
+					},
+					type: 'POST',
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		},{
+			text: "加入购物车",
+			handle: function () {
+
+				var form=$('#form').html('').form({
+					title: '加入购物车',
+					url: "/json/shop/AddShoppingCart",
+					controls: [{
+						type: 'text',
+						name: 'account',
+						value: account
+					},{
+						type: 'text',
+						name: 'auth',
+						value: util.getCookie('auth')
+					},{
+						type: 'text',
+						name: 'workId',
+						value: workId
+					},{
+						type: 'text',
+						name: 'productId',
+						value: productId
+					},{
+						type: 'text',
+						name: 'Qty',
+						value: 1
+					},{
+						type: 'text',
+						name: 'ColorID',
+						value: colorId
+					},{
+						type: 'text',
+						name: 'SizeID',
+						value: sizeId
+					},{
+						type: 'file',
+						name: 'Print'
+					},{
+						type: 'text',
+						name: 'Content'
+					}],
+					buttons: [{
+						text: '提交',
+						handle: function () {
+							form.submit(function (res) {
+								content.html(util.stringify(res));
+							});
+						}
+					}]
+				});
+
+
+			}
+		},{
+			text: "获取购物车",
+			handle: function () {
+				$.ajax({
+					url: "/json/shop/GetShoppingCart",
+					data: {
+						account: account,
+						auth: util.getCookie('auth')
+					},
+					type: 'POST',
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+						carts=[];
+						$.each(res.data,function (i,d) {
+							carts.push(d.CartID);
+						});
+						carts=carts.join(',');
+					}
+				});
+			}
+		},{
+			text: "删除购物车",
+			handle: function () {
+				$.ajax({
+					url: "/json/shop/DeleteShoppingCart",
+					data: {
+						account: account,
+						auth: util.getCookie('auth'),
+						cartId: 7
+					},
+					type: 'POST',
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		},{
+			text: "修改购物车数量",
+			handle: function () {
+				$.ajax({
+					url: "/json/shop/ModifyQty",
+					data: {
+						account: account,
+						auth: util.getCookie('auth'),
+						cartId: carts.split(',')[0],
+						qty: 2
+					},
+					type: 'POST',
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		},{
+			text: "获取支付方式",
+			handle: function () {
+				$.ajax({
+					url: "/json/shop/GetPayments",
+					type: 'POST',
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		},{
+			text: "生成订单",
+			handle: function () {
+				$.ajax({
+					url: "/json/shop/CreateOrder",
+					type: 'POST',
+					data: {
+						account: account,
+						auth: util.getCookie('auth'),
+						AddressID: addressId,
+						PaymentID: paymentId,
+						Carts: carts
+					},
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		},{
+			text: "获取订单",
+			handle: function () {
+				$.ajax({
+					url: "/json/shop/GetOrders",
+					data: {
+						account: account,
+						auth: util.getCookie('auth')
+					},
+					type: 'POST',
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		},{
+			text: "获取单个订单",
+			handle: function () {
+				$.ajax({
+					url: "/json/shop/GetOrder",
+					data: {
+						account: account,
+						auth: util.getCookie('auth'),
+						orderid: 4
+					},
+					type: 'POST',
+					dataType: 'json',
+					success: function (res) {
+						content.html(util.stringify(res));
+					}
+				});
+			}
+		}]);
+
+	});
+</script>

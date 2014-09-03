@@ -1,0 +1,12 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	Layout = null;
+
+	var js = new JavaScriptSerializer();
+
+	var categories = SQL.Query("select CategoryID,CategoryName from CouponCate order by Sort desc");
+
+	Output.Write(js.Serialize(new { success = true, data = categories }));
+	return;
+}

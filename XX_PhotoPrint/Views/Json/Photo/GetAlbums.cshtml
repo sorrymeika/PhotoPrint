@@ -1,0 +1,46 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    string account = req.String("Account", false, "未输入账号");
+    string auth = req.String("Auth", false, "未输入授权");
+
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+    string sAuth = UserService.GetAuth(account);
+    if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+        return;
+    }
+
+    int uid = UserService.GetUserID(account);
+
+    var data = SQL.Query("select AlbumID,AlbumName,Cover,Description,CreationDate,EditDate from PhotoAlbum where UserID=@p0", uid);
+    if (data != null)
+    {
+        IDictionary<string, object> item;
+        string cover;
+        for (int i = 0; i < data.Count; i++)
+        {
+            item = data[i];
+            cover = (string)item["Cover"];
+            if (!string.IsNullOrEmpty(cover))
+            {
+                item["Cover"] = "http://" + Request.Url.Authority + "/Content/" + cover;
+            }
+        }
+    }
+
+    Output.Write(js.Serialize(new { success = true, data = data }));
+    return;
+}

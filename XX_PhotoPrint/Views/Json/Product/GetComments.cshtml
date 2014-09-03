@@ -1,0 +1,44 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	Layout = null;
+
+	var js = new JavaScriptSerializer();
+
+	var req = new Req();
+
+	int productId = req.Int("ProductID", false, "缺少商品编号");
+	int page = req.Int("Page", defaultValue: 1);
+	int pageSize = req.Int("PageSize", defaultValue: 10);
+
+	if (req.HasError)
+	{
+		Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+		return;
+	}
+
+	int total;
+	var data = SQL.QueryPage(new string[] { "CommentID" },
+		"a.CommentID,a.ProductID,a.UserID,a.Content,a.CommentTime,b.UserName,b.Account,b.Avatars",
+		"ProductComments a join Users b on a.UserID=b.UserID",
+		"a.ProductID=@p0",
+		page, pageSize,
+		new object[] { productId },
+		out total,
+		new Dictionary<string, bool>{
+			{ "a.CommentTime", false }
+		}
+	);
+
+	if (data != null)
+	{
+		data.All(user =>
+		{
+			user["Avatars"] = "http://" + Request.Url.Authority + "/Content/" + user["Avatars"];
+			return true;
+		});
+	}
+
+	Json.Write(new { success = true, total = total, data = data }, Output);
+	return;
+}

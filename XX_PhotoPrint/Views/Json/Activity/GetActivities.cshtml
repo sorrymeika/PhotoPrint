@@ -1,0 +1,51 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	Layout = null;
+
+	var js = new JavaScriptSerializer();
+	var req = new Req();
+	int categoryId = req.Int("CategoryID");
+	int page = req.Int("Page", defaultValue: 1);
+	int pageSize = req.Int("PageSize", defaultValue: 10);
+
+	string where = "1=1";
+	System.Collections.ArrayList parameters = new System.Collections.ArrayList();
+	if (categoryId != 0)
+	{
+		where += " and a.CategoryID=@p0";
+		parameters.Add(categoryId);
+	}
+
+	Dictionary<string, bool> sorts = new Dictionary<string, bool>{
+        {"a.Sort",false},
+        {"CreationDate",false},
+    };
+
+	int total;
+	var data = SQL.QueryPage(new[] { "ActivityID" },
+		"ActivityID,a.CategoryID,Title,Pic,CategoryName",
+		"Activity a join ActivityCate b on a.CategoryID=b.CategoryID",
+		where,
+		page,
+		pageSize,
+		parameters.ToArray(),
+		out total,
+		sorts);
+
+	if (data != null)
+	{
+		IDictionary<string, object> item;
+		for (var i = 0; i < data.Count; i++)
+		{
+			item = data[i];
+			var title = Json.Decode(item["Title"].ToString());
+			item["Title"] = title.t;
+			item["SubTitle"] = title.s;
+			item["Pic"] = "http://" + Request.Url.Authority + "/Content/" + item["Pic"];
+		}
+	}
+
+	Output.Write(js.Serialize(new { success = true, total = total, data = data }));
+	return;
+}

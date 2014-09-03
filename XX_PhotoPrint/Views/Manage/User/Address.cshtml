@@ -1,0 +1,20 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    if (Request["action"] == "get")
+    {
+        Layout = null;
+
+        var js = new JavaScriptSerializer();
+
+        var req = new Req();
+        int uid = req.Int("uid", false, "缺少uid");
+
+        var data = SQL.Query("select AddressID,UserID,Receiver,a.CityID,CityName,a.RegionID,RegionName,c.ProvID,c.ProvName,Zip,Address,TelPhone,Mobile,IsCommonUse from UserAddress a inner join City b on a.CityID=b.CityID join Province c on b.ProvID=c.ProvID left join Region d on a.RegionID=d.RegionID where UserID=@p0", uid);
+
+        Output.Write(js.Serialize(new { success = true, data = data }));
+        return;
+    }
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    
+}

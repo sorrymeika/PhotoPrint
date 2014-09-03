@@ -1,0 +1,44 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    string account = req.String("Account", false, "未输入账号");
+    string auth = req.String("Auth", false, "未输入授权");
+    int cartId = req.Int("CartID", false, "缺少购物车编号 ");
+
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+    string sAuth = UserService.GetAuth(account);
+    if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+        return;
+    }
+
+    int uid = UserService.GetUserID(account);
+    var data = SQL.QueryOne("select UserWorkID from Cart where CartID=@p0 and UserID=@p1", cartId, uid);
+    if (data == null)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "购物车中无该项" }));
+        return;
+    }
+
+    using (DbService db = new DbService())
+    {
+        db.Execute("delete from Cart where CartID=@p0", cartId);
+        db.Execute("delete from UserWork where UserWorkID=@p0", data["UserWorkID"]);
+        db.Execute("delete from UserCustomization where UserWorkID=@p0", data["UserWorkID"]);
+    }
+
+    Output.Write(js.Serialize(new { success = true }));
+    return;
+}

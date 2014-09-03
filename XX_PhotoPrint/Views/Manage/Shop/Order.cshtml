@@ -1,0 +1,196 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	var js = new JavaScriptSerializer();
+	var req = new Req();
+	int orderid = req.Int("OrderID", defaultValue: 0);
+
+	if (Request["action"] == "status")
+	{
+		Layout = null;
+
+		SQL.Execute("update OrderInfo set Status=@p0 where OrderID=@p1", req.Int("Status"), orderid);
+
+		Output.Write(js.Serialize(new { success = true }));
+		return;
+	}
+
+	Layout = "~/Views/Shared/_Layout.cshtml";
+
+	if (req.HasError)
+	{
+		Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+		return;
+	}
+
+	var data = SQL.QueryOne("select OrderID,OrderCode,Amount,Freight,a.AddTime,a.Status,a.UserID,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName,a.CouponID,f.Title as CouponTitle,f.Price as CouponPrice from OrderInfo a join Users b on a.UserID=b.UserID join City c on a.CityID=c.CityID join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID left join Coupon f on a.CouponID=f.CouponID where OrderID=@p0", orderid);
+
+	if (data == null)
+	{
+		Output.Write("订单不存在");
+		return;
+	}
+
+	var detailList = SQL.Query("select c.OrderID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price,d.[Print],e.StyleName,f.ColorName,f.ColorCode,g.SizeName from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID join UserCustomization d on a.UserWorkID=d.UserWorkID left join Style e on d.StyleID=e.StyleID left join Color f on d.ColorID=f.ColorID left join ProductSize g on d.SizeID=g.SizeID where OrderID=@p0", orderid);
+
+	List<Dictionary<string, object>> details;
+	string url = "http://" + Request.Url.Authority + "/Content/";
+	details = new List<Dictionary<string, object>>();
+	detailList.All(a =>
+	{
+		a["Picture"] = url + a["Picture"];
+		a["Print"] = url + a["Print"];
+		return true;
+	});
+	data["children"] = detailList;
+
+	var orderStatus = new Dictionary<int, string>
+    {
+        {-3,"已退款"},
+        {-2,"退款中"},
+        {-1,"已取消"},
+        {0,"未付款"},
+        {1,"已付款"},
+        {2,"已确认制作中"},
+        {3,"已发货"},
+        {4,"交易完成"}
+    };
+	int status = (int)data["Status"];
+}
+<h1>订单管理</h1>
+<div id="toolbar" class="toolbar"></div>
+<div class="form">
+	<table>
+		<tr>
+			<th>订单编码：</th>
+			<td>@data["OrderCode"]</td>
+		</tr>
+		<tr>
+			<th>订单金额：</th>
+			<td>@data["Amount"]</td>
+		</tr>
+		<tr>
+			<th>下单时间：</th>
+			<td>@data["AddTime"]</td>
+		</tr>
+		<tr>
+			<th>订单状态：</th>
+			<td>@(orderStatus[(int)data["Status"]])</td>
+		</tr>
+		<tr>
+			<th>收货人：</th>
+			<td>@data["Receiver"]</td>
+		</tr>
+		<tr>
+			<th>收货省市区：</th>
+			<td>@data["ProvName"] @data["CityName"] @data["RegionName"]</td>
+		</tr>
+		<tr>
+			<th>收货地址：</th>
+			<td>@data["Address"]</td>
+		</tr>
+		<tr>
+			<th>邮编：</th>
+			<td>@data["Zip"]</td>
+		</tr>
+		<tr>
+			<th>联系方式：</th>
+			<td>@data["Mobile"] @data["Phone"]</td>
+		</tr>
+		<tr>
+			<th>优惠券：</th>
+			<td>@data["CouponTitle"] @data["CouponPrice"]</td>
+		</tr>
+	</table>
+</div>
+<div id="grid"></div>
+<div class="action"><a class="button" href="orders">返回</a>
+</div>
+<script>
+    var products=@(new MvcHtmlString(js.Serialize(data["children"])));
+</script>
+<script>
+    seajs.use(['jquery','lib/buttons','lib/grid','lib/jquery.datepicker','lib/global.css','lib/jquery.datepicker.css'],function ($,B) {
+        //工具栏
+        var buttons=new B('#toolbar',[{
+            text: "取消订单",
+            ico: "delete",
+            disabled: @(status == -1 || status == 4 ? "true" : "false"),
+            handle: function () {
+                if (!confirm('确定取消订单？'))return;
+                $.ajax({
+                    url: 'order?action=status',
+                    data: {
+                        status: -1,
+                        orderid: @orderid
+                    },
+                    dataType: 'json',
+                    type: 'POST',
+                    success: function(res){
+                        if (res.success) {
+                            alert('取消成功');
+                            location.reload();
+                        }
+                    },
+                    error: function(){
+                    }
+                });
+            }
+        },{
+            text: "设订单状态为已完成",
+            ico: "modify",
+            disabled: @(status == -1 || status == 4 ? "true" : "false"),
+            handle: function () {
+                if (!confirm('确定将订单状态设为已完成？'))return;
+                $.ajax({
+                    url: 'order?action=status',
+                    data: {
+                        status: 4,
+                        orderid: @orderid
+                    },
+                    dataType: 'json',
+                    type: 'POST',
+                    success: function(res){
+                        if (res.success) {
+                            alert('取消成功');
+                            location.reload();
+                        }
+                    },
+                    error: function(){
+                    }
+                });
+            }
+        }]);
+
+        $('#grid').grid({
+            data: products,
+            rowHeight: 100,
+            columns: [{
+                text: "商品名",
+                bind: 'ProductName',
+                width: 10,
+                render: function(cell,data){
+                    cell.append('<p class="gridCellItem" style="margin: 10px 0 0 15px"><a href="/manage/product/uploadpic?id='+data.ProductID+'" target="_blank"><b>'+data.ProductName+'</b><br>尺寸：'+data.SizeName
+                    +'<br>颜色：'+data.ColorName+'</a></p>');
+                
+                }
+            },{
+                text: "商品价格",
+                bind: 'Price',
+                width: 10
+            },{
+                text: "购买数量",
+                bind: 'Qty',
+                width: 10
+            },{
+                text: "打印图案",
+                bind: 'Picture',
+                width: 10,
+                align: 'center',
+                render: function(cell,data){
+                    cell.append('<a href="'+data.Print+'" target="_blank"><img src="'+data.Print+'" height="100%" /></a>');
+                }
+            }]
+        });
+    });
+</script>

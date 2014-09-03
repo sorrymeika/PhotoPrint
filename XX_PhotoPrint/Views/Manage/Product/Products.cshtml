@@ -1,0 +1,255 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    var js = new System.Web.Script.Serialization.JavaScriptSerializer();
+    Req req = new Req();
+
+    if (Request["action"] == "delete")
+    {
+        Layout = null;
+        int pid = req.Int("pid");
+
+        using (DbService db = new DbService())
+        {
+            db.Execute("update Work set Deleted=1 where ProductID=@p0", pid);
+            db.Execute("update Product set Deleted=1 where ProductID=@p0", pid);
+        }
+
+        Output.Write(js.Serialize(new { success = true }));
+        return;
+    }
+    else if (Request["action"] == "search")
+    {
+        Layout = null;
+
+        int categoryId = req.Int("CategoryID");
+        int subId = req.Int("SubID");
+        int page = req.Int("Page", defaultValue: 1);
+        int pageSize = req.Int("PageSize", defaultValue: 10);
+        string keywords = req.String("Keywords");
+        string sort = req.String("Sort");
+        bool isAsc = req.Bool("Asc");
+
+        if (req.HasError)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+            return;
+        }
+
+        string where = "a.Deleted=0 and b.Deleted=0";
+        List<object> parameters = new List<object>();
+        if (subId != 0)
+        {
+            where += " and d.SubID=@p0";
+            parameters.Add(subId);
+        }
+        else if (categoryId != 0)
+        {
+            where += " and d.CategoryID=@p" + parameters.Count;
+            parameters.Add(categoryId);
+        }
+        if (!string.IsNullOrEmpty(keywords))
+        {
+            where += " and (ProductCode=@p" + parameters.Count + " or ProductName like '%'+@p" + parameters.Count + "+'%' or Tag like '%'+@p" + parameters.Count + "+'%' or WorkName like '%'+@p" + parameters.Count + "+'%')";
+            parameters.Add(keywords);
+        }
+
+        IDictionary<string, bool> sortDic = new Dictionary<string, bool>{
+            {"b.Sort",false}
+        };
+        if ("sold".Equals(sort, StringComparison.OrdinalIgnoreCase))
+        {
+            sortDic.Add("SoldNum", isAsc);
+        }
+        else if ("date".Equals(sort, StringComparison.OrdinalIgnoreCase))
+        {
+            sortDic.Add("CreationTime", isAsc);
+        }
+        else
+        {
+            sortDic.Add("CreationTime", false);
+        }
+
+        int total;
+        var data = SQL.QueryPage(new[] { "WorkID" },
+            "WorkID,WorkName,a.ProductID,b.ProductCode,b.ProductName,a.Picture,b.Price,b.SubID,d.SubName,d.CategoryID,c.CategoryName",
+            "Work a join Product b on a.ProductID=b.ProductID join SubCate d on b.SubID=d.SubID join Category c on d.CategoryID=c.CategoryID",
+            where, page, pageSize, parameters.ToArray(), out total, sortDic);
+
+        string url = "http://" + Request.Url.Authority + "/Content/";
+        if (data != null)
+        {
+            data.All(a =>
+            {
+                a["Picture"] = url + a["Picture"];
+                return true;
+            });
+        }
+
+        Output.Write(js.Serialize(new { success = true, data = data, total = total }));
+        return;
+
+    }
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var categories = SQL.Query("select CategoryID,CategoryName from Category order by CategoryName");
+    if (categories == null)
+    {
+        categories = new List<Dictionary<string, object>>();
+    }
+    categories.Insert(0, new Dictionary<string, object>{
+        { "CategoryID","" },
+        { "CategoryName","选择类别" }
+    });
+}
+<h1>商品管理</h1>
+<div id="toolbar" class="toolbar"></div>
+<div id="grid"></div>
+<script>
+var categories=@(new MvcHtmlString(js.Serialize(categories.Select(a => new
+{
+    value = a["CategoryID"],
+    text = a["CategoryName"]
+}))));
+</script>
+<script>
+    seajs.use(['jquery','lib/buttons','lib/grid','lib/global.css'],function ($,B) {
+
+        //工具栏
+        var buttons=new B('#toolbar',[{
+            text: "添加",
+            ico: "add",
+            disabled: false,
+            handle: function () {
+                location.href="addproduct";
+            }
+        },{
+            text: "修改",
+            ico: "modify",
+            disabled: true,
+            handle: function () {
+                var data=grid.selectedRow().data;
+                location.href="modifyproduct?id="+data.WorkID;
+            }
+        },{
+            text: "上传商品图",
+            ico: "modify",
+            disabled: true,
+            handle: function () {
+                var data=grid.selectedRow().data;
+                location.href="uploadpic?id="+data.ProductID;
+            }
+        },{
+            text: "删除",
+            ico: "delete",
+            disabled: true,
+            handle: function () {
+                if(!window.confirm('确认删除？')) return;
+                var data=grid.selectedRow().data;
+
+                $.ajax({
+                    url: 'products?action=delete',
+                    type: 'post',
+                    data: {
+                        pid: data.ProductID
+                    },
+                    dataType: 'json',
+                    success: function (res) {
+                        if(res.success) {
+                            alert('删除成功！');
+                            grid.search();
+                        } else
+                            alert(res.msg);
+                    }
+                });
+
+            }
+        }]);
+
+        //商品列表
+        var grid=$('#grid').grid({
+            search: {
+                url: "products?action=search",
+                beforeSend: function () {
+                    buttons.disable(1,2,3);
+                },
+                data: {
+                    categoryId: {
+                        label: "类别：",
+                        type: 'select',
+                        options: categories
+                    },
+                    subId: {
+                        type: 'select',
+                        options: [{
+                            text: '选择子类',
+                            value: ''
+                        }]
+                    },
+                    keywords: {
+                        label: "关键字：",
+                        type: 'text'
+                    }
+                }
+            },
+            pageEnabled: true,
+            onRowSelect: function (row,data) {
+                buttons.enable(1,2,3);
+            },
+            columns: [{
+                text: "编号",
+                bind: "ProductID",
+                width: 5
+            },{
+                text: "商品名称",
+                bind: "ProductName",
+                render: function (cell,data) {
+                    cell.html(data.WorkName+' '+data.ProductName);
+                },
+                width: 15
+            },{
+                text: "商品编码",
+                bind: "ProductCode",
+                width: 10
+            },{
+                text: "商品价格",
+                bind: "Price",
+                width: 6
+            },{
+                text: "商品类别",
+                bind: "SubName",
+                align: 'center',
+                render: function (cell,data) {
+                    cell.html(data.CategoryName+'/'+data.SubName);
+                },
+                width: 10
+            }]
+        })
+        .search();
+
+        //商品分类
+        var $subId=grid.searchInput('subId');
+        grid.searchInput('categoryId').on('change',function () {
+            var id=this.value;
+            $subId[0].length=1;
+
+            if(id!='') {
+                $.ajax({
+                    url: 'addproduct?action=getsubcate',
+                    type: 'post',
+                    data: {
+                        categoryId: id
+                    },
+                    dataType: 'json',
+                    success: function (res) {
+                        if(res.success) {
+                            $.each(res.data,function (i,item) {
+                                $subId.append('<option value="'+item.SubID+'">'+item.SubName+'</option>');
+                            });
+                        } else
+                            alert(res.msg);
+                    }
+                });
+            }
+        });
+
+    });
+</script>

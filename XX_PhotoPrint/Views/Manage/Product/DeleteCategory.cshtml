@@ -1,0 +1,39 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    Layout = null;
+
+    var js = new System.Web.Script.Serialization.JavaScriptSerializer();
+    Req req = new Req();
+    int parentId = req.Int("pid");
+    int categoryId = req.Int("id");
+
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    if (parentId == 0)
+    {
+        bool exists = SQL.QueryScalar<bool>("if exists (select 1 from SubCate where CategoryID=@p0) select 1 else select 0", categoryId);
+        if (exists)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = "该类下有子类，无法删除" }));
+            return;
+        }
+        SQL.Execute("delete from Category where CategoryID=@p0", categoryId);
+    }
+    else
+    {
+        bool exists = SQL.QueryScalar<bool>("if exists (select 1 from Product where SubID=@p0) select 1 else select 0", categoryId);
+        if (exists)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = "该类下有商品，无法删除" }));
+            return;
+        }
+        SQL.Execute("delete from SubCate where SubID=@p0", categoryId);
+    }
+
+    Output.Write(js.Serialize(new { success = true }));
+    return;
+}

@@ -1,0 +1,18 @@
+﻿@using XX_PhotoPrint.Service;
+@{
+	Layout = null;
+
+	Req req = new Req();
+	string content = req.String("Content", false, "缺少反馈内容");
+
+	int uid;
+	if (!AuthHelper.IsAuth(req, out uid))
+	{
+		return;
+	}
+
+	SQL.Execute("insert into FeedBack (UserID,Content,FeedBackTime) values (@p0,@p1,@p2)", uid, content, DateTime.Now);
+
+	Json.Write(new { success = true }, Output);
+	return;
+}

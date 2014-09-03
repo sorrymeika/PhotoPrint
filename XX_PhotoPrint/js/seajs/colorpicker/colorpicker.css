@@ -1,0 +1,7 @@
+.colorpicker { position: relative; }
+.colorpicker * { position: absolute; cursor: crosshair; }
+.colorpicker, .colorpicker .wheel { width: 195px; height: 195px; }
+.colorpicker .color, .colorpicker .overlay { top: 47px; left: 47px; width: 101px; height: 101px; }
+.colorpicker .wheel { background: url(wheel.png) no-repeat; width: 195px; height: 195px; }
+.colorpicker .overlay { background: url(mask.png) no-repeat; }
+.colorpicker .marker { width: 17px; height: 17px; margin: -8px 0 0 -8px; overflow: hidden; background: url(marker.png) no-repeat; }

@@ -1,0 +1,103 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	Layout = null;
+
+	var js = new JavaScriptSerializer();
+
+	var req = new Req();
+	string account = req.String("Account", false, "未输入账号");
+	string auth = req.String("Auth", false, "未输入授权");
+	int workId = req.Int("WorkID", false, "缺少官方作品编号");
+	int productId = req.Int("ProductID", false, "缺少商品编号");
+	int qty = req.Int("Qty", false, "缺少商品数量");
+
+	if (req.HasError)
+	{
+		Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+		return;
+	}
+
+	if (qty <= 0)
+	{
+		Output.Write(js.Serialize(new { success = false, msg = "购买数量不能小于等于0" }));
+		return;
+	}
+
+	auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+	string sAuth = UserService.GetAuth(account);
+	if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+	{
+		Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+		return;
+	}
+
+	var styles = SQL.Query("select StyleID from Style where ProductID=@p0", productId);
+	int styleId;
+	IDictionary<string, object> item;
+
+	if (styles != null)
+	{
+		string after;
+		for (int i = 0; i < styles.Count; i++)
+		{
+			item = styles[i];
+			styleId = (int)item["StyleID"];
+			after = styles.Count == 1 ? "" : styleId.ToString();
+			item["ColorID"] = req.Int("ColorID" + after, false, "缺少颜色编号");
+			item["Print"] = req.File("Print" + after, false, "缺少款式打印图");
+			item["SizeID"] = req.Int("SizeID" + after, false, "缺少款式尺寸");
+			item["Content"] = req.String("Content" + after);
+		}
+	}
+
+	if (req.HasError)
+	{
+		Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+		return;
+	}
+
+	int uid = UserService.GetUserID(account);
+	int status = 1;
+	DateTime now = DateTime.Now;
+	int userWorkId;
+	string picture = null;
+	HttpPostedFile print;
+
+	if (styles != null && styles.Count != 0)
+	{
+		item = styles.First();
+		styleId = (int)item["StyleID"];
+		print = (HttpPostedFile)item["Print"];
+		picture = "styles/" + now.ToString("yyyy-MM") + "/" + uid + "_" + styleId + "_" + now.Ticks + print.FileName.Substring(print.FileName.LastIndexOf('.'));
+	}
+
+	SQL.Execute("insert into UserWork (WorkID,UserID,ProductID,[Status],CreationTime,Picture) values (@p0,@p1,@p2,@p3,@p4,@p5)", out userWorkId, workId, uid, productId, status, now, picture);
+
+	int cartId;
+	SQL.Execute("insert into Cart (UserID,UserWorkID,Qty,AddTime) values (@p0,@p1,@p2,@p3)", out cartId, uid, userWorkId, qty, now);
+
+	for (int i = 0; i < styles.Count; i++)
+	{
+		item = styles[i];
+		styleId = (int)item["StyleID"];
+		print = (HttpPostedFile)item["Print"];
+		string src = "styles/" + now.ToString("yyyy-MM") + "/" + uid + "_" + styleId + "_" + now.Ticks + print.FileName.Substring(print.FileName.LastIndexOf('.'));
+		if (i == 0)
+		{
+			picture = src;
+		}
+		string savePath = Server.MapPath("~/Content/" + src);
+		string dir = System.IO.Path.GetDirectoryName(savePath);
+		if (!System.IO.Directory.Exists(dir))
+		{
+			System.IO.Directory.CreateDirectory(dir);
+		}
+		print.SaveAs(savePath);
+
+		SQL.Execute("insert into UserCustomization (UserWorkID,ProductID,ColorID,StyleID,[Print],Content,SizeID) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6)", userWorkId, productId, item["ColorID"], styleId, src, item["Content"], item["SizeID"]);
+	}
+
+	Output.Write(js.Serialize(new { success = true, cartId = cartId }));
+	return;
+}

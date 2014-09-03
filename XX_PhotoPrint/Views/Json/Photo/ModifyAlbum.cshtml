@@ -1,0 +1,40 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    string account = req.String("Account", false, "未输入账号");
+    string auth = req.String("Auth", false, "未输入授权");
+    int albumId = req.Int("AlbumID", false, "缺少相册编号");
+    var albumName = req.String("AlbumName", false, "缺少相册名称");
+    var description = req.String("Description");
+
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+    string sAuth = UserService.GetAuth(account);
+    if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+        return;
+    }
+
+    int uid = UserService.GetUserID(account);
+    var data = SQL.QueryOne("select AlbumName,Description,CreationDate from PhotoAlbum where AlbumID=@p0 and UserID=@p1", albumId, uid);
+    if (data == null)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "相册不存在" }));
+        return;
+    }
+
+    SQL.Execute("update PhotoAlbum set AlbumName=@p0,Description=@p1,EditDate=@p2 where AlbumID=@p3", albumName, description, DateTime.Now, albumId);
+
+    Output.Write(js.Serialize(new { success = true }));
+}

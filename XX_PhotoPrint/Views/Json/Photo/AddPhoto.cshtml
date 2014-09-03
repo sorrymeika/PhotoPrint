@@ -1,0 +1,61 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	Layout = null;
+
+	var js = new JavaScriptSerializer();
+
+	var req = new Req();
+	string account = req.String("Account", false, "未输入账号");
+	string auth = req.String("Auth", false, "未输入授权");
+	int albumId = req.Int("AlbumID", false, "缺少相册编号");
+	var description = req.String("Description");
+	var photo = req.File("Photo", false, "未上传图片");
+
+	if (req.HasError)
+	{
+		Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+		return;
+	}
+
+	auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+	string sAuth = UserService.GetAuth(account);
+	if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+	{
+		Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
+		return;
+	}
+
+	int uid = UserService.GetUserID(account);
+	var album = SQL.QueryOne("select Cover from PhotoAlbum where UserID=@p0 and AlbumID=@p1", uid, albumId);
+	if (album == null)
+	{
+		Output.Write(js.Serialize(new { success = false, msg = "相册不存在" }));
+		return;
+	}
+
+	DateTime date = DateTime.Now;
+	string src = "Photo/" + date.ToString("yyyy-MM") + "/" + albumId + "_" + date.Ticks + photo.FileName.Substring(photo.FileName.LastIndexOf('.'));
+	string savePath = Server.MapPath("~/Content/" + src);
+	string dir = System.IO.Path.GetDirectoryName(savePath);
+	if (!System.IO.Directory.Exists(dir))
+	{
+		System.IO.Directory.CreateDirectory(dir);
+	}
+
+	int photoId;
+	SQL.Execute("insert into Photo (AlbumID,Src,Description,CreationDate) values (@p0,@p1,@p2,@p3)", out photoId, albumId, src, description, DateTime.Now);
+
+	if (photoId != 0)
+	{
+		string cover = (string)album["Cover"];
+		if (string.IsNullOrEmpty(cover))
+		{
+			SQL.Execute("update PhotoAlbum set Cover=@p0 where AlbumID=@p1", src, albumId);
+		}
+		photo.SaveAs(savePath);
+	}
+
+	Output.Write(js.Serialize(new { success = true, photoId = photoId, src = "http://" + Request.Url.Authority + "/Content/" + src }));
+	return;
+}

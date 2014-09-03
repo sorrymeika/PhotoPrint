@@ -1,0 +1,540 @@
+﻿@using XX_PhotoPrint.Service
+@{
+
+    var js = new System.Web.Script.Serialization.JavaScriptSerializer();
+    Req req = new Req();
+
+    int workId = req.Int("id");
+    int subId;
+    int productId;
+    string baseInfo;
+
+    if (Request["action"] == "modify")
+    {
+        Layout = null;
+        string callback = req.String("callback");
+        productId = req.Int("productId", false, "缺少商品编号");
+        string productName = req.String("productName", false, "缺少商品名");
+        decimal price = req.Decimal("price", false, "缺少商品价格");
+        baseInfo = req.String("baseInfo");
+        string content = req.String("content", false, "缺少商品内容");
+        string tag = req.String("tag");
+        int sort = req.Int("sort");
+        subId = req.Int("subId", false, "缺少商品类别");
+        string workName = req.String("workName", false, "缺少图案名");
+        string workDesc = req.String("workDesc");
+        var picture = req.File("print");
+        string colors = req.String("colors");
+        string sizes = req.String("sizes");
+
+        var sizeList = js.Deserialize<IList<Dictionary<string, object>>>(sizes);
+        var colorList = js.Deserialize<IList<Dictionary<string, object>>>(colors);
+
+        if (req.HasError)
+        {
+            Output.Write(HtmlService.SubmitResult(callback, new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+            return;
+        }
+
+        content = HttpUtility.UrlDecode(content);
+        DateTime now = DateTime.Now;
+        string src = SQL.QueryScalar<string>("select Picture from Work where WorkID=@p0", workId);
+
+        if (picture != null && picture.ContentLength != 0)
+        {
+            System.IO.File.Delete(Server.MapPath("~/Content/" + src));
+
+            src = "product/" + now.ToString("yyyy") + "/" + (now.Ticks - DateTime.MinValue.Ticks) + picture.FileName.Substring(picture.FileName.LastIndexOf('.'));
+            string savePath = Server.MapPath("~/Content/" + src);
+            string dir = System.IO.Path.GetDirectoryName(savePath);
+            if (!System.IO.Directory.Exists(dir))
+            {
+                System.IO.Directory.CreateDirectory(dir);
+            }
+            picture.SaveAs(savePath);
+        }
+
+        using (DbService db = new DbService())
+        {
+            db.BeginTrans();
+
+            db.Execute("update Product set ProductName=@p0,Price=@p1,BaseInfo=@p2,Content=@p3,Tag=@p4,Sort=@p5,SubID=@p6,EditDate=@p7 where ProductID=@p8", productName, price, baseInfo, content, tag, sort, subId, now, productId);
+
+            db.Execute("update Work set WorkName=@p0,WorkDesc=@p1,EditTime=@p2 where WorkID=@p3", workName, workDesc, now, workId);
+
+            int styleId = db.QueryScalar<int>("select StyleID from Style where ProductID=@p0", productId);
+
+            for (var i = 0; i < sizeList.Count; i++)
+            {
+                var size = sizeList[i];
+                int type = (int)size["type"];
+                if (type == 1)
+                {
+                    db.Execute("insert into ProductSize (SizeName,StyleID,ProductID) values (@p0,@p1,@p2)", size["sizeName"], styleId, productId);
+                }
+                else if (type == 0)
+                {
+                    db.Execute("delete from ProductSize where SizeID=@p0", size["sizeId"]);
+                }
+                else
+                {
+                    db.Execute("update ProductSize set SizeName=@p0 where SizeID=@p1", size["sizeName"], size["sizeId"]);
+                }
+            }
+
+            for (var i = 0; i < colorList.Count; i++)
+            {
+                var color = colorList[i];
+                int type = (int)color["type"];
+                if (type == 1)
+                {
+                    db.Execute("insert into Color (ColorName,ColorCode,ProductID) values (@p0,@p1,@p2)", color["colorName"], color["colorCode"], productId);
+                }
+                else if (type == 0)
+                {
+                    db.Execute("delete from Color where ColorID=@p0", color["colorId"]);
+                }
+                else
+                {
+                    db.Execute("update Color set ColorName=@p0,ColorCode=@p1 where ColorID=@p2", color["colorName"], color["colorCode"], color["colorId"]);
+                }
+            }
+
+            db.Commit();
+        }
+
+        Output.Write(HtmlService.SubmitResult(callback, new { success = true, productId = productId }));
+        return;
+    }
+    else if (Request["action"] == "getsubcate")
+    {
+        Layout = null;
+        Output.Write(js.Serialize(new
+        {
+            success = true,
+            data = SQL.Query("select SubID,SubName,CategoryID from SubCate where CategoryID=@p0", int.Parse(Request["categoryId"]))
+        }));
+        return;
+    }
+
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var data = SQL.QueryOne("select w.WorkID,w.WorkName,w.WorkDesc,w.ProductID,a.ProductName,a.Price,a.Tag,a.Sort,w.SoldNum,a.BaseInfo,a.Content,a.SubID,b.SubName,c.CategoryID,c.CategoryName from Work w join Product a on w.ProductID=a.ProductID join SubCate b on a.SubID=b.SubID join Category c on b.CategoryID=c.CategoryID where w.WorkID=@p0 and w.Deleted=0 and a.Deleted=0", workId);
+
+    if (data == null)
+    {
+        Output.Write("商品不存在");
+        return;
+    }
+
+    subId = (int)data["SubID"];
+    int categoryId = (int)data["CategoryID"];
+    var categories = SQL.Query("select CategoryID,CategoryName from Category order by CategoryName");
+    var subCates = SQL.Query("select SubID,SubName from SubCate where CategoryID=@p0", categoryId);
+
+    productId = (int)data["ProductID"];
+    baseInfo = (string)data["BaseInfo"];
+    IList<Dictionary<string, object>> data_Colors, data_Styles, data_Sizes, data_BaseInfo;
+    if (!string.IsNullOrEmpty(baseInfo))
+    {
+        data_BaseInfo = js.Deserialize<IList<Dictionary<string, object>>>(baseInfo);
+    }
+    else
+    {
+        data_BaseInfo = null;
+    }
+
+    using (DbService db = new DbService())
+    {
+        data_Colors = db.Query("select ColorID,ColorName,ColorCode from Color where ProductID=@p0", productId);
+        data_Styles = db.Query("select a.StyleID,StyleName,Rect,ColorID,SizeID,[Print],Content from Style a left join Customization b on a.StyleID=b.StyleID where WorkID=@p0 order by a.StyleID", workId);
+        data_Sizes = db.Query("select SizeID,SizeName,StyleID from ProductSize where ProductID=@p0", productId);
+    }
+}
+<style>
+    .p-color { position: relative; width: 720px; }
+    .p-color .p-colors { }
+    .p-color .p-colors p { float: left; background: #ddd; padding: 0 2px 2px 0; margin: 0 0 2px 2px; position: relative; white-space: nowrap; }
+    .p-color .p-colors p i { display: inline-block; vertical-align: middle; margin: 0 2px 2px 2px; width: 14px; height: 14px; }
+    .p-color .p-colors p em { cursor: pointer; color: #666; }
+    .p-color-add { float: left; cursor: pointer; width: 20px; height: 20px; margin: 0 0 0 4px; }
+    .p-size { float: left; margin-left: 2px; }
+    .cp-main { position: absolute; background: #fff; border: 3px solid #ddd; padding: 20px; display: none; z-index: 100; }
+    .cp-form li { margin: 4px 0 0 0; }
+    .cp-action { text-align: right; }
+    .bs-text { float: left; }
+    .bs { zoom: 1; clear: left; float: left; }
+</style>
+<h1>商品修改</h1>
+<div id="toolbar" class="toolbar"></div>
+<form id="form1" action="modifyproduct?action=modify" method="post" enctype="multipart/form-data" class="form">
+<input type="hidden" value="@productId" name="productId" />
+<table>
+    <tr>
+        <th>商品类别<i>*</i></th>
+        <td>
+            <select id="categoryId" name="categoryId">
+                <option value="">选择类别</option>
+                @if (categories != null)
+                {
+                    foreach (var item in categories)
+                    { 
+                    <option value="@item["CategoryID"]"@(categoryId == (int)item["CategoryID"] ? " selected" : "")>@item["CategoryName"]</option>
+                    }
+                }
+            </select>
+        </td>
+    </tr>
+    <tr>
+        <th>商品子类<i>*</i></th>
+        <td>
+            <select id="subId" name="subId">
+                <option value="">选择子类</option>
+                @if (subCates != null)
+                {
+                    foreach (var item in subCates)
+                    { 
+                    <option value="@item["SubID"]"@(subId == (int)item["SubID"] ? " selected" : "")>@item["SubName"]</option>
+                    }
+                }
+            </select>
+        </td>
+    </tr>
+    <tr>
+        <th>图案名<i>*</i></th>
+        <td><input name="workName" class="text" value="@data["WorkID"]" /></td>
+    </tr>
+    <tr>
+        <th>商品名<i>*</i></th>
+        <td><input name="productName" class="text" value="@data["ProductName"]" /></td>
+    </tr>
+    <tr>
+        <th>商品价格<i>*</i></th>
+        <td><input name="price" class="text_price" value="@data["Price"]" /></td>
+    </tr>
+    <tr>
+        <th>图案图片<i>*</i></th>
+        <td><input name="print" type="file" /></td>
+    </tr>
+    <tr>
+        <th>商品颜色<i>*</i></th>
+        <td>
+            <div class="p-color" style="z-index: 100">
+                <div class="J_colors p-colors">
+                    @if (data_Colors != null)
+                    {
+                        foreach (var item in data_Colors)
+                        {
+                        <p data-type="2" data-name="@item["ColorName"]" data-color="@item["ColorCode"]" data-id="@item["ColorID"]"><i style="background-color: @item["ColorCode"];"></i>@item["ColorName"]<em>×</em></p>
+                        }
+                    }
+                    <span id="addColor" class="p-color-add"><em class="ico-add"></em></span></div>
+                <div id="colorPickerPanel" class="cp-main">
+                    <div id="colorPicker"></div>
+                    <ol class="cp-form">
+                        <li><span>颜色：</span><input class="text_normal" id="colorCode" value="#123456" /></li>
+                        <li><span>名称：</span><input class="text_normal" id="colorName" /></li>
+                        <li class="cp-action"><input type="button" id="cpOK" class="button" value="确定" />
+                            <input type="button" id="cpCancel" class="button" value="取消" />
+                        </li>
+                    </ol>
+                </div>
+                <input type="hidden" name="colors" />
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <th>商品尺寸<i>*</i></th>
+        <td>
+            <div class="p-color" style="z-index: 0">
+                <div class="J_Size p-colors">
+                    @if (data_Sizes != null)
+                    {
+                        foreach (var item in data_Sizes)
+                        { 
+                        <p data-type="2" data-name="@item["SizeName"]" data-id="@item["SizeID"]">@item["SizeName"]<em>×</em></p>
+                        }
+                    }<input id="sizeName" class="text_short p-size" /><span id="addSize" class="p-color-add"><em class="ico-add"></em></span></div>
+                <input type="hidden" name="sizes" />
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <th class="vtop">商品简述</th>
+        <td>
+            <textarea name="workDesc" class="text">@data["WorkDesc"]</textarea></td>
+    </tr>
+    <tr>
+        <th class="vtop">基本信息</th>
+        <td>
+            <div class="p-color" style="z-index: 0">
+                <div class="J_BaseInfo p-colors">
+                    @if (data_BaseInfo != null)
+                    {
+                        foreach (var item in data_BaseInfo)
+                        { 
+                        <p class="bs"><input class="text_short p-size" value="@item["name"]" /><i class="bs-text">：</i><input class="text_normal p-size" value="@item["value"]" /><em>×</em></p>
+                        }
+                    }
+                    <span id="addBaseInfo" class="p-color-add"><em class="ico-add"></em></span></div>
+                <input type="hidden" name="baseInfo" value="@baseInfo" />
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <th>排序权重</th>
+        <td><input name="sort" class="text_number"  value="@data["Sort"]"/></td>
+    </tr>
+    <tr>
+        <th>商品标签</th>
+        <td><input name="tag" class="text"  value="@data["Tag"]"/></td>
+    </tr>
+    <tr>
+        <th class="vtop">商品正文<i>*</i></th>
+        <td>
+            <div style="position: relative;">
+                <textarea name="content" style="width: 600px; height: 400px; visibility: hidden;">@data["Content"]</textarea></div>
+        </td>
+    </tr>
+</table>
+</form>
+<div class="action">
+    <button id="add" class="button">修改</button>
+    <a class="button" href="products">取消</a>
+</div>
+<script>
+    seajs.use(['jquery','lib/buttons','kindeditor/kindeditor-min','lib/validation','lib/util','colorpicker/colorpicker','lib/global.css','colorpicker/colorpicker.css'],function ($,Buttons,K,V,util) {
+        var buttons=new Buttons('#toolbar',[{
+            text: "上传商品图片",
+            ico: "modify",
+            handle: function () {
+                location.href="uploadpic?id=@productId"
+            }
+        }]);
+
+        //商品分类
+        var $subId=$('#subId');
+        $('#categoryId').on('change',function () {
+            var id=this.value;
+            $subId[0].length=1;
+
+            if(id!='') {
+                $.ajax({
+                    url: 'addproduct?action=getsubcate',
+                    type: 'post',
+                    data: {
+                        categoryId: id
+                    },
+                    dataType: 'json',
+                    success: function (res) {
+                        if(res.success) {
+                            $.each(res.data,function (i,item) {
+                                $subId.append('<option value="'+item.SubID+'">'+item.SubName+'</option>');
+                            });
+                        } else
+                            alert(res.msg);
+                    }
+                });
+            }
+        });
+
+        //商品内容
+        var editor=K.create('textarea[name="content"]',{
+            uploadJson: "/manage/upload",
+            allowFileManager: false,
+            items: ['source','fontname','fontsize','|','forecolor','hilitecolor','bold','italic','underline',
+                'removeformat','|','justifyleft','justifycenter','justifyright','insertorderedlist',
+                'insertunorderedlist','|','emoticons','image','link']
+        });
+
+        //商品颜色
+        $("#colorPicker").colorPicker('#colorCode');
+
+        var colors=[],
+            $colorPicker=$('#colorPickerPanel'),
+            $colorCode=$('#colorCode'),
+            $colorName=$('#colorName'),
+            $colors=$('.J_colors'),
+            $colorAdd=$('#addColor');
+
+        $colors.delegate('p em','click',function () {
+            if(!window.confirm('删除会影响购买该颜色的商品,确认删除？')) return;
+            $(this).parent().attr('data-type',0).hide();
+        });
+
+        $colorAdd.click(function () {
+            $colorPicker.css({
+                left: Math.min(this.offsetLeft+this.offsetWidth,$(window).width()/2+500-$colorPicker.parent().offset().left-$colorPicker.outerWidth())
+
+            }).show(200);
+        });
+
+        $('#cpCancel').click(function () {
+            $colorPicker.hide(200);
+        });
+
+        $('#cpOK').click(function () {
+            var colorName=$colorName.val(),
+                colorCode=$colorCode.val();
+
+            if(colorName==''||colorCode=='') {
+                alert("请填写颜色");
+                return;
+            }
+
+            $colorPicker.hide(200);
+
+            $('<p><i style="background-color: '+colorCode+';"></i>'+colorName+'<em>×</em></p>')
+                .attr('data-type',1)
+                .attr('data-name',colorName)
+                .attr('data-color',colorCode)
+                .insertBefore($colorAdd);
+        });
+        var getColors=function () {
+            var colors=[];
+            $colors.find('[data-name]').each(function (i,item) {
+                item=$(item);
+                colors.push({
+                    type: parseInt(item.attr('data-type')),
+                    colorId: parseInt(item.attr('data-id')||0),
+                    colorName: item.attr('data-name'),
+                    colorCode: item.attr('data-color')
+                });
+            });
+            return colors;
+        };
+
+        //商品尺寸
+        var $sizeName=$('#sizeName');
+
+        $('#addSize').click(function () {
+            var sizeName=$sizeName.val();
+
+            if(sizeName=='') {
+                alert("请填写尺寸");
+                return;
+            }
+
+            $('<p>'+sizeName+'<em>×</em></p>')
+                .attr('data-type',1)
+                .attr('data-name',sizeName)
+                .insertBefore($sizeName);
+
+            $sizeName.val('');
+        });
+
+        $('.J_Size').delegate('p em','click',function () {
+            if(!window.confirm('删除会影响购买该尺寸的商品,确认删除？')) return;
+            $(this).parent().attr('data-type',0).hide();
+        });
+
+        var getSizes=function () {
+            var sizes=[];
+            $('.J_Size').find('[data-name]').each(function (i,item) {
+                item=$(item);
+                sizes.push({
+                    type: parseInt(item.attr('data-type')),
+                    sizeId: parseInt(item.attr('data-id')||0),
+                    sizeName: item.attr('data-name')
+                });
+            });
+            return sizes;
+        };
+
+        //基本信息
+        $baseInfoBtn=$('#addBaseInfo');
+        $baseInfoBtn.click(function () {
+            $('<p class="bs"><input class="text_short p-size" /><i class="bs-text">：</i><input class="text_normal p-size" /><em>×</em></p>')
+                .insertBefore($baseInfoBtn);
+        });
+
+        $('.J_BaseInfo').delegate('p em','click',function () {
+            $(this).parent().remove();
+        });
+
+        var getBaseInfos=function () {
+            var infos=[];
+            $('.J_BaseInfo').find('.bs').each(function (i,item) {
+                item=$(item).find('input');
+
+                infos.push({
+                    name: item.eq(0).val(),
+                    value: item.eq(1).val()
+                });
+            });
+            return infos;
+        };
+
+        //验证信息
+        var valid=new V([{
+            id: '#categoryId',
+            emptyAble: false,
+            emptyText: '请选择类别'
+        },{
+            id: '#subId',
+            emptyAble: false,
+            emptyText: '请选择子类'
+        },{
+            id: '[name="workName"]',
+            emptyAble: false,
+            emptyText: '请填写图案名'
+        },{
+            id: '[name="productName"]',
+            emptyAble: false,
+            emptyText: '请填写商品名'
+        },{
+            id: '[name="price"]',
+            emptyAble: false,
+            emptyText: '请填写商品价格',
+            regex: /^\d+(\.\d+){0,1}$/,
+            regexText: '请填写正确的金额'
+        },{
+            id: '#addColor',
+            top: 0,
+            validate: function () {
+                return getColors().length>0;
+            },
+            validationText: '请添加商品颜色'
+        },{
+            id: '#addSize',
+            top: 0,
+            validate: function () {
+                return getSizes().length>0;
+            },
+            validationText: '请添加商品尺寸'
+        },{
+            id: '[name="content"]',
+            position: 'dock-bottom:this.parent()',
+            emptyAble: false,
+            emptyText: '请填写商品内容'
+        }]);
+
+        //修改商品
+        $('#add').click(function () {
+            var colors=getColors(),
+                sizes=getSizes(),
+                infos=getBaseInfos();
+
+            var $content=$('[name="content"]').val(encodeURIComponent(editor.html()));
+
+            if(valid.validate()) {
+                $('[name="colors"]').val(util.stringify(colors));
+                $('[name="sizes"]').val(util.stringify(sizes));
+                $('[name="baseInfo"]').val(util.stringify(infos));
+
+                util.submitForm('#form1',function (res) {
+                    $content.val(decodeURIComponent($content.val()));
+                    if(res.success) {
+                        alert('修改成功');
+                        location.href='products?pid='+res.productId;
+                    } else
+                        alert(res.msg);
+                });
+
+            } else
+                scrollTo(0,0);
+        });
+    });
+    window._pathname='/manage/product/products';
+</script>

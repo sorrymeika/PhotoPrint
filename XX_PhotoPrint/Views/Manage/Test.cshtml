@@ -1,0 +1,31 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h1>上传测试</h1>
+<div id="form" class="form">
+	<form action="/json/user/UploadAvatars" method="post" enctype="multipart/form-data" class="form">
+	<table>
+		<tbody>
+			<tr>
+				<th>账号</th>
+				<td><input type="text" name="account" class="text" value="asdf@asd.com"></td>
+			</tr>
+			<tr>
+				<th>授权</th>
+				<td><input type="text" name="auth" class="text" value="DE39FF27A3759694B8D5652A3319C258"></td>
+			</tr>
+			<tr>
+				<th></th>
+				<td><input type="file" name="Avatars"></td>
+			</tr>
+		</tbody>
+	</table>
+	<input type="submit" value="上传" />
+	</form>
+</div>
+<script>
+
+	seajs.use(['lib/global.css']);
+</script>
