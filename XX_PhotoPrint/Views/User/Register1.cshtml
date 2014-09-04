@@ -1,0 +1,265 @@
+﻿@using XX_PhotoPrint.Service
+@using SL.Util
+@using System.Web.Script.Serialization
+@{
+    if (Request.HttpMethod == "POST")
+    {
+        Layout = null;
+
+        RequestUtil req = new RequestUtil();
+
+        string account = req.String("mail", false, "未输入账号");
+        string userName = req.String("UserName", false, "未输入用户名");
+        string password = req.Password("password", "未输入密码");
+
+        if (req.HasError)
+        {
+            Json.Write(new { success = false, msg = req.FirstError, errors = req.GetErrors() }, Output);
+            return;
+        }
+
+        int uid = SQL.QueryScalar<int>("select UserID from Users where Account=@p0", account);
+        if (uid != 0)
+        {
+            Json.Write(new { success = false, msg = "账号已注册" }, Output);
+        }
+        else
+        {
+            DateTime date = DateTime.Now;
+            string auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(account + date.ToString("yyyyMMddHHmmssffff") + password, "md5");
+            string md5auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+
+            var result = SQL.Execute("insert into Users (Account,UserName,Password,Auth,RegisterDate,LatestLoginDate) values (@p0,@p1,@p2,@p3,@p4,@p4)", out uid, account, userName, password, md5auth, date);
+
+            var user = new Dictionary<string, object>();
+
+            user["UserID"] = uid;
+            user["UserName"] = userName;
+            user["Auth"] = auth;
+            user["LatestLoginDate"] = date.ToString("yyyy-MM-dd HH:mm:ss");
+            user["Avatars"] = null;
+
+            UserService.SetAuth(account, md5auth);
+
+            SessionUtil.Set("USERINFO", user);
+
+            Json.Write(new { success = true, auth = auth }, Output);
+        }
+        return;
+    }
+
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var provinces = SL.Data.SQL.Query("select ProvID,ProvName from Province order by ProvName");
+}
+<div class="main stepswrap">
+    <div class="steps_hd">
+        <ul class="clearfix">
+            <li><i>1</i>填写信息</li>
+            <li class="curr"><i>2</i>验证身份</li>
+            <li><i>3</i>成功注册</li>
+        </ul>
+    </div>
+    <div class="steps_bd reg_form js_form">
+        <div class="reg_hd"><b class="hd">新用户注册</b><span class="msg">所有字段都为强制性，除非另有说明</span></div>
+        <div class="reg_bd">
+            <div class="clearfix"><dl class="form_item l">
+                <dt>省</dt>
+                <dd><select name="province">
+                    <option value="">请选择</option>
+                    @for (int i = 0; i < provinces.Count; i++)
+                    {
+                        var item = provinces[i];
+                        <option value="@item.ProvID">@item.ProvName</option>
+                    }
+                </select></dd>
+            </dl>
+                <dl class="form_item l">
+                    <dt>城市</dt>
+                    <dd><select name="city">
+                        <option value="">请选择</option>
+                    </select></dd>
+                </dl>
+                <dl class="form_item l">
+                    <dt>区</dt>
+                    <dd><select name="region">
+                        <option value="">请选择</option>
+                    </select></dd>
+                </dl>
+            </div>
+            <dl class="form_item">
+                <dt>地址</dt>
+                <dd><input class="text" name="address" type="text" value="" /></dd>
+            </dl>
+            <dl class="form_item">
+                <dt>姓名</dt>
+                <dd><input class="text" name="realName" type="text" value="" /></dd>
+            </dl>
+            <div class="clearfix"><dl class="form_item l">
+                <dt>手机</dt>
+                <dd><input class="text" name="mobile" type="text" value="" /></dd>
+            </dl>
+                <dl class="form_item l">
+                    <dt>验证码</dt>
+                    <dd><input class="validcode" name="validcode" type="text" value="" /></dd>
+                </dl>
+            </div>
+        </div>
+        <div class="reg_ft">
+            <div class="check_accept">
+                <div class="btn_dlg_r js_register"><i class="ico"></i>继 续</div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    seajs.use(['$','lib/util','sl/view','sl/validation'],function($,util,View,Validation) {
+        var RegisterView=View.extend({
+            events: {
+                'click .js_register': 'register',
+                'change [name="province"]': function(e) {
+                    var that=this,
+                        target=e.currentTarget,
+                        $city=this.$('[name="city"]'),
+                        city=$city[0];
+
+                    if(!target.value) {
+                        city.options.length=1;
+                        return;
+                    }
+
+                    city.options.length=0;
+                    city.options.add(new Option('正在载入...',''));
+
+                    $.ajax({
+                        url: '/json/user/getCitiesByProvID',
+                        type: 'GET',
+                        dataType: 'json',
+                        data: {
+                            provId: target.value
+                        },
+                        success: function(res) {
+                            if(res.success) {
+                                city.options[0].text="请选择";
+                                $.each(res.data,function(i,item) {
+                                    city.options.add(new Option(item.CityName,item.CityID));
+                                });
+                            } else {
+                                city.options[0].text=res.msg;
+                            }
+                        }
+                    });
+                },
+                'change [name="city"]': function(e) {
+
+                    var that=this,
+                        target=e.currentTarget,
+                        $region=this.$('[name="region"]'),
+                        region=$region[0];
+
+                    if(!target.value) {
+                        region.options.length=1;
+                        return;
+                    }
+
+                    region.options.length=0;
+                    region.options.add(new Option('正在载入...',''));
+
+                    $.ajax({
+                        url: '/json/user/getRegionsByCityID',
+                        type: 'GET',
+                        dataType: 'json',
+                        data: {
+                            cityId: target.value
+                        },
+                        success: function(res) {
+                            if(res.success) {
+                                region.options[0].text="请选择";
+                                $.each(res.regions,function(i,item) {
+                                    region.options.add(new Option(item.RegionName,item.RegionID));
+                                });
+                            } else {
+                                region.options[0].text=res.msg;
+                            }
+                        }
+                    });
+                }
+            },
+            register: function() {
+                var that=this;
+
+                if(that.isLoading) return;
+
+                that.validator
+                    .validate()
+                    .done(function() {
+
+                        that.isLoading=true;
+
+                        that.$('.js_register').addClass('disabled').html('<i class="ico"></i>请稍候...');
+
+                        $.ajax({
+                            type: 'POST',
+                            dataType: 'json',
+                            url: '/register1.html',
+                            data: {
+                                mail: that.$('[name="mail"]').val(),
+                                username: that.$('[name="username"]').val(),
+                                password: that.$('[name="password"]').val()
+                            },
+                            success: function(res) {
+
+                                if(res.success) {
+                                    location.href="/register1.html";
+                                } else
+                                    alert(res.msg);
+
+                                that.$('.js_register').removeClass('disabled').html('<i class="ico"></i>继 续');
+                                that.isLoading=false;
+                            }
+                        });
+                    });
+            },
+            initialize: function() {
+                var that=this;
+
+                that.validator=new Validation({
+                    '[name="region"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入区',
+                        successText: '',
+                        position: 'dock-after:this.closest("dd").prev("dt")'
+                    },
+                    '[name="address"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入地址',
+                        successText: '',
+                        position: 'dock-after:this.closest("dd").prev("dt")'
+                    },
+                    '[name="realName"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入姓名',
+                        successText: '',
+                        position: 'dock-after:this.closest("dd").prev("dt")'
+                    },
+                    '[name="mobile"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入手机',
+                        successText: '',
+                        position: 'dock-after:this.closest("dd").prev("dt")'
+                    },
+                    '[name="validcode"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入验证码',
+                        successText: '',
+                        position: 'dock-after:this.closest("dd").prev("dt")'
+                    }
+                });
+            }
+        });
+
+        new RegisterView('.js_form');
+
+    });
+</script>

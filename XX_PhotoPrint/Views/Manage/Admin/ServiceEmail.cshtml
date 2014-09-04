@@ -29,7 +29,7 @@
 		Output.Write(js.Serialize(new { success = true }));
 		return;
 	}
-	Layout = "~/Views/Shared/_Layout.cshtml";
+	Layout = "~/Views/Shared/_ManageLayout.cshtml";
 
 	SQL.Execute(@"IF NOT EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[Settings]') AND xtype = 'U')
 begin

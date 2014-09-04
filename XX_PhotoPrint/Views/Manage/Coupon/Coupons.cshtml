@@ -162,7 +162,7 @@
 		Output.Write(js.Serialize(new { success = true, data = data, total = total }));
 		return;
 	}
-	Layout = "~/Views/Shared/_Layout.cshtml";
+	Layout = "~/Views/Shared/_ManageLayout.cshtml";
 	var categories = SQL.Query("select CategoryID,CategoryName from CouponCate");
 	if (categories == null)
 	{

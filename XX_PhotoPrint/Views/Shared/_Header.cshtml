@@ -1,0 +1,25 @@
+﻿@using XX_PhotoPrint.Service
+<div class="header clearfix png">
+    <div class="logowrap"><a href="/"><img class="logo" src="theme/images/logo.png" /></a></div>
+    <div class="navwrap">
+        <div class="navtop">
+            @if (UserService.IsLogin())
+            { 
+                <text><span class="">HI @UserService.GetUserName()</span> / <a class="ico_cart"><i class="ico"></i>购物车</a></text>
+            }
+            else
+            {
+                <text><a href="/login.html">登录</a> / <a href="/register.html">注册</a></text>
+            }
+        </div>
+        <div class="nav">
+            <ul>
+                <li><a href="/">首页</a></li>
+                <li><a href="">创作</a></li>
+                <li><a href="">生态环境</a></li>
+                <li><a href="">画廊</a></li>
+                <li class="last"><a href="">下载应用</a></li>
+            </ul>
+        </div>
+    </div>
+</div>

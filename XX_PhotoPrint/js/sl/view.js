@@ -1,0 +1,175 @@
+﻿define(function(require,exports,module) {
+
+    var $=require('$'),
+        sl=require('./base'),
+        tmpl=require('./tmpl');
+
+    var View=function() {
+        var that=this,
+            args=Array.prototype.slice.call(arguments),
+            selector=args.shift(),
+            options=args.shift();
+
+        that.options=$.extend({},that.options,options);
+
+        that.$el=$(selector);
+        that.el=that.$el[0];
+
+        if(that.template) {
+            that.$el.append(tmpl(that.template,that.options));
+        }
+
+        that.listen(that.events);
+        that.listen(that.options.events);
+
+        that.initialize.apply(that,args);
+    };
+
+    View.fn=View.prototype={
+        template: '',
+        options: {},
+        events: null,
+        _bindDelegateAttrs: [],
+        _bindAttrs: [],
+        _bindResults: [],
+        _bind: function(el,name,f) {
+            this._bindDelegateAttrs.push([el,name,f]);
+            this.$el.delegate(el,name,$.proxy(f,this));
+
+            return this;
+        },
+        _listenEvents: function(events) {
+            var that=this;
+
+            events&&$.each(events,function(evt,f) {
+                that.listen(evt,f);
+            });
+        },
+        listen: function(evt,f) {
+            var that=this;
+
+            if(!f) {
+                that._listenEvents(evt);
+            }
+            else {
+                var arr=evt.split(' '),
+                    events=arr.shift();
+
+                events=events.replace(/,/g,' ');
+
+                f=$.isFunction(f)?f:that[f];
+
+                if(arr.length>0&&arr[0]!=='') {
+                    that._bind(arr.join(' '),events,f);
+                } else {
+                    that.bind(events,f);
+                }
+            }
+
+            return that;
+        },
+        listenToResult: function(name,f) {
+            name='result_'+name;
+            this._bindResults.push([name,f]);
+            $(document).bind(name,$.proxy(f,this));
+        },
+        setResult: function() {
+            var args=slice.call(arguments);
+            $(document).trigger('result_'+args.shift(),args);
+        },
+        on: function(selector,evt,handler) {
+            if(handler) {
+                this._bind(selector,evt,handler);
+            } else {
+                this.bind(selector,evt);
+            }
+            return this;
+        },
+        $: function(selector) {
+            return $(selector,this.$el);
+        },
+        one: function(name,f) {
+            this.$el.one(name,$.proxy(f,this));
+            return this;
+        },
+        bind: function(name,f) {
+            this._bindAttrs.push([name,f]);
+            this.$el.bind(name,$.proxy(f,this));
+            return this;
+        },
+        unbind: function(name,f) {
+            var that=this,
+                $el=that.$el;
+
+            for(var i=that._bindAttrs.length-1,attrs;i>=0;i--) {
+                attrs=that._bindAttrs[i];
+
+                if(attrs[0]==name&&(typeof f==='undefined'||f===attrs[1])) {
+                    $el.unbind.apply($el,attrs);
+                    that._bindAttrs.splice(i,1);
+                }
+            }
+
+            return this;
+        },
+        trigger: function() {
+            var args=slice.call(arguments),
+                name=args.shift();
+
+            this.$el.triggerHandler(name,args);
+            return this;
+        },
+        initialize: function() {
+        },
+        destory: function() {
+            var $el=this.$el,
+                that=this;
+
+            $.each(this._bindDelegateAttrs,function(i,attrs) {
+                $el.undelegate.apply($el,attrs);
+            });
+
+            $.each(this._bindResults,function(i,attrs) {
+                $(document).unbind.apply($(document),attrs);
+            });
+
+            this.one('Destory',function() {
+                $.each(that._bindAttrs,function(i,attrs) {
+                    $el.unbind.apply($el,attrs);
+                });
+            });
+            this.trigger('Destory');
+        }
+    };
+
+    View.extend=function(prop) {
+        var that=this;
+
+        var childClass=function() {
+            that.apply(this,arguments);
+        };
+
+        var F=function() { };
+        F.prototype=that.prototype;
+
+        childClass.fn=childClass.prototype=new F();
+
+        prop.options=$.extend({},that.prototype.options,prop.options);
+        prop.events=$.extend({},that.prototype.events,prop.events);
+
+        for(var key in prop) {
+            childClass.fn[key]=prop[key];
+        }
+
+        childClass.superClass=that.prototype;
+        childClass.prototype.constructor=childClass;
+
+        childClass.extend=arguments.callee;
+
+        return childClass;
+    };
+
+    sl.View=View;
+
+    module.exports=View;
+});

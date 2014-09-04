@@ -1,0 +1,153 @@
+﻿@using XX_PhotoPrint.Service
+@using SL.Util
+@using System.Web.Script.Serialization
+@{
+    if (Request.HttpMethod == "POST")
+    {
+        Layout = null;
+
+        RequestUtil req = new RequestUtil();
+
+        string account = req.String("mail", false, "未输入账号");
+        string password = req.Password("password", "未输入密码");
+
+        if (req.HasError)
+        {
+            HtmlUtil.OutputResult(new { success = false, msg = req.FirstError, errors = req.GetErrors() });
+            return;
+        }
+
+        var user = SL.Data.SQL.QuerySingle("select UserID,UserName,Password,LatestLoginDate,Avatars from Users where Account=@p0", account);
+        if (user == null)
+        {
+            HtmlUtil.OutputResult(new { success = false, msg = "该账号不存在" });
+            return;
+        }
+
+        string pwd = (string)user["Password"];
+        if (!pwd.Equals(password, StringComparison.OrdinalIgnoreCase))
+        {
+            HtmlUtil.OutputResult(new { success = false, msg = "密码错误" });
+            return;
+        }
+
+        user.Remove("Password");
+
+        int uid = (int)user["UserID"];
+        DateTime date = DateTime.Now;
+        string auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(account + date.ToString("yyyyMMddHHmmssffff") + password, "md5");
+        string md5auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+
+        SQL.Execute("update Users set Auth=@p0,LatestLoginDate=@p1 where UserID=@p2", md5auth, date, uid);
+        user["Auth"] = auth;
+        user["LatestLoginDate"] = date.ToString("yyyy-MM-dd HH:mm:ss");
+        user["Avatars"] = "http://" + Request.Url.Authority + "/Content/" + user["Avatars"];
+
+        UserService.SetAuth(account, md5auth);
+
+        SessionUtil.Set("USERINFO", user);
+
+        HtmlUtil.OutputResult(new { success = true, userinfo = user });
+        return;
+    }
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="main loginwrap clearfix js_login_con">
+    <div class="login_blk">
+        <div class="login_hd">会员登录 MEMBER LOGIN</div>
+        <div class="login_bd">
+            <form class="login_con js_form" action="" method="post">
+            <ul class="login_account">
+                <li class="js_text_focus"><input class="text" type="text" name="mail" /><span class="text_tip">MAIL</span></li>
+                <li class="js_text_focus"><input class="text" type="password" name="password" /><span class="text_tip">PASSWORD</span></li>
+                <li class="remember"><input type="checkbox" />在这台电脑上记住密码</li>
+            </ul>
+            <div class="actions clearfix"><a class="forgot" href="/forgot.html">忘记你的密码？</a>
+                <div class="btn_dlg_r js_login"><i class="ico"></i>登 录</div>
+            </div>
+            </form>
+        </div>
+    </div>
+    <div class="join_blk">
+        <div class="login_hd">还不是会员？NOT YET A MEMBER?</div>
+        <div class="join_bd">
+            <div class="join_title">请输入你的个人信息</div>
+            <div class="join_action"><a href="register.html" class="btn_dlg_r"><i class="ico"></i>立即加入</a></div>
+            <div class="join_msg_hd">免费注册后，你可以得到以下服务：</div>
+            <ul class="join_msg">
+                <li>把你的梦想变成现实。</li>
+                <li>上传您的创意。</li>
+                <li>做一名设计师只需轻松3步。</li>
+            </ul>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    seajs.use(['$','lib/util','sl/view','sl/validation'],function($,util,View,Validation) {
+        var LoginView=View.extend({
+            events: {
+                'click .js_login': 'login',
+                'focus .js_text_focus .text': function(e) {
+                    $(e.currentTarget).next('.text_tip').hide();
+                },
+                'blur .text': function(e) {
+                    if(e.target.value=='')
+                        $(e.currentTarget).next('.text_tip').show();
+                }
+            },
+            onLoginEnd: function() {
+                var that=this;
+
+                that.$('.js_login').removeClass('disabled').html('<i class="ico"></i>登 录');
+                that.isLogining=false;
+            },
+            login: function() {
+                var that=this;
+
+                if(that.isLogining) return;
+
+                that.validator
+                    .validate()
+                    .done(function() {
+
+                        that.isLogining=true;
+
+                        that.$('.js_login').addClass('disabled').html('<i class="ico"></i>登录中...');
+
+                        util.submitForm(that.$el,function(res) {
+                            if(res.success) {
+                                location.href=util.query('?r')||"/";
+                            } else {
+                                alert(res.msg);
+                            }
+
+                            that.onLoginEnd();
+                        });
+                    });
+            },
+            initialize: function() {
+                var that=this;
+
+                that.$('.js_text_focus .text').each(function() {
+                    if(this.value!='') $(this).next('.text_tip').hide();
+                });
+
+                that.validator=new Validation({
+                    '[name="mail"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入MAIL',
+                        successText: ''
+                    },
+                    '[name="password"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入密码',
+                        successText: ''
+                    }
+                });
+            }
+        });
+
+        new LoginView('.js_form');
+
+    });
+</script>

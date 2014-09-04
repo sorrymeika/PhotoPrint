@@ -296,3 +296,8 @@ Content varchar(1000),
 CommentTime datetime,
 IsReview bit
 )
+
+
+--2014-09-04
+--·şÎñ¶ËÎ´Ö´ĞĞ
+alter table Users add RealName varchar(20)

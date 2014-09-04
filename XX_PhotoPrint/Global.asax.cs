@@ -22,6 +22,14 @@ namespace XX_PhotoPrint
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
             routes.MapRoute(
+                "User",
+                "{handle}.html",
+                new { controller = "Home", action = "Index", catalog = "User" },
+                new { handle = "^Login|Register|Register1$" }
+
+            );
+
+            routes.MapRoute(
                 "JsonDefault",
                 "json/{catalog}/{handle}",
                 new { controller = "Home", action = "JsonAction", catalog = "Home", handle = "Index" }
@@ -43,7 +51,7 @@ namespace XX_PhotoPrint
               "AlipayPaySuccess",
               "pay/success",
               new { controller = "Home", action = "AlipayPaySuccess" }
-          );
+            );
 
             routes.MapRoute(
                 "Pay",
@@ -63,7 +71,6 @@ namespace XX_PhotoPrint
                 "manage/{catalog}/{handle}",
                 new { controller = "Home", action = "Manage", catalog = "Home", handle = "" }
             );
-
 
             routes.MapRoute(
                 "CheckCode",

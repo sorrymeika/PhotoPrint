@@ -1,0 +1,166 @@
+﻿@using XX_PhotoPrint.Service
+@using SL.Util
+@using System.Web.Script.Serialization
+@{
+    if (Request.HttpMethod == "POST")
+    {
+        Layout = null;
+
+        RequestUtil req = new RequestUtil();
+
+        string account = req.String("mail", false, "未输入账号");
+        string userName = req.String("UserName", false, "未输入用户名");
+        string password = req.Password("password", "未输入密码");
+
+        if (req.HasError)
+        {
+            Json.Write(new { success = false, msg = req.FirstError, errors = req.GetErrors() }, Output);
+            return;
+        }
+
+        int uid = SQL.QueryScalar<int>("select UserID from Users where Account=@p0", account);
+        if (uid != 0)
+        {
+            Json.Write(new { success = false, msg = "账号已注册" }, Output);
+        }
+        else
+        {
+            DateTime date = DateTime.Now;
+            string auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(account + date.ToString("yyyyMMddHHmmssffff") + password, "md5");
+            string md5auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+
+            var result = SQL.Execute("insert into Users (Account,UserName,Password,Auth,RegisterDate,LatestLoginDate) values (@p0,@p1,@p2,@p3,@p4,@p4)", out uid, account, userName, password, md5auth, date);
+
+            var user = new Dictionary<string, object>();
+
+            user["UserID"] = uid;
+            user["UserName"] = userName;
+            user["Auth"] = auth;
+            user["LatestLoginDate"] = date.ToString("yyyy-MM-dd HH:mm:ss");
+            user["Avatars"] = null;
+
+            UserService.SetAuth(account, md5auth);
+
+            SessionUtil.Set("USERINFO", user);
+
+            Json.Write(new { success = true, auth = auth }, Output);
+        }
+        return;
+    }
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="main stepswrap">
+    <div class="steps_hd">
+        <ul class="clearfix">
+            <li class="curr"><i>1</i>填写信息</li>
+            <li><i>2</i>验证身份</li>
+            <li><i>3</i>成功注册</li>
+        </ul>
+    </div>
+    <div class="steps_bd reg_form js_form">
+        <div class="reg_hd"><b class="hd">新用户注册</b><span class="msg">所有字段都为强制性，除非另有说明</span></div>
+        <div class="reg_bd">
+            <div class="clearfix"><dl class="form_item l">
+                <dt>邮箱</dt>
+                <dd><input class="text" name="mail" type="text" value="" /></dd>
+            </dl>
+                <dl class="form_item l">
+                    <dt>用户名</dt>
+                    <dd><input class="text" name="username" type="text" value="" /></dd>
+                </dl>
+            </div>
+            <dl class="form_item">
+                <dt>设置密码</dt>
+                <dd><input class="text" name="password" type="password" value="" /></dd>
+            </dl>
+            <dl class="form_item">
+                <dt>再次确认密码</dt>
+                <dd><input class="text" name="password1" type="password" value="" /></dd>
+            </dl>
+        </div>
+        <div class="reg_ft">
+            <div class="check_accept"><input type="checkbox" />
+                <label>同意协议并开通INSTAFABRIC</label>
+                <div class="btn_dlg_r js_register"><i class="ico"></i>继 续</div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    seajs.use(['$','lib/util','sl/view','sl/validation'],function($,util,View,Validation) {
+        var RegisterView=View.extend({
+            events: {
+                'click .js_register': 'register'
+            },
+            register: function() {
+                var that=this;
+
+                if(that.isLoading) return;
+
+                that.validator
+                    .validate()
+                    .done(function() {
+
+                        that.isLoading=true;
+
+                        that.$('.js_register').addClass('disabled').html('<i class="ico"></i>请稍候...');
+
+                        $.ajax({
+                            type: 'POST',
+                            dataType: 'json',
+                            url: '/register.html',
+                            data: {
+                                mail: that.$('[name="mail"]').val(),
+                                username: that.$('[name="username"]').val(),
+                                password: that.$('[name="password"]').val()
+                            },
+                            success: function(res) {
+
+                                if(res.success) {
+                                    location.href="/register1.html";
+                                } else
+                                    alert(res.msg);
+
+                                that.$('.js_register').removeClass('disabled').html('<i class="ico"></i>继 续');
+                                that.isLoading=false;
+                            }
+                        });
+                    });
+            },
+            initialize: function() {
+                var that=this;
+
+                that.validator=new Validation({
+                    '[name="mail"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入邮箱',
+                        successText: '',
+                        position: 'dock-after:this.closest("dd").prev("dt")'
+                    },
+                    '[name="username"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入用户名',
+                        successText: '',
+                        position: 'dock-after:this.closest("dd").prev("dt")'
+                    },
+                    '[name="password"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入密码',
+                        successText: '',
+                        position: 'dock-after:this.closest("dd").prev("dt")'
+                    },
+                    '[name="password1"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请再次输入密码',
+                        compare: $('[name="password"]'),
+                        compareText: '<i></i>两次密码不一致',
+                        position: 'dock-after:this.closest("dd").prev("dt")'
+                    }
+                });
+            }
+        });
+
+        new RegisterView('.js_form');
+
+    });
+</script>

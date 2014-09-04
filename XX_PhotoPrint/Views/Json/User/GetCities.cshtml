@@ -5,8 +5,8 @@
 
     var js = new JavaScriptSerializer();
 
-    var provinces = SQL.Query("select ProvID,ProvName from Province order by Sort");
-    var cities = SQL.Query("select CityID,CityName,ProvID from City order by Sort");
+    var provinces = SQL.Query("select ProvID,ProvName from Province order by ProvName");
+    var cities = SQL.Query("select CityID,CityName,ProvID from City order by CityName");
 
     Output.Write(js.Serialize(new { success = true, provinces = provinces, cities = cities }));
     return;

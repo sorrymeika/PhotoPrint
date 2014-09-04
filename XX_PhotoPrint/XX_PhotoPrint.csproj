@@ -70,6 +70,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Service\CacheService.cs" />
     <Compile Include="Service\Config.cs" />
+    <Compile Include="Service\_EmptyService.cs" />
+    <Compile Include="Service\ProductService.cs" />
+    <Compile Include="Service\Req.cs" />
     <Compile Include="Service\DataService.cs" />
     <Compile Include="Service\DbService.cs" />
     <Compile Include="Service\HtmlService.cs" />
@@ -77,7 +80,6 @@
     <Compile Include="Service\Md5.cs" />
     <Compile Include="Service\PaymentService.cs" />
     <Compile Include="Service\RandomCode.cs" />
-    <Compile Include="Service\Req.cs" />
     <Compile Include="Service\ServiceExtentions.cs" />
     <Compile Include="Service\SessionService.cs" />
     <Compile Include="Service\SQL.cs" />
@@ -90,7 +92,10 @@
     <Content Include="js\colorpicker\marker.png" />
     <Content Include="js\colorpicker\mask.png" />
     <Content Include="js\colorpicker\wheel.png" />
-    <Content Include="js\config.js" />
+    <Content Include="js\sl\base.js" />
+    <Content Include="js\sl\tmpl.js" />
+    <Content Include="js\sl\validation.js" />
+    <Content Include="js\sl\view.js" />
     <Content Include="js\kindeditor\kindeditor-min.js" />
     <Content Include="js\kindeditor\kindeditor.js" />
     <Content Include="js\kindeditor\lang\zh_CN.js" />
@@ -321,6 +326,14 @@
     <Content Include="js\lib\util.js" />
     <Content Include="js\lib\validation.js" />
     <Content Include="js\seajs\sea.js" />
+    <Content Include="theme\ie.css" />
+    <Content Include="theme\images\appdl.jpg" />
+    <Content Include="theme\images\learn_l.jpg" />
+    <Content Include="theme\images\learn_r.jpg" />
+    <Content Include="theme\images\logo.png" />
+    <Content Include="theme\images\site.png" />
+    <Content Include="theme\images\text_bg.png" />
+    <Content Include="theme\style.css" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -331,11 +344,10 @@
     <Content Include="Views\Web.config" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
-    <Content Include="Views\Shared\_Layout.cshtml" />
+    <Content Include="Views\Shared\_ManageLayout.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\" />
-    <Folder Include="Views\User\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Tests\User_Register.cshtml" />
@@ -373,6 +385,90 @@
     <Content Include="Views\Manage\Test.cshtml" />
     <Content Include="Views\Manage\User\Address.cshtml" />
     <Content Include="Views\Manage\User\Users.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Shared\_Layout.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Shared\_Header.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Shared\_Footer.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Json\Activity\GetActivities.cshtml" />
+    <Content Include="Views\Json\Activity\GetActivity.cshtml" />
+    <Content Include="Views\Json\Activity\GetCategories.cshtml" />
+    <Content Include="Views\Json\Coupon\BindCoupon.cshtml" />
+    <Content Include="Views\Json\Coupon\GetCategories.cshtml" />
+    <Content Include="Views\Json\Coupon\GetCoupon.cshtml" />
+    <Content Include="Views\Json\Coupon\GetCoupons.cshtml" />
+    <Content Include="Views\Json\Feedback\AddFeedBack.cshtml" />
+    <Content Include="Views\Json\Feedback\GetFeedBack.cshtml" />
+    <Content Include="Views\Json\Photo\AddAlbum.cshtml" />
+    <Content Include="Views\Json\Photo\AddPhoto.cshtml" />
+    <Content Include="Views\Json\Photo\GetAlbums.cshtml" />
+    <Content Include="Views\Json\Photo\GetPhotos.cshtml" />
+    <Content Include="Views\Json\Photo\ModifyAlbum.cshtml" />
+    <Content Include="Views\Json\Photo\ModifyPhoto.cshtml" />
+    <Content Include="Views\Json\Photo\SetAlbumCover.cshtml" />
+    <Content Include="Views\Json\Product\AddComment.cshtml" />
+    <Content Include="Views\Json\Product\GetCategories.cshtml" />
+    <Content Include="Views\Json\Product\GetComments.cshtml" />
+    <Content Include="Views\Json\Product\GetProduct.cshtml" />
+    <Content Include="Views\Json\Product\GetProducts.cshtml" />
+    <Content Include="Views\Json\Product\GetWork.cshtml" />
+    <Content Include="Views\Json\Product\GetWorks.cshtml" />
+    <Content Include="Views\Json\Shop\AddShoppingCart.cshtml" />
+    <Content Include="Views\Json\Shop\CreateOrder.cshtml" />
+    <Content Include="Views\Json\Shop\DeleteShoppingCart.cshtml" />
+    <Content Include="Views\Json\Shop\GetOrder.cshtml" />
+    <Content Include="Views\Json\Shop\GetOrders.cshtml" />
+    <Content Include="Views\Json\Shop\GetPayments.cshtml" />
+    <Content Include="Views\Json\Shop\GetShoppingCart.cshtml" />
+    <Content Include="Views\Json\Shop\ModifyQty.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Service\Product.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SL\SL.csproj">
+      <Project>{D8E09BBC-5A9D-441B-B403-988286537F2B}</Project>
+      <Name>SL</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\User\Login.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Json\User\AddAddress.cshtml" />
+    <Content Include="Views\Json\User\DeleteAddress.cshtml" />
+    <Content Include="Views\Json\User\GetAddress.cshtml" />
+    <Content Include="Views\Json\User\GetCities.cshtml" />
+    <Content Include="Views\Json\User\GetRegionsByCityID.cshtml" />
+    <Content Include="Views\Json\User\GetUserInfo.cshtml" />
+    <Content Include="Views\Json\User\GetUserWork.cshtml" />
+    <Content Include="Views\Json\User\GetUserWorks.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Json\User\Login.cshtml" />
+    <Content Include="Views\Json\User\ModifyAddress.cshtml" />
+    <Content Include="Views\Json\User\ModifyPassword.cshtml" />
+    <Content Include="Views\Json\User\ModifyUserInfo.cshtml" />
+    <Content Include="Views\Json\User\PasswordReset.cshtml" />
+    <Content Include="Views\Json\User\Register.cshtml" />
+    <Content Include="Views\Json\User\ResetPassword.cshtml" />
+    <Content Include="Views\Json\User\SetCommonUseAddress.cshtml" />
+    <Content Include="Views\Json\User\UploadAvatars.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\User\Register.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\User\Register1.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Json\User\GetCitiesByProvID.cshtml" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" />

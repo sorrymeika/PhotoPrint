@@ -3,11 +3,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Net.Mail;
+using SL.Util;
 
 namespace XX_PhotoPrint.Service
 {
     public class UserService
     {
+        public static bool IsLogin()
+        {
+            return SessionUtil.Exist("USERINFO");
+        }
+
+        public static IDictionary<string, object> GetUser()
+        {
+            return SessionUtil.Get<IDictionary<string, object>>("USERINFO");
+        }
+
+        public static string GetUserName()
+        {
+            return IsLogin() ? GetUser()["UserName"] as String : null;
+        }
+
         public static int GetUserID(string account)
         {
             IDictionary<string, int> data;
@@ -99,5 +115,7 @@ namespace XX_PhotoPrint.Service
                 client.Dispose();
             }
         }
+
+
     }
 }

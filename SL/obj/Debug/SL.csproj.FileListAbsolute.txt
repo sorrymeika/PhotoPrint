@@ -1,0 +1,4 @@
+D:\Projects\AspNet\XX\PhotoPrint\SL\bin\Debug\SL.dll
+D:\Projects\AspNet\XX\PhotoPrint\SL\bin\Debug\SL.pdb
+D:\Projects\AspNet\XX\PhotoPrint\SL\obj\Debug\SL.dll
+D:\Projects\AspNet\XX\PhotoPrint\SL\obj\Debug\SL.pdb

@@ -1,0 +1,15 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var js = new JavaScriptSerializer();
+
+    var req = new Req();
+    int provId = req.Int("provId");
+
+    var cities = SQL.Query("select CityID,CityName,ProvID from City where ProvID=@p0 order by CityName", provId);
+
+    Output.Write(js.Serialize(new { success = true, data = cities }));
+    return;
+}
