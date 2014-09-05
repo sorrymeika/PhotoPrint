@@ -75,6 +75,8 @@ Rect varchar(200),--定制的内容区域{top:0;left:0;width:0;height:0}
 ProductID int
 )
 
+select * from Style
+
 create table StyleColorPic(
 PicID int identity primary key,
 StyleID int,
@@ -119,6 +121,8 @@ Content text
 --[{type:0,src:"图片地址",width:100,height:200,left:100,top:100,rotate:"旋转",...}
 --,{type:1,text:"文本类型",fontFamily:"字体",...}]
 )
+
+select * from Customization
 
 --个人作品
 create table UserWork(
