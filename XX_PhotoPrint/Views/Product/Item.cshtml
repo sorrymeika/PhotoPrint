@@ -1,0 +1,181 @@
+﻿@using XX_PhotoPrint.Service
+@using SL.Util
+@using System.Web.Script.Serialization
+@{
+    RequestUtil req = new RequestUtil();
+    if (Request.HttpMethod == "POST")
+    {
+        Layout = null;
+
+        return;
+    }
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    int workId = Convert.ToInt32(ViewBag.RouteData["id"]);
+
+    var Item = ProductService.GetByID(workId);
+
+    if (Item == null)
+    {
+        Output.Write("该商品不存在");
+        return;
+    }
+
+    IList<dynamic> Colors = Item.Colors;
+    IList<dynamic> Styles = Item.Styles;
+    IList<dynamic> Size = Item.Size;
+    IList<dynamic> StyleColorPic = Item.StyleColorPic;
+
+    if (Colors == null || Size == null || StyleColorPic == null)
+    {
+        Output.Write("商品信息不完整");
+        return;
+    }
+}
+<div class="main prodwrap clearfix">
+    <div class="prod_preview"><img src="@StyleColorPic.First().Picture" /></div>
+    <div class="prod_main_info">
+        <div class="priceinfo"><span class="saleprice">￥100</span><del class="origprice">￥200</del><i class="ico_sale">促销</i></div>
+        <h1>@Item.WorkName@Item.ProductName</h1>
+        <div class="character">
+            <div class="text">T-SHIRT可与皮肤直接接触</div>
+            <div class="pic"></div>
+        </div>
+        <ul class="prod_selector">
+            <li><span>数量</span> <input class="num" value="1" /></li>
+            <li><span>颜色</span> <span class="color">
+                @for (int i = 0; i < Colors.Count; i++)
+                {
+                    var color = Colors[i];
+                    if (i == 0)
+                    { 
+                    <i class="curr" data-id="@color.ColorID" style="background-color:@(color.ColorCode)"></i>
+                    }
+                    else
+                    {
+                    <i data-id="@color.ColorID" style="background-color:@(color.ColorCode)"></i>
+                    }
+                }
+            </span></li>
+            <li><span>尺码</span><span class="size">
+                @for (int i = 0; i < Size.Count; i++)
+                {
+                    var item = Size[i];
+                    if (i == 0)
+                    { 
+                    <i class="curr" data-id="@item.SizeID">@item.SizeName</i>
+                    }
+                    else
+                    {
+                    <i data-id="@item.SizeID">@item.SizeName</i>
+                    }
+                }
+            </span></li>
+        </ul>
+        <ul class="img_smallist clearfix">
+            <li><img /></li>
+        </ul>
+        <div class="actions">
+            <div class="btn_dlg_l"><i class="ico"></i>重新创作</div>
+            <div class="btn_dlg_r"><i class="ico"></i>加入购物车</div>
+        </div>
+    </div>
+</div>
+<div class="main prodwrap">
+    <div class="bigtitle">
+        <div class="cn">产品详情</div>
+        <div class="en">PRODUCT DETAILS</div>
+    </div>
+    <div class="prod_details"></div>
+</div>
+<div class="main prodwrap">
+    <div class="bigtitle">
+        <div class="cn">你可能喜欢其他产品</div>
+        <div class="en">OTHER PRODUCTS YOU MIGHT LIKE</div>
+    </div>
+    <div class="other_list">
+        <ul class="clearfix">
+            <li><a href="">
+                <p class="img"><img src="" /></p>
+                <p class="name">名称</p>
+            </a></li>
+            <li><a href="">
+                <p class="img"><img src="" /></p>
+                <p class="name">名称</p>
+            </a></li>
+            <li><a href="">
+                <p class="img"><img src="" /></p>
+                <p class="name">名称</p>
+            </a></li>
+        </ul>
+    </div>
+</div>
+<script>
+    seajs.use(['$','lib/util','sl/view','sl/validation'],function($,util,View,Validation) {
+        var LoginView=View.extend({
+            events: {
+                'click .js_login': 'login',
+                'focus .js_text_focus .text': function(e) {
+                    $(e.currentTarget).next('.text_tip').hide();
+                },
+                'blur .text': function(e) {
+                    if(e.target.value=='')
+                        $(e.currentTarget).next('.text_tip').show();
+                }
+            },
+            onLoginEnd: function() {
+                var that=this;
+
+                that.$('.js_login').removeClass('disabled').html('<i class="ico"></i>登 录');
+                that.isLogining=false;
+            },
+            login: function() {
+                var that=this;
+
+                if(that.isLogining) return;
+
+                that.validator
+                    .validate()
+                    .done(function() {
+
+                        that.isLogining=true;
+
+                        that.$('.js_login').addClass('disabled').html('<i class="ico"></i>登录中...');
+
+                        util.submitForm(that.$el,function(res) {
+                            if(res.success) {
+                                location.href=util.query('?r')||"/";
+                            } else {
+                                alert(res.msg);
+                            }
+
+                            that.onLoginEnd();
+                        });
+                    });
+            },
+            initialize: function() {
+                var that=this;
+
+                that.$('.js_text_focus .text').each(function() {
+                    if(this.value!='') $(this).next('.text_tip').hide();
+                });
+
+                that.validator=new Validation({
+                    '[name="mail"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入MAIL',
+                        successText: ''
+                    },
+                    '[name="password"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入密码',
+                        successText: ''
+                    }
+                });
+            }
+        });
+
+        new LoginView('.js_form');
+
+    });
+</script>

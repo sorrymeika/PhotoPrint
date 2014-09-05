@@ -23,7 +23,8 @@
         subId = req.Int("subId", false, "缺少商品类别");
         string workName = req.String("workName", false, "缺少图案名");
         string workDesc = req.String("workDesc");
-        var picture = req.File("print");
+        var print = req.File("print");
+        var picture = req.File("picture");
         string colors = req.String("colors");
         string sizes = req.String("sizes");
 
@@ -52,6 +53,31 @@
                 System.IO.Directory.CreateDirectory(dir);
             }
             picture.SaveAs(savePath);
+        }
+
+
+        if (print != null && print.ContentLength != 0)
+        {
+            string printSrc = SQL.QueryScalar<string>("select [Print] from Customization where WorkID=@p0", workId);
+            int styleId = SQL.QueryScalar<int>("select StyleId from Style where ProductID=@p0", productId);
+
+            printSrc = "product/" + now.ToString("yyyy") + "/" + (now.Ticks - DateTime.MinValue.Ticks) + picture.FileName.Substring(picture.FileName.LastIndexOf('.'));
+            string savePath = Server.MapPath("~/Content/" + src);
+            string dir = System.IO.Path.GetDirectoryName(savePath);
+            if (!System.IO.Directory.Exists(dir))
+            {
+                System.IO.Directory.CreateDirectory(dir);
+            }
+
+            if (printSrc == null)
+            {
+                SQL.Execute("insert into Customization (WorkID,ProductID,StyleID,ColorID,SizeID,[Print]) values (@p0,@p1)", workId, productId, styleId, 0, 0, printSrc);
+            }
+            else
+            {
+                System.IO.File.Delete(Server.MapPath("~/Content/" + printSrc));
+            }
+            print.SaveAs(savePath);
         }
 
         using (DbService db = new DbService())
@@ -173,32 +199,30 @@
 <table>
     <tr>
         <th>商品类别<i>*</i></th>
-        <td>
-            <select id="categoryId" name="categoryId">
-                <option value="">选择类别</option>
-                @if (categories != null)
-                {
-                    foreach (var item in categories)
-                    { 
-                    <option value="@item["CategoryID"]"@(categoryId == (int)item["CategoryID"] ? " selected" : "")>@item["CategoryName"]</option>
-                    }
+        <td><select id="categoryId" name="categoryId">
+            <option value="">选择类别</option>
+            @if (categories != null)
+            {
+                foreach (var item in categories)
+                { 
+                <option value="@item["CategoryID"]"@(categoryId == (int)item["CategoryID"] ? " selected" : "")>@item["CategoryName"]</option>
                 }
-            </select>
+            }
+        </select>
         </td>
     </tr>
     <tr>
         <th>商品子类<i>*</i></th>
-        <td>
-            <select id="subId" name="subId">
-                <option value="">选择子类</option>
-                @if (subCates != null)
-                {
-                    foreach (var item in subCates)
-                    { 
-                    <option value="@item["SubID"]"@(subId == (int)item["SubID"] ? " selected" : "")>@item["SubName"]</option>
-                    }
+        <td><select id="subId" name="subId">
+            <option value="">选择子类</option>
+            @if (subCates != null)
+            {
+                foreach (var item in subCates)
+                { 
+                <option value="@item["SubID"]"@(subId == (int)item["SubID"] ? " selected" : "")>@item["SubName"]</option>
                 }
-            </select>
+            }
+        </select>
         </td>
     </tr>
     <tr>
@@ -262,8 +286,7 @@
     </tr>
     <tr>
         <th class="vtop">商品简述</th>
-        <td>
-            <textarea name="workDesc" class="text">@data["WorkDesc"]</textarea></td>
+        <td><textarea name="workDesc" class="text">@data["WorkDesc"]</textarea></td>
     </tr>
     <tr>
         <th class="vtop">基本信息</th>
@@ -293,29 +316,26 @@
     <tr>
         <th class="vtop">商品正文<i>*</i></th>
         <td>
-            <div style="position: relative;">
-                <textarea name="content" style="width: 600px; height: 400px; visibility: hidden;">@data["Content"]</textarea></div>
+            <div style="position: relative;"><textarea name="content" style="width: 600px; height: 400px; visibility: hidden;">@data["Content"]</textarea></div>
         </td>
     </tr>
 </table>
 </form>
-<div class="action">
-    <button id="add" class="button">修改</button>
-    <a class="button" href="products">取消</a>
-</div>
+<div class="action"><button id="add" class="button">修改</button>
+    <a class="button" href="products">取消</a> </div>
 <script>
-    seajs.use(['jquery','lib/buttons','kindeditor/kindeditor-min','lib/validation','lib/util','colorpicker/colorpicker','lib/global.css','colorpicker/colorpicker.css'],function ($,Buttons,K,V,util) {
+    seajs.use(['jquery','lib/buttons','kindeditor/kindeditor-min','lib/validation','lib/util','colorpicker/colorpicker','lib/global.css','colorpicker/colorpicker.css'],function($,Buttons,K,V,util) {
         var buttons=new Buttons('#toolbar',[{
             text: "上传商品图片",
             ico: "modify",
-            handle: function () {
+            handle: function() {
                 location.href="uploadpic?id=@productId"
             }
         }]);
 
         //商品分类
         var $subId=$('#subId');
-        $('#categoryId').on('change',function () {
+        $('#categoryId').on('change',function() {
             var id=this.value;
             $subId[0].length=1;
 
@@ -327,9 +347,9 @@
                         categoryId: id
                     },
                     dataType: 'json',
-                    success: function (res) {
+                    success: function(res) {
                         if(res.success) {
-                            $.each(res.data,function (i,item) {
+                            $.each(res.data,function(i,item) {
                                 $subId.append('<option value="'+item.SubID+'">'+item.SubName+'</option>');
                             });
                         } else
@@ -358,23 +378,23 @@
             $colors=$('.J_colors'),
             $colorAdd=$('#addColor');
 
-        $colors.delegate('p em','click',function () {
+        $colors.delegate('p em','click',function() {
             if(!window.confirm('删除会影响购买该颜色的商品,确认删除？')) return;
             $(this).parent().attr('data-type',0).hide();
         });
 
-        $colorAdd.click(function () {
+        $colorAdd.click(function() {
             $colorPicker.css({
                 left: Math.min(this.offsetLeft+this.offsetWidth,$(window).width()/2+500-$colorPicker.parent().offset().left-$colorPicker.outerWidth())
 
             }).show(200);
         });
 
-        $('#cpCancel').click(function () {
+        $('#cpCancel').click(function() {
             $colorPicker.hide(200);
         });
 
-        $('#cpOK').click(function () {
+        $('#cpOK').click(function() {
             var colorName=$colorName.val(),
                 colorCode=$colorCode.val();
 
@@ -391,9 +411,9 @@
                 .attr('data-color',colorCode)
                 .insertBefore($colorAdd);
         });
-        var getColors=function () {
+        var getColors=function() {
             var colors=[];
-            $colors.find('[data-name]').each(function (i,item) {
+            $colors.find('[data-name]').each(function(i,item) {
                 item=$(item);
                 colors.push({
                     type: parseInt(item.attr('data-type')),
@@ -408,7 +428,7 @@
         //商品尺寸
         var $sizeName=$('#sizeName');
 
-        $('#addSize').click(function () {
+        $('#addSize').click(function() {
             var sizeName=$sizeName.val();
 
             if(sizeName=='') {
@@ -424,14 +444,14 @@
             $sizeName.val('');
         });
 
-        $('.J_Size').delegate('p em','click',function () {
+        $('.J_Size').delegate('p em','click',function() {
             if(!window.confirm('删除会影响购买该尺寸的商品,确认删除？')) return;
             $(this).parent().attr('data-type',0).hide();
         });
 
-        var getSizes=function () {
+        var getSizes=function() {
             var sizes=[];
-            $('.J_Size').find('[data-name]').each(function (i,item) {
+            $('.J_Size').find('[data-name]').each(function(i,item) {
                 item=$(item);
                 sizes.push({
                     type: parseInt(item.attr('data-type')),
@@ -444,18 +464,18 @@
 
         //基本信息
         $baseInfoBtn=$('#addBaseInfo');
-        $baseInfoBtn.click(function () {
+        $baseInfoBtn.click(function() {
             $('<p class="bs"><input class="text_short p-size" /><i class="bs-text">：</i><input class="text_normal p-size" /><em>×</em></p>')
                 .insertBefore($baseInfoBtn);
         });
 
-        $('.J_BaseInfo').delegate('p em','click',function () {
+        $('.J_BaseInfo').delegate('p em','click',function() {
             $(this).parent().remove();
         });
 
-        var getBaseInfos=function () {
+        var getBaseInfos=function() {
             var infos=[];
-            $('.J_BaseInfo').find('.bs').each(function (i,item) {
+            $('.J_BaseInfo').find('.bs').each(function(i,item) {
                 item=$(item).find('input');
 
                 infos.push({
@@ -492,14 +512,14 @@
         },{
             id: '#addColor',
             top: 0,
-            validate: function () {
+            validate: function() {
                 return getColors().length>0;
             },
             validationText: '请添加商品颜色'
         },{
             id: '#addSize',
             top: 0,
-            validate: function () {
+            validate: function() {
                 return getSizes().length>0;
             },
             validationText: '请添加商品尺寸'
@@ -511,7 +531,7 @@
         }]);
 
         //修改商品
-        $('#add').click(function () {
+        $('#add').click(function() {
             var colors=getColors(),
                 sizes=getSizes(),
                 infos=getBaseInfos();
@@ -523,7 +543,7 @@
                 $('[name="sizes"]').val(util.stringify(sizes));
                 $('[name="baseInfo"]').val(util.stringify(infos));
 
-                util.submitForm('#form1',function (res) {
+                util.submitForm('#form1',function(res) {
                     $content.val(decodeURIComponent($content.val()));
                     if(res.success) {
                         alert('修改成功');

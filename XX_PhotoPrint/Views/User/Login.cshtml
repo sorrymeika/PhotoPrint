@@ -17,7 +17,7 @@
             return;
         }
 
-        var user = SL.Data.SQL.QuerySingle("select UserID,UserName,Password,LatestLoginDate,Avatars from Users where Account=@p0", account);
+        var user = SQL.QueryOne("select UserID,UserName,Password,LatestLoginDate,Avatars from Users where Account=@p0", account);
         if (user == null)
         {
             HtmlUtil.OutputResult(new { success = false, msg = "该账号不存在" });

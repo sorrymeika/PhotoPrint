@@ -25,8 +25,15 @@ namespace XX_PhotoPrint
                 "User",
                 "{handle}.html",
                 new { controller = "Home", action = "Index", catalog = "User" },
-                new { handle = "^Login|Register|Register1$" }
+                new { handle = "^Login|Register|Register1|Register2$" }
 
+            );
+
+            routes.MapRoute(
+                "Item",
+                "item/{id}.html",
+                new { controller = "Home", action = "Index", catalog = "Product", handle = "Item" },
+                new { id = "^\\d+$" }
             );
 
             routes.MapRoute(

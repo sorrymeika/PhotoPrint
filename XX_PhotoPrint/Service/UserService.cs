@@ -24,6 +24,12 @@ namespace XX_PhotoPrint.Service
             return IsLogin() ? GetUser()["UserName"] as String : null;
         }
 
+
+        public static int GetUserID()
+        {
+            return IsLogin() ? (int)GetUser()["UserID"] : 0;
+        }
+
         public static int GetUserID(string account)
         {
             IDictionary<string, int> data;

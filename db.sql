@@ -301,3 +301,7 @@ IsReview bit
 --2014-09-04
 --·şÎñ¶ËÎ´Ö´ĞĞ
 alter table Users add RealName varchar(20)
+alter table Users add Address varchar(500)
+alter table Users add RegionID int
+
+alter table Product add OrigPrice decimal(28,2)

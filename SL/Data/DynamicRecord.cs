@@ -8,6 +8,7 @@
     using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
 
+    [Serializable]
     public sealed class DynamicRecord : DynamicObject, ICustomTypeDescriptor
     {
         private readonly Dictionary<string, object> fields;

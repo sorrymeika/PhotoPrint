@@ -1,7 +1,9 @@
 ﻿@using XX_PhotoPrint.Service
-@using System.Web.Script.Serialization
 @{
     Layout = null;
+
+    int total;
+    var products = ProductService.Search(null, 1, 10, out total);
 }
 <!DOCTYPE html>
 <html>
@@ -26,14 +28,14 @@
     <div class="main">
         <div class="m_recommend">
             <ul class="clearfix">
-                <li><a class="view"><span><b>￥120</b><em>查看</em></span></a>
-                    <p class="img"><a href=""><img src="" /></a></p>
-                    <p class="con"><a href="">夏季新款惺惺相惜惺惺相惜</a></p>
-                </li>
-                <li><a class="view"><span><b>￥120</b><em>查看</em></span></a>
-                    <p class="img"><a href=""><img src="" /></a></p>
-                    <p class="con"><a href="">夏季新款惺惺相惜惺惺相惜</a></p>
-                </li>
+                @for (var i = 0; i < products.Count; i++)
+                {
+                    var item = products[i];
+                    <li><a class="view" href="/item/@(item.WorkID).html"><span><b>￥120</b><em>查看</em></span></a>
+                        <p class="img"><a href="/item/@(item.WorkID).html"><img src="@item.Picture" /></a></p>
+                        <p class="con"><a href="/item/@(item.WorkID).html">@item.WorkName@item.ProductName</a></p>
+                    </li>
+                }
             </ul>
         </div>
     </div>

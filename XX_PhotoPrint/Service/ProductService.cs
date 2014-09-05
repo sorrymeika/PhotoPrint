@@ -2,11 +2,48 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.Helpers;
 
 namespace XX_PhotoPrint.Service
 {
     public class ProductService
     {
+        public static dynamic GetByID(int workId)
+        {
+            var Request = HttpContext.Current.Request;
+
+            using (SL.Data.Database db = SL.Data.Database.Open())
+            {
+                var data = db.QuerySingle("select w.WorkID,w.WorkName,w.WorkDesc,w.ProductID,a.ProductName,a.Price,w.SoldNum,a.BaseInfo,a.Content,a.SubID,b.SubName,c.CategoryID,c.CategoryName from Work w join Product a on w.ProductID=a.ProductID join SubCate b on a.SubID=b.SubID join Category c on b.CategoryID=c.CategoryID where w.WorkID=@p0 and w.Deleted=0 and a.Deleted=0", workId);
+                if (data == null)
+                {
+                    return null;
+                }
+                int productId = (int)data["ProductID"];
+                string baseInfo = (string)data["BaseInfo"];
+                if (!string.IsNullOrEmpty(baseInfo))
+                {
+                    data["BaseInfo"] = Json.Decode<IList<IDictionary<string, object>>>(baseInfo);
+                }
+                else if (baseInfo == "")
+                {
+                    data["BaseInfo"] = null;
+                }
+
+                if (!string.IsNullOrEmpty((string)data["Content"]))
+                {
+                    data["Content"] = System.Text.RegularExpressions.Regex.Replace(data["Content"].ToString(), @"src=""/", "src=\"http://" + Request.Url.Authority + "/", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                }
+
+                data["Colors"] = db.Query("select ColorID,ColorName,ColorCode from Color where ProductID=@p0", productId);
+                data["Styles"] = db.Query("select a.StyleID,StyleName,Rect,ColorID,SizeID,[Print],Content from Style a left join Customization b on a.StyleID=b.StyleID where WorkID=@p0 order by a.StyleID", workId);
+                data["Size"] = db.Query("select SizeID,SizeName,StyleID from ProductSize where ProductID=@p0", productId);
+                data["StyleColorPic"] = db.Query("select PicID,StyleID,ColorID,Picture from StyleColorPic where ProductID=@p0", productId);
+
+                return data;
+            }
+        }
+
         public static IList<dynamic> Search(int categoryId, string keywords, int page, int pageSize, string sort, string sortType, out int total)
         {
             return Search(categoryId, 0, keywords, page, pageSize, sort, sortType, out  total);

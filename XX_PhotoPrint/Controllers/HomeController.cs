@@ -15,6 +15,8 @@ namespace XX_PhotoPrint.Controllers
     {
         public ActionResult Index(string catalog, string handle)
         {
+            this.ViewBag.RouteData = this.RouteData.Values;
+
             return View("~/Views/" + catalog + "/" + handle + ".cshtml");
         }
 
