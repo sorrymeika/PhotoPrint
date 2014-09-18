@@ -107,7 +107,7 @@ EditTime datetime,
 Deleted bit
 )
 
---定制信息
+--官方定制信息
 create table Customization(
 CustomID int identity primary key,
 WorkID int,

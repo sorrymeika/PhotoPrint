@@ -1,7 +1,7 @@
-﻿define(function(require,exports,module) {
+﻿define(function (require,exports,module) {
     var $=require('jquery');
 
-    var offsetParent=function(el) {
+    var offsetParent=function (el) {
         var parent=el.parent(),
 			position;
         while(parent.length!=0&&parent[0].tagName.toLowerCase()!="body") {
@@ -12,7 +12,7 @@
         return parent;
     };
 
-    var Validation=function(input,options) {
+    var Validation=function (input,options) {
         var me=this;
 
         options=$.extend({
@@ -71,7 +71,7 @@
         options.onValidate&&input.on('validate',$.proxy(options.onValidate,me));
 
         if(compare)
-            compare.on('validate',function(evt,suc) {
+            compare.on('validate',function (evt,suc) {
                 if(suc&&input.val()&&this.value!=input.val()) {
                     me.error(options.compareText);
                 }
@@ -79,26 +79,36 @@
 
         if(input[0].tagName.toLowerCase()=="input"&&input[0].type=="file") {
         } else {
-            input.focus(function() {
+            input.focus(function () {
                 if(options.beforeValidate) options.beforeValidate.call(me);
                 me.hide();
                 if(options.msg) me.msg(options.msg);
             })
-			.blur(function() {
+			.blur(function () {
 			    me.hide().validate();
 			});
         }
     };
     Validation.prototype={
-        hide: function() {
+        hide: function () {
             this._options._tip.hide();
             return this;
         },
-        validate: function(callback) {
+        validate: function (callback) {
             var me=this,
 				opt=me._options,
 				v=opt._input.val(),
-				res=false;
+				res=false,
+                dfd={
+                    reject: function (msg) {
+                        me.error(opt.validationText||msg);
+                        callback&&callback(false);
+                    },
+                    resolve: function () {
+                        me.success(opt.successText);
+                        callback&&callback(true);
+                    }
+                };
 
             if((opt.emptyAble===false||($.isFunction(opt.emptyAble)&&!opt.emptyAble()))&&(v==""||v==null))
                 me.error(opt.emptyText);
@@ -107,11 +117,7 @@
             else if(opt.compare&&opt.compare.val()!=v)
                 me.error(opt.compareText);
             else if(opt.validate) {
-                res=opt.validate.call(me,v,function(flag,msg) {
-                    if(!flag) me.error(opt.validationText||msg);
-                    else me.success(opt.successText);
-                    callback&&callback(flag);
-                });
+                res=opt.validate.call(me,v,dfd);
 
                 if(res===true)
                     me.success(opt.successText);
@@ -126,16 +132,16 @@
                 return res;
             }
         },
-        msg: function(msg) {
+        msg: function (msg) {
             return this._text(msg);
         },
-        success: function(msg) {
+        success: function (msg) {
             return this._text(msg,true);
         },
-        error: function(msg) {
+        error: function (msg) {
             return this._text(msg,false);
         },
-        _text: function(msg,type) {
+        _text: function (msg,type) {
             var me=this,
                 opt=me._options,
                 tip=opt._tip,
@@ -192,62 +198,68 @@
         }
     };
 
-    var Validations=function(options) {
+    var Validations=function (options) {
         var me=this;
 
         me._list=[];
 
         if(options)
-            $.each(options,function(input,opt) {
+            $.each(options,function (input,opt) {
                 me.add(input,opt);
             });
     };
 
     Validations.prototype={
-        add: function(input,options) {
+        add: function (input,options) {
             var valid=options?new Validation(input,options):input;
 
             this._list.push(valid);
 
             return this;
         },
-        items: function() {
+        items: function () {
             var list=this._list,
                 args=arguments,
                 items=new Validations();
 
-            $.each($.isArray(args[0])?args[0]:args,function(i,index) {
+            $.each($.isArray(args[0])?args[0]:args,function (i,index) {
                 items._list.push(list[index]);
             });
 
             return items;
         },
-        hide: function() {
-            $.each(this._list,function(i,item) {
+        hide: function () {
+            $.each(this._list,function (i,item) {
                 item.hide();
             });
             return this;
         },
-        validate: function(callback) {
+        validate: function (callback) {
             var list=this._list,
                 length=list.length-1,
                 result=true,
+                immediately,
+                isDfd=false,
                 dfd=$.Deferred();
 
-            $.each(list,function(i,item) {
-                item.validate(function(flag) {
+            $.each(list,function (i,item) {
+                immediately=item.validate(function (flag) {
                     result&=flag;
 
                     if(length==i) {
                         callback&&callback(result===1);
-                        dfd[result===1?'resolve':'reject']();
+                        isDfd&&dfd[result===1?'resolve':'reject']();
                     }
                 });
+
+                if(immediately!==true&&immediately!==false) {
+                    isDfd=true;
+                }
             });
 
-            return dfd;
+            return isDfd?dfd:result;
         },
-        item: function(i) {
+        item: function (i) {
             return this._list[i];
         }
     };

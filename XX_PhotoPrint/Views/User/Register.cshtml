@@ -35,6 +35,7 @@
 
             user["UserID"] = uid;
             user["UserName"] = userName;
+            user["Account"] = account;
             user["Auth"] = auth;
             user["LatestLoginDate"] = date.ToString("yyyy-MM-dd HH:mm:ss");
             user["Avatars"] = null;
@@ -60,10 +61,11 @@
     <div class="steps_bd reg_form js_form">
         <div class="reg_hd"><b class="hd">新用户注册</b><span class="msg">所有字段都为强制性，除非另有说明</span></div>
         <div class="reg_bd">
-            <div class="clearfix"><dl class="form_item l">
-                <dt>邮箱</dt>
-                <dd><input class="text" name="mail" type="text" value="" /></dd>
-            </dl>
+            <div class="clearfix">
+                <dl class="form_item l">
+                    <dt>邮箱</dt>
+                    <dd><input class="text" name="mail" type="text" value="" /></dd>
+                </dl>
                 <dl class="form_item l">
                     <dt>用户名</dt>
                     <dd><input class="text" name="username" type="text" value="" /></dd>
@@ -87,47 +89,44 @@
     </div>
 </div>
 <script type="text/javascript">
-    seajs.use(['$','lib/util','sl/view','sl/validation'],function($,util,View,Validation) {
+    seajs.use(['$','lib/util','sl/view','sl/validation'],function ($,util,View,Validation) {
         var RegisterView=View.extend({
             events: {
                 'click .js_register': 'register'
             },
-            register: function() {
+            register: function () {
                 var that=this;
 
                 if(that.isLoading) return;
 
-                that.validator
-                    .validate()
-                    .done(function() {
+                if(that.validator.validate()) {
+                    that.isLoading=true;
 
-                        that.isLoading=true;
+                    that.$('.js_register').addClass('disabled').html('<i class="ico"></i>请稍候...');
 
-                        that.$('.js_register').addClass('disabled').html('<i class="ico"></i>请稍候...');
+                    $.ajax({
+                        type: 'POST',
+                        dataType: 'json',
+                        url: '/register.html',
+                        data: {
+                            mail: that.$('[name="mail"]').val(),
+                            username: that.$('[name="username"]').val(),
+                            password: that.$('[name="password"]').val()
+                        },
+                        success: function (res) {
 
-                        $.ajax({
-                            type: 'POST',
-                            dataType: 'json',
-                            url: '/register.html',
-                            data: {
-                                mail: that.$('[name="mail"]').val(),
-                                username: that.$('[name="username"]').val(),
-                                password: that.$('[name="password"]').val()
-                            },
-                            success: function(res) {
+                            if(res.success) {
+                                location.href="/register1.html";
+                            } else
+                                alert(res.msg);
 
-                                if(res.success) {
-                                    location.href="/register1.html";
-                                } else
-                                    alert(res.msg);
-
-                                that.$('.js_register').removeClass('disabled').html('<i class="ico"></i>继 续');
-                                that.isLoading=false;
-                            }
-                        });
+                            that.$('.js_register').removeClass('disabled').html('<i class="ico"></i>继 续');
+                            that.isLoading=false;
+                        }
                     });
+                }
             },
-            initialize: function() {
+            initialize: function () {
                 var that=this;
 
                 that.validator=new Validation({

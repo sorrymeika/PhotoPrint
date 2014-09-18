@@ -1,29 +1,14 @@
 ﻿@using XX_PhotoPrint.Service
-@using System.Web.Script.Serialization
 @{
     Layout = null;
 
-    var js = new JavaScriptSerializer();
+    int uid;
 
-    var req = new Req();
-    string account = req.String("Account", false, "未输入账号");
-    string auth = req.String("Auth", false, "未输入授权");
-
-    if (req.HasError)
+    if (!AuthHelper.CheckAuth(out uid))
     {
-        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        Json.Write(new { success = false, returnCode = "0000", msg = "授权错误" }, Output);
         return;
     }
-
-    auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
-    string sAuth = UserService.GetAuth(account);
-    if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
-    {
-        Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
-        return;
-    }
-
-    int uid = UserService.GetUserID(account);
 
     IList<Dictionary<string, object>> data;
     string url = "http://" + Request.Url.Authority + "/Content/";
@@ -42,6 +27,6 @@
         }
     }
 
-    Output.Write(js.Serialize(new { success = true, data = data }));
+    Json.Write(new { success = true, data = data }, Output);
     return;
 }

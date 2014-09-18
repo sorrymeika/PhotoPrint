@@ -32,7 +32,7 @@
         return;
     }
 }
-<div class="main prodwrap clearfix">
+<div class="main prodwrap clearfix js_form">
     <div class="prod_preview"><img src="@StyleColorPic.First().Picture" /></div>
     <div class="prod_main_info">
         <div class="priceinfo"><span class="saleprice">￥100</span><del class="origprice">￥200</del><i class="ico_sale">促销</i></div>
@@ -42,7 +42,7 @@
             <div class="pic"></div>
         </div>
         <ul class="prod_selector">
-            <li><span>数量</span> <input class="num" value="1" /></li>
+            <li><span>数量</span> <input class="num js_qty" data-qty='1' value="1" /></li>
             <li><span>颜色</span> <span class="color">
                 @for (int i = 0; i < Colors.Count; i++)
                 {
@@ -73,11 +73,25 @@
             </span></li>
         </ul>
         <ul class="img_smallist clearfix">
-            <li><img /></li>
+            @for (var i = 0; i < StyleColorPic.Count; i++)
+            {
+                var item = StyleColorPic[i];
+                if (i == 0)
+                {
+                <li class="curr"><img src="@item.Picture" /></li>
+                }
+                else
+                { 
+                <li><img src="@item.Picture" /></li>
+                }
+            }
         </ul>
-        <div class="actions">
-            <div class="btn_dlg_l"><i class="ico"></i>重新创作</div>
-            <div class="btn_dlg_r"><i class="ico"></i>加入购物车</div>
+        <div class="actions"><input class="js_color_id" value="@Colors.First().ColorID" type="hidden" />
+            <input class="js_size_id" value="@Size.First().SizeID" type="hidden" />
+            <input class="js_product_id" value="@Item.ProductID" type="hidden" />
+            <input class="js_work_id" value="@Item.WorkID" type="hidden" />
+            <div class="btn_dlg_l js_create"><i class="ico"></i>重新创作</div>
+            <div class="btn_dlg_r js_addtocart"><i class="ico"></i>加入购物车</div>
         </div>
     </div>
 </div>
@@ -86,7 +100,7 @@
         <div class="cn">产品详情</div>
         <div class="en">PRODUCT DETAILS</div>
     </div>
-    <div class="prod_details"></div>
+    <div class="prod_details">@(new MvcHtmlString(Item.Content))</div>
 </div>
 <div class="main prodwrap">
     <div class="bigtitle">
@@ -95,87 +109,107 @@
     </div>
     <div class="other_list">
         <ul class="clearfix">
-            <li><a href="">
-                <p class="img"><img src="" /></p>
+            <li><a href=""><p class="img"><img src="" /></p>
                 <p class="name">名称</p>
-            </a></li>
-            <li><a href="">
-                <p class="img"><img src="" /></p>
+            </a>
+            </li>
+            <li><a href=""><p class="img"><img src="" /></p>
                 <p class="name">名称</p>
-            </a></li>
-            <li><a href="">
-                <p class="img"><img src="" /></p>
+            </a>
+            </li>
+            <li><a href=""><p class="img"><img src="" /></p>
                 <p class="name">名称</p>
-            </a></li>
+            </a>
+            </li>
         </ul>
     </div>
 </div>
 <script>
-    seajs.use(['$','lib/util','sl/view','sl/validation'],function($,util,View,Validation) {
-        var LoginView=View.extend({
+    seajs.use(['$','lib/util','sl/view','sl/validation'],function ($,util,View,Validation) {
+        var product_id=$('.js_product_id').val(),
+            work_id=$('.js_work_id').val();
+
+        var ProductView=View.extend({
             events: {
-                'click .js_login': 'login',
-                'focus .js_text_focus .text': function(e) {
-                    $(e.currentTarget).next('.text_tip').hide();
+                'click .js_addtocart': 'addToCart',
+                'keyup .js_qty': function (e) {
+                    var $qty=$(e.currentTarget),
+                        qty=$qty.val();
+
+                    if(qty!=''&&(!/^\d+$/.test(qty)||qty=='0')) {
+                        $qty.val($qty.data('qty')).css({
+                            background: '#f9d0d0',
+                            border: '1px solid #c00'
+                        });
+
+                        setTimeout(function () {
+                            $qty.css({
+                                background: '',
+                                border: ''
+                            });
+                        },200);
+
+                    } else if(qty!='') {
+                        $qty.data('qty',qty);
+                    }
                 },
-                'blur .text': function(e) {
-                    if(e.target.value=='')
-                        $(e.currentTarget).next('.text_tip').show();
+                'blur .js_qty': function (e) {
+                    var $qty=$(e.currentTarget),
+                        qty=$qty.val();
+
+                    if(qty=='') {
+                        $qty.val($qty.data('qty'));
+                    }
                 }
             },
-            onLoginEnd: function() {
-                var that=this;
 
-                that.$('.js_login').removeClass('disabled').html('<i class="ico"></i>登 录');
-                that.isLogining=false;
-            },
-            login: function() {
-                var that=this;
+            isLogining: false,
 
+            addToCart: function () {
+                var that=this;
                 if(that.isLogining) return;
+                that.isLogining=true;
 
-                that.validator
-                    .validate()
-                    .done(function() {
+                that.$('.js_addtocart').addClass('disabled').html('<i class="ico"></i>请稍候...');
 
-                        that.isLogining=true;
-
-                        that.$('.js_login').addClass('disabled').html('<i class="ico"></i>登录中...');
-
-                        util.submitForm(that.$el,function(res) {
-                            if(res.success) {
-                                location.href=util.query('?r')||"/";
-                            } else {
-                                alert(res.msg);
-                            }
-
-                            that.onLoginEnd();
-                        });
-                    });
-            },
-            initialize: function() {
-                var that=this;
-
-                that.$('.js_text_focus .text').each(function() {
-                    if(this.value!='') $(this).next('.text_tip').hide();
-                });
-
-                that.validator=new Validation({
-                    '[name="mail"]': {
-                        emptyAble: false,
-                        emptyText: '<i></i>请输入MAIL',
-                        successText: ''
+                $.ajax({
+                    url: '/json/shop/addShoppingCart',
+                    type: 'POST',
+                    data: {
+                        WorkID: work_id,
+                        ProductID: product_id,
+                        Qty: $('.js_qty').val(),
+                        ColorID: $('.js_color_id').val(),
+                        SizeID: $('.js_size_id').val(),
+                        UseDefault: true
                     },
-                    '[name="password"]': {
-                        emptyAble: false,
-                        emptyText: '<i></i>请输入密码',
-                        successText: ''
+                    dataType: 'json',
+                    success: function (res) {
+                        if(res.success) {
+                            alert('加入购物车成功！');
+                        } else if(res.returnCode=='0000') {
+                            location.href='/login.html?r='+encodeURIComponent(location.href);
+                        } else {
+                            alert(res.msg);
+                        }
+                    },
+                    error: function () {
+                        alert('网络错误');
+                    },
+                    complete: function () {
+                        that.isLogining=false;
+                        that.$('.js_addtocart').removeClass('disabled').html('<i class="ico"></i>加入购物车');
                     }
                 });
+
+            },
+            initialize: function () {
+                var that=this;
+
             }
         });
 
-        new LoginView('.js_form');
+        new ProductView('.js_form');
 
     });
 </script>

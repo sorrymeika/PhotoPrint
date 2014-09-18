@@ -187,12 +187,14 @@ a:hover { color: #999; }
 .prod_selector .color i.curr { border: 4px solid #e94b1e; }
 .prod_selector .num { width: 60px; text-align: center; }
 
-.prod_selector .size i { vertical-align: -2px; display: inline-block; line-height: 26px; height: 26px; padding: 0 5px; margin-right: 5px; background-color:#d8dad9; }
+.prod_selector .size i { vertical-align: -2px; display: inline-block; line-height: 26px; height: 26px; padding: 0 5px; margin-right: 5px; background-color:#d8dad9; min-width: 16px; font-size: 14px; text-align: center; }
 .prod_selector .size i.curr { background-color: #e94b1e; color:#fff; }
-
 
 .prod_main_info .img_smallist { margin-top: 13px; }
 .prod_main_info .img_smallist li { height: 50px; width: 50px; background: #ddd; }
+.prod_main_info .img_smallist li img { height: 50px; width: 50px; }
+.prod_main_info .img_smallist li.curr { height: 42px; width: 42px;border: 4px solid #ddd; }
+.prod_main_info .img_smallist li.curr img { height: 42px; width: 42px; }
 
 .prod_main_info .actions { margin-top: 25px; }
 .prod_main_info .actions .btn_dlg_l, .prod_main_info .actions .btn_dlg_r { width: 120px; }

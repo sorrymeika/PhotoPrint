@@ -31,7 +31,7 @@
                 @for (var i = 0; i < products.Count; i++)
                 {
                     var item = products[i];
-                    <li><a class="view" href="/item/@(item.WorkID).html"><span><b>￥120</b><em>查看</em></span></a>
+                    <li><a class="view" href="/item/@(item.WorkID).html"><span><b>￥@item.Price</b><em>查看</em></span></a>
                         <p class="img"><a href="/item/@(item.WorkID).html"><img src="@item.Picture" /></a></p>
                         <p class="con"><a href="/item/@(item.WorkID).html">@item.WorkName@item.ProductName</a></p>
                     </li>

@@ -187,36 +187,33 @@
 
                 if(that.isLoading) return;
 
-                that.validator
-                    .validate()
-                    .done(function() {
+                if (that.validator.validate()) {
+                    that.isLoading=true;
 
-                        that.isLoading=true;
+                    that.$('.js_register').addClass('disabled').html('<i class="ico"></i>请稍候...');
 
-                        that.$('.js_register').addClass('disabled').html('<i class="ico"></i>请稍候...');
+                    $.ajax({
+                        type: 'POST',
+                        dataType: 'json',
+                        url: '/register1.html',
+                        data: {
+                            region: that.$('[name="region"]').val(),
+                            address: that.$('[name="address"]').val(),
+                            realName: that.$('[name="realName"]').val(),
+                            mobile: that.$('[name="mobile"]').val()
+                        },
+                        success: function(res) {
 
-                        $.ajax({
-                            type: 'POST',
-                            dataType: 'json',
-                            url: '/register1.html',
-                            data: {
-                                region: that.$('[name="region"]').val(),
-                                address: that.$('[name="address"]').val(),
-                                realName: that.$('[name="realName"]').val(),
-                                mobile: that.$('[name="mobile"]').val()
-                            },
-                            success: function(res) {
+                            if(res.success) {
+                                location.href="/register2.html";
+                            } else
+                                alert(res.msg);
 
-                                if(res.success) {
-                                    location.href="/register2.html";
-                                } else
-                                    alert(res.msg);
-
-                                that.$('.js_register').removeClass('disabled').html('<i class="ico"></i>继 续');
-                                that.isLoading=false;
-                            }
-                        });
+                            that.$('.js_register').removeClass('disabled').html('<i class="ico"></i>继 续');
+                            that.isLoading=false;
+                        }
                     });
+                }
             },
             initialize: function() {
                 var that=this;

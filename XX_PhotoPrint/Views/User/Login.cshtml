@@ -42,6 +42,7 @@
         user["Auth"] = auth;
         user["LatestLoginDate"] = date.ToString("yyyy-MM-dd HH:mm:ss");
         user["Avatars"] = "http://" + Request.Url.Authority + "/Content/" + user["Avatars"];
+        user["Account"] = account;
 
         UserService.SetAuth(account, md5auth);
 
@@ -83,52 +84,50 @@
     </div>
 </div>
 <script type="text/javascript">
-    seajs.use(['$','lib/util','sl/view','sl/validation'],function($,util,View,Validation) {
+    seajs.use(['$','lib/util','sl/view','sl/validation'],function ($,util,View,Validation) {
         var LoginView=View.extend({
             events: {
                 'click .js_login': 'login',
-                'focus .js_text_focus .text': function(e) {
+                'focus .js_text_focus .text': function (e) {
                     $(e.currentTarget).next('.text_tip').hide();
                 },
-                'blur .text': function(e) {
+                'blur .text': function (e) {
                     if(e.target.value=='')
                         $(e.currentTarget).next('.text_tip').show();
                 }
             },
-            onLoginEnd: function() {
+            onLoginEnd: function () {
                 var that=this;
 
                 that.$('.js_login').removeClass('disabled').html('<i class="ico"></i>登 录');
                 that.isLogining=false;
             },
-            login: function() {
+            login: function () {
                 var that=this;
 
                 if(that.isLogining) return;
 
-                that.validator
-                    .validate()
-                    .done(function() {
+                if(that.validator.validate()) {
+                    that.isLogining=true;
 
-                        that.isLogining=true;
+                    that.$('.js_login').addClass('disabled').html('<i class="ico"></i>登录中...');
 
-                        that.$('.js_login').addClass('disabled').html('<i class="ico"></i>登录中...');
+                    util.submitForm(that.$el,function (res) {
+                        if(res.success) {
+                            location.href=decodeURIComponent(util.query('?r')||"/");
+                        } else {
+                            alert(res.msg);
+                        }
 
-                        util.submitForm(that.$el,function(res) {
-                            if(res.success) {
-                                location.href=util.query('?r')||"/";
-                            } else {
-                                alert(res.msg);
-                            }
-
-                            that.onLoginEnd();
-                        });
+                        that.onLoginEnd();
                     });
+                }
+
             },
-            initialize: function() {
+            initialize: function () {
                 var that=this;
 
-                that.$('.js_text_focus .text').each(function() {
+                that.$('.js_text_focus .text').each(function () {
                     if(this.value!='') $(this).next('.text_tip').hide();
                 });
 

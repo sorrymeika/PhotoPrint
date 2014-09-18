@@ -1,40 +1,79 @@
 ﻿@using XX_PhotoPrint.Service;
 @functions{
-	public static bool IsAuth(Req req, out int uid)
-	{
-		string account = req.String("Account", false, "未输入账号");
-		string auth = req.String("Auth", false, "未输入授权");
+    public static bool CheckAuth()
+    {
+        int uid;
+        return CheckAuth(out uid);
+    }
 
-		if (req.HasError)
-		{
-			Json.Write(new { success = false, msg = req.FirstError, errors = req.GetErrors() }, Response.Output);
-			uid = 0;
-			return false;
-		}
+    public static bool CheckAuth(out int uid)
+    {
+        bool isLogin = UserService.IsLogin();
 
-		auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
-		string sAuth = UserService.GetAuth(account);
-		if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
-		{
-			Json.Write(new { success = false, msg = "授权错误" }, Response.Output);
-			uid = 0;
-			return false;
-		}
-		uid = UserService.GetUserID(account);
-		return uid != 0;
-	}
+        if (isLogin)
+        {
+            uid = UserService.GetUserID();
+            return true;
+        }
 
-	public static bool IsAuth(Req req)
-	{
-		int uid;
-		return IsAuth(req, out uid);
-	}
+        Req req = new Req();
+        string account = req.String("Account", false, "NO_AUTH");
+        string auth = req.String("Auth", false, "NO_AUTH");
 
-	public static int GetUserID(Req req)
-	{
-		int uid;
-		IsAuth(req, out uid);
+        if (req.HasError)
+        {
+            uid = 0;
+            return false;
+        }
 
-		return uid;
-	}
+        auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+        string sAuth = UserService.GetAuth(account);
+        if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+        {
+            uid = 0;
+            return false;
+        }
+
+        uid = UserService.GetUserID(account);
+        return uid != 0;
+    }
+
+
+    public static bool IsAuth(Req req, out int uid)
+    {
+        string account = req.String("Account", false, "NO_AUTH");
+        string auth = req.String("Auth", false, "NO_AUTH");
+
+        if (req.HasError)
+        {
+            Json.Write(new { success = false, msg = req.FirstError, errors = req.GetErrors() }, Response.Output);
+            uid = 0;
+            return false;
+        }
+
+        auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
+        string sAuth = UserService.GetAuth(account);
+        if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
+        {
+            Json.Write(new { success = false, msg = "授权错误" }, Response.Output);
+            uid = 0;
+            return false;
+        }
+        uid = UserService.GetUserID(account);
+        return uid != 0;
+    }
+
+    public static bool IsAuth(Req req)
+    {
+        int uid;
+        return IsAuth(req, out uid);
+    }
+
+    public static int GetUserID(Req req)
+    {
+        int uid;
+        IsAuth(req, out uid);
+
+        return uid;
+    }
 }
