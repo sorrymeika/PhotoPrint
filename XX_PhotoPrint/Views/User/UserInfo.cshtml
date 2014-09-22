@@ -1,0 +1,56 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    ViewBag.Title = "UserCenter";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    if (!UserService.IsLogin())
+    {
+        Response.Redirect("/login.html?r=/userinfo.html");
+        return;
+    }
+
+    var userInfo = UserService.GetUserFullInfo();
+
+}
+<div class="main ucenterwrap clearfix">
+    <div class="ucsidebar">
+        <div class="hd"><i class="ico"></i><span>资料</span></div>
+        <ul>
+            <li class="curr"><i class="ico"></i><span>数据</span></li>
+            <li><a href="/"><i class="ico"></i><span>账户</span></a></li>
+        </ul>
+    </div>
+    <div class="uccontent">
+        <div class="bd creations">
+            <dl class="uc_form">
+                <dt class="avatars"><img class="img js_avatars" src="@userInfo.Avatars" /></dt>
+                <dt>ID @userInfo.Account</dt>
+                <dt>用户名</dt>
+                <dd><input class="@userInfo.UserName" type="text" /></dd>
+                <dt>真实姓名</dt>
+                <dd><input class="@userInfo.RealName" type="text" /></dd>
+                <dt>手机</dt>
+                <dd><input class="@userInfo.Mobile" type="text" /></dd>
+                <dt>性别</dt>
+                <dd><input type="checkbox" /></dd>
+                <dt>生日</dt>
+                <dd><input class="@userInfo.Birthday" type="text" /></dd>
+            </dl>
+        </div>
+    </div>
+</div>
+<script>
+    seajs.use(['$','lib/util','sl/view','sl/validation'],function($,util,View,Validation) {
+
+        var DialogView=View.extend({
+            el: document.body,
+            template: '<div class="dialog avatar_dialog">\
+                            <div class="dialog_close"></div>\
+                            <div class="dialog_cont"></div>\
+                        </div>',
+            initialize: function() {
+            }
+        });
+
+    });
+</script>

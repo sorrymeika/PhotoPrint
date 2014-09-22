@@ -131,14 +131,14 @@ a:hover { color: #999; }
 
 .ucnav { margin: 67px 0 96px 0; }
 .ucnav li { display: inline-block; width: 120px; height: 110px; margin: 0 64px; }
-.ucnav li .ico { display: inline-block; width: 120px; height: 110px; width: 77px; height: 70px; text-align: center; background: url(images/site.png) no-repeat 0px -100px; }
+.ucnav li .ico { display: inline-block; width: 120px; height: 110px; width: 77px; height: 70px; text-align: center; background: url(images/site.png) no-repeat -100px -100px; }
 .ucnav li span { display: block; }
-.ucnav li .ico_manage { background-position: -100px -100px; }
-.ucnav li .ico_custom { background-position: -200px -100px; }
+.ucnav li .ico_manage { background-position: -200px -100px; }
+.ucnav li .ico_custom { background-position: 0px -100px; }
 .ucnav li .ico_signout { background-position: -300px -100px; }
 
 .ucsidebar { width: 300px; text-align: center; float: left; }
-.ucsidebar .ico { width: 77px; height: 70px; background: #fff url(images/site.png) no-repeat 0px -100px; display: block; margin: 0 auto; }
+.ucsidebar .ico { width: 77px; height: 70px; background: #fff url(images/site.png) no-repeat -100px -100px; display: block; margin: 0 auto; }
 .ucsidebar .hd { margin-top: 27px; }
 .ucsidebar li .ico { background-position: -150px 0px; width: 50px; height: 50px; margin-top: 42px; }
 .ucsidebar li.curr { color: #fe3d04; }

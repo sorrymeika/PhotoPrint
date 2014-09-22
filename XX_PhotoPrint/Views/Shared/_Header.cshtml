@@ -5,7 +5,7 @@
         <div class="navtop">
             @if (UserService.IsLogin())
             { 
-                <text><span class="">HI @UserService.GetUserName()</span> / <a class="ico_cart"><i class="ico"></i>购物车</a></text>
+                <text><a href="/usercenter.html">HI @UserService.GetUserName()</a> / <a class="ico_cart"><i class="ico"></i>购物车</a></text>
             }
             else
             {

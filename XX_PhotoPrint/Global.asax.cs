@@ -25,7 +25,7 @@ namespace XX_PhotoPrint
                 "User",
                 "{handle}.html",
                 new { controller = "Home", action = "Index", catalog = "User" },
-                new { handle = "^Login|Register|Register1|Register2$" }
+                new { handle = "^Login|Register|Register1|Register2|UserCenter|UserInfo$" }
 
             );
 
