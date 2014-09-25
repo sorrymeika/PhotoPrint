@@ -21,36 +21,84 @@
         </ul>
     </div>
     <div class="uccontent">
-        <div class="bd creations">
+        <div class="bd js_form">
             <dl class="uc_form">
                 <dt class="avatars"><img class="img js_avatars" src="@userInfo.Avatars" /></dt>
                 <dt>ID @userInfo.Account</dt>
                 <dt>用户名</dt>
-                <dd><input class="@userInfo.UserName" type="text" /></dd>
+                <dd><input class="text" value="@userInfo.UserName" type="text" /></dd>
                 <dt>真实姓名</dt>
-                <dd><input class="@userInfo.RealName" type="text" /></dd>
+                <dd><input class="text" value="@userInfo.RealName" type="text" /></dd>
                 <dt>手机</dt>
-                <dd><input class="@userInfo.Mobile" type="text" /></dd>
+                <dd><input class="text" value="@userInfo.Mobile" type="text" /></dd>
                 <dt>性别</dt>
-                <dd><input type="checkbox" /></dd>
+                <dd><label><input type="checkbox" value="1" />男</label> <label><input type="checkbox" value="0" />女</label></dd>
                 <dt>生日</dt>
-                <dd><input class="@userInfo.Birthday" type="text" /></dd>
+                <dd><input class="text" value="@userInfo.Birthday" type="text" /></dd>
             </dl>
+            <div class="uc_form_action">
+                <div class="btn_dlg_r js_update"><i class="ico"></i>更 新</div>
+            </div>
         </div>
     </div>
 </div>
 <script>
     seajs.use(['$','lib/util','sl/view','sl/validation'],function($,util,View,Validation) {
 
-        var DialogView=View.extend({
-            el: document.body,
-            template: '<div class="dialog avatar_dialog">\
-                            <div class="dialog_close"></div>\
-                            <div class="dialog_cont"></div>\
-                        </div>',
+        var UserView=View.extend({
+            events: {
+                'click .js_avatars': 'showAvatars'
+            },
             initialize: function() {
+                var that=this;
+            },
+            showAvatars: function() {
+                var that=this;
+
+                if(!that.dialogView) {
+                    that.dialogView=new DialogView();
+                }
+                that.dialogView.show();
             }
         });
+
+        var DialogView=View.extend({
+            el: '<div class="dialog avatar_dialog">\
+                    <div class="dialog_close"></div>\
+                    <div class="dialog_cont"></div>\
+                </div>',
+            mask: '<div></div>',
+            initialize: function() {
+                var that=this;
+
+                console.log(that.$el);
+
+                that.$el.appendTo(document.body);
+            },
+            show: function() {
+                var that=this,
+                    $window=$(window);
+
+                that.$el.css({
+                    visibility: 'hidden',
+                    display: 'block'
+                })
+                .css({
+                    top: ($window.height()-that.$el.height())/2,
+                    left: ($window.width()-that.$el.width())/2,
+                    visibility: ''
+                });
+
+                $window.on('resize',function() {
+                    that.$el.css({
+                        top: ($window.height()-that.$el.height())/2,
+                        left: ($window.width()-that.$el.width())/2
+                    });
+                });
+            }
+        });
+
+        new UserView('.js_form');
 
     });
 </script>

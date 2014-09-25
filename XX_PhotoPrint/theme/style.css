@@ -260,3 +260,10 @@ a:hover { color: #999; }
 .join_msg_hd, .join_msg { font-size: 12px; margin-left: 48px; color: #424242; }
 .join_msg_hd { margin-top: 41px; }
 .join_msg { line-height: 22px; margin-top: 14px; }
+
+.uc_form dt { margin-top: 20px; font-size: 14px; color:#000; }
+.uc_form dd { margin-top: 8px; font-size: 14px; }
+.uc_form .text { width: 278px; padding: 0 10px; height: 22px;border: 1px solid #a3a3a3;}
+.uc_form .avatars{ width: 55px; height: 55px; cursor: pointer; border: 1px solid #e2e2e2; padding: 1px; }
+.uc_form .avatars img { width: 55px; height: 55px;}
+.uc_form_action { margin-top: 40px; }

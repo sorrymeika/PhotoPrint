@@ -24,7 +24,7 @@
             args=Array.prototype.slice.call(arguments),
             selector=args.shift();
 
-        if(!$.isPlainObject(selector)) {
+        if(typeof selector!=='undefined'&&!$.isPlainObject(selector)) {
 
             that.$el=$(selector);
             options=args.shift();
@@ -36,10 +36,6 @@
         that.options=$.extend({},that.options,options);
 
         that.el=that.$el[0];
-
-        if(that.template) {
-            that.$el.append(tmpl(that.template,that.options));
-        }
 
         that.listen(that.events);
         that.listen(that.options.events);
@@ -95,6 +91,8 @@
         listenTo: function($target,name,f) {
             this._bindListenTo.push([$target,name,f]);
             $($target).on(name,$.proxy(f,this));
+
+            return this;
         },
 
         on: function(selector,evt,handler) {
@@ -182,7 +180,7 @@
             childClass.fn[key]=prop[key];
         }
 
-        childClass.superClass=that.prototype;
+        childClass.prototype.superClass=that.prototype;
         childClass.prototype.constructor=childClass;
 
         childClass.extend=arguments.callee;
