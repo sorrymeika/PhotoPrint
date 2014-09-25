@@ -31,6 +31,7 @@
 
         } else if(!that.$el) {
             that.$el=$(that.el);
+            options=selector;
         }
 
         that.options=$.extend({},that.options,options);

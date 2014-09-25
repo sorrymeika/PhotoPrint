@@ -5,13 +5,13 @@ using System.Web;
 using System.IO;
 using System.Web.Caching;
 
-namespace INAnswer.Service
+namespace SL.Util
 {
     /// <summary>
     /// 类型T必须有ID属性
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class CacheService
+    public class CacheUtil
     {
         private static void onRemove(string strIdentify, object userInfo, CacheItemRemovedReason reason)
         {

@@ -7,9 +7,9 @@ using System.Drawing.Drawing2D;
 using System.IO;
 using System.Drawing.Imaging;
 
-namespace INAnswer.Service
+namespace SL.Util
 {
-    public class ImageService
+    public class ImageUtil
     {
         private static Size getNewSize(int maxWidth, int maxHeight, int imageOriginalWidth, int imageOriginalHeight)
         {
@@ -158,6 +158,22 @@ namespace INAnswer.Service
             using (FileStream fs = new FileStream(fileName, FileMode.Open))
             {
                 image = GetThumbNailImage(System.Drawing.Image.FromStream(fs), thumMaxWidth, thumMaxHeight);
+            }
+
+            using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
+            {
+                Compress(image, ms, level);
+
+                return ms.ToArray();
+            }
+        }
+
+        public static byte[] Compress(Stream stream, int level, int thumMaxWidth, int thumMaxHeight)
+        {
+            Image image;
+            using (stream)
+            {
+                image = GetThumbNailImage(System.Drawing.Image.FromStream(stream), thumMaxWidth, thumMaxHeight);
             }
 
             using (System.IO.MemoryStream ms = new System.IO.MemoryStream())

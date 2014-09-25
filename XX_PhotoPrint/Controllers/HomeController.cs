@@ -8,6 +8,8 @@ using XX_PhotoPrint.Service;
 using System.IO;
 using System.Globalization;
 using System.Web.Script.Serialization;
+using System.Drawing;
+using SL.Util;
 
 namespace XX_PhotoPrint.Controllers
 {
@@ -324,5 +326,65 @@ namespace XX_PhotoPrint.Controllers
             }
         }
         #endregion
+
+
+        #region 图片预览
+
+        [HttpPost]
+        public ActionResult ImagePreview()
+        {
+            string callback = Request.Params["callback"];
+
+            HttpPostedFileBase pic = Request.Files.Count == 0 ? null : Request.Files[0];
+            if (pic != null && pic.ContentLength != 0)
+            {
+                int width = int.Parse(Request.QueryString["width"]), height = int.Parse(Request.QueryString["height"]);
+                Image originalImage = new Bitmap(pic.InputStream);
+                Bitmap image = new Bitmap(width, height);
+                Graphics g = Graphics.FromImage(image);
+                g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Low;
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighSpeed;
+
+                g.DrawImage(originalImage, new Rectangle(0, 0, width, height), new Rectangle(0, 0, originalImage.Width, originalImage.Height), GraphicsUnit.Pixel);
+
+                byte[] imageBuffer;
+                using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
+                {
+                    image.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
+
+                    g.Dispose();
+                    image.Dispose();
+
+                    imageBuffer = ms.ToArray();
+                }
+
+                string guid = System.Guid.NewGuid().ToString("N");
+
+                CacheUtil.CreateCache("preview-" + guid, 0.1, imageBuffer);
+
+                return Content(HtmlUtil.CallbackResult(callback, new { success = true, guid = guid, name = Request.Files.Keys[0] }));
+            }
+            else
+            {
+                return Content(HtmlUtil.CallbackResult(callback, new { success = false, msg = "您还未选择图片" }));
+            }
+        }
+
+        public ActionResult ImagePreview(string picGuid)
+        {
+            picGuid = "preview-" + picGuid;
+
+            if (SessionUtil.Exist(picGuid))
+            {
+                byte[] imageBuffer = CacheUtil.Get<byte[]>(picGuid);
+                return File(imageBuffer, "image/Jpeg");
+            }
+            else
+                return Content("图片不存在！");
+
+        }
+        #endregion
+
     }
 }
