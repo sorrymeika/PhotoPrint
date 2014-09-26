@@ -68,6 +68,12 @@ namespace XX_PhotoPrint
             );
 
             routes.MapRoute(
+                "ImagePreview",
+                "ImagePreview",
+                new { controller = "Home", action = "ImagePreview" }
+            );
+
+            routes.MapRoute(
                "Upload",
                "manage/upload",
                new { controller = "Home", action = "Upload" }

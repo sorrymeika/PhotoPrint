@@ -333,31 +333,16 @@ namespace XX_PhotoPrint.Controllers
         [HttpPost]
         public ActionResult ImagePreview()
         {
-            string callback = Request.Params["callback"];
+            RequestUtil req = new RequestUtil();
+
+            string callback = req.String("callback");
+            int width = req.Int("width", defaultValue: 640);
+            int height = req.Int("height", defaultValue: 1024);
 
             HttpPostedFileBase pic = Request.Files.Count == 0 ? null : Request.Files[0];
             if (pic != null && pic.ContentLength != 0)
             {
-                int width = int.Parse(Request.QueryString["width"]), height = int.Parse(Request.QueryString["height"]);
-                Image originalImage = new Bitmap(pic.InputStream);
-                Bitmap image = new Bitmap(width, height);
-                Graphics g = Graphics.FromImage(image);
-                g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
-                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Low;
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighSpeed;
-
-                g.DrawImage(originalImage, new Rectangle(0, 0, width, height), new Rectangle(0, 0, originalImage.Width, originalImage.Height), GraphicsUnit.Pixel);
-
-                byte[] imageBuffer;
-                using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
-                {
-                    image.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
-
-                    g.Dispose();
-                    image.Dispose();
-
-                    imageBuffer = ms.ToArray();
-                }
+                byte[] imageBuffer = ImageUtil.Compress(pic.InputStream, 40, width, height);
 
                 string guid = System.Guid.NewGuid().ToString("N");
 
@@ -371,17 +356,17 @@ namespace XX_PhotoPrint.Controllers
             }
         }
 
-        public ActionResult ImagePreview(string picGuid)
+        public ActionResult ImagePreview(string guid)
         {
-            picGuid = "preview-" + picGuid;
+            guid = "preview-" + guid;
 
-            if (SessionUtil.Exist(picGuid))
+            if (CacheUtil.ExistCache(guid))
             {
-                byte[] imageBuffer = CacheUtil.Get<byte[]>(picGuid);
+                byte[] imageBuffer = CacheUtil.Get<byte[]>(guid);
                 return File(imageBuffer, "image/Jpeg");
             }
             else
-                return Content("图片不存在！");
+                return Content("图片不存在！"+guid);
 
         }
         #endregion

@@ -115,7 +115,7 @@ namespace SL.Util
         /// <param name="srcBitmap">传入的Bitmap对象</param>
         /// <param name="destStream">压缩后的Stream对象</param>
         /// <param name="level">压缩等级，0到100，0 最差质量，100 最佳</param>
-        public static void Compress(Image srcBitmap, Stream destStream, long level)
+        public static void Compress(Image srcBitmap, Stream destStream, int level)
         {
             ImageCodecInfo myImageCodecInfo;
             Encoder myEncoder;
@@ -143,7 +143,7 @@ namespace SL.Util
             srcBitmap.Save(destStream, myImageCodecInfo, myEncoderParameters);
         }
 
-        public static byte[] Compress(Image srcBitmap, long level)
+        public static byte[] Compress(Image srcBitmap, int level)
         {
             using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
             {

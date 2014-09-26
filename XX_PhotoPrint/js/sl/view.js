@@ -4,21 +4,7 @@
         sl=require('./base'),
         tmpl=require('./tmpl');
 
-    /*
-    var Class=function() {
-    var args=Array.prototype.slice.call(arguments);
-
-    this.options=$.extend({},this.options,args.shift());
-    this.initialize.apply(this,args);
-    };
-
-    Class.fn=Class.prototype={
-    options: {},
-    initialize: function() { }
-    };
-    */
-
-    var View=function() {
+    var View=sl.Class.extend(function() {
         var that=this,
             options,
             args=Array.prototype.slice.call(arguments),
@@ -42,9 +28,9 @@
         that.listen(that.options.events);
 
         that.initialize.apply(that,args);
-    };
+        that.options.initialize&&that.options.initialize.apply(that,args);
 
-    View.fn=View.prototype={
+    },{
         $el: null,
         template: '',
         options: {},
@@ -160,29 +146,14 @@
 
             that.trigger('Destory');
         }
-    };
+    });
 
-    View.extend=function(prop) {
+    View.extend=function(childClass,prop) {
         var that=this;
 
-        var childClass=function() {
-            that.apply(this,arguments);
-        };
+        childClass=sl.Class.extend.call(that,childClass,prop);
 
-        var F=function() { };
-        F.prototype=that.prototype;
-
-        childClass.fn=childClass.prototype=new F();
-
-        prop.options=$.extend({},that.prototype.options,prop.options);
-        prop.events=$.extend({},that.prototype.events,prop.events);
-
-        for(var key in prop) {
-            childClass.fn[key]=prop[key];
-        }
-
-        childClass.prototype.superClass=that.prototype;
-        childClass.prototype.constructor=childClass;
+        childClass.events=$.extend({},childClass.fn.superClass.events,childClass.prototype.events);
 
         childClass.extend=arguments.callee;
 

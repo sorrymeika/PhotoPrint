@@ -51,25 +51,25 @@
         <div class="upload">
             <div class="upload_hd"><b>上传</b> <em>你的图片</em> </div>
             <div class="actions">
-                <form class="select_loc btn js_preview_form" enctype="multipart/form-data">
-                <i class="ico"></i>本 地 <input class="file" type="file" name="localAvatars" /></form>
+                <form class="select_loc btn js_preview_form" method="post" enctype="multipart/form-data">
+                <i class="ico"></i>本 地 <input class="file" type="file" name="Avatars" /></form>
                 <div class="select_album btn"><i class="ico"></i>画 廊</div>
             </div>
         </div>
         <div class="avatar_preview">
-            <div class="size_xl"><img alt="" /><p>选择您所期望<br>
+            <div class="size_xl"><img class="js_preview" alt="" /><p>选择您所期望<br>
                 的方式上传头像</p>
             </div>
-            <div class="size_l"><img /><p>160X160</p>
+            <div class="size_l"><img class="js_preview" /><p>160X160</p>
             </div>
-            <div class="size_m"><img /><p>60X60</p>
+            <div class="size_m"><img class="js_preview" /><p>60X60</p>
             </div>
-            <div class="size_s"><img /><p>30X30</p>
+            <div class="size_s"><img class="js_preview" /><p>30X30</p>
             </div>
         </div>
     </div>
     <div class="avatar_ft">
-        <div class="update_avatar btn"><i class="ico"></i>更 新</div>
+        <div class="update_avatar btn js_upload"><i class="ico"></i>更 新</div>
     </div>
 </div>
 <script>
@@ -96,8 +96,11 @@
                 if(!that.dialogView) {
                     that.dialogView=new DialogView({
                         events: {
-                            'change [name="localAvatars"]': function() {
+                            'change [name="Avatars"]': function() {
                                 that.getPreview();
+                            },
+                            'click .js_upload': function() {
+                                that.uploadAvatars();
                             }
                         },
                         $content: $('.js_avatar_upload')
@@ -106,7 +109,34 @@
                 that.dialogView.show();
             },
             getPreview: function() {
-                util.submit('#js_preview_form','/previewPic',function() {
+                var that=this;
+
+                util.submit('.js_preview_form','/ImagePreview',function(res) {
+                    if(res&&res.success) {
+                        console.log(res);
+
+                        that.dialogView.$(".js_preview").attr({ src: '/ImagePreview?guid='+res.guid }).next().hide();
+
+                    } else {
+                        alert(res.msg);
+                    }
+                });
+            },
+            uploadAvatars: function() {
+                var that=this;
+
+                var button=that.dialogView.$('.js_upload').addClass('disabled').html('<i class="ico"></i>请稍候...');
+
+                util.submit('.js_preview_form','/Json/User/UploadAvatars',function(res) {
+                    if(res&&res.success) {
+                        that.$('.js_avatars').attr({ src: res.avatars });
+
+                        that.dialogView.hide();
+                        button.removeClass('disabled').html('<i class="ico"></i>更 新');
+
+                    } else {
+                        alert(res.msg);
+                    }
                 });
             }
         });
