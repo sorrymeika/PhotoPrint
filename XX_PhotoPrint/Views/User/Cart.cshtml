@@ -1,0 +1,101 @@
+﻿@using XX_PhotoPrint.Service
+@using SL.Util
+@using System.Web.Script.Serialization
+@{
+    if (Request.HttpMethod == "POST")
+    {
+        return;
+    }
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="main cartwrap clearfix js_cart_bd">
+    <table class="cartlist tablelist">
+        <tr>
+            <th width="80"><input class="js_select_all" type="checkbox" />选 择</th>
+            <th width="120">图 片</th>
+            <th class="desc" width="400">说 明</th>
+            <th>单 价</th>
+            <th>数 量</th>
+            <th>价 格</th>
+            <th>删 除</th>
+        </tr>
+        <tbody class="js_cart_list">
+            <tr class="noborder">
+                <td colspan="7">正在载入...</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="cartinfo clearfix mainlast">
+        <ul class="carttips">
+            <li>本清单已包含税费</li>
+            <li>如果您购买600元以上，并提供免费送货服务</li>
+            <li>本清单支持下列付款方式</li>
+            <li class="paylist"><img src="/theme/images/alipay.png" /> </li>
+        </ul>
+        <ul class="cartprice">
+            <li><span>￥110</span>金额</li>
+            <li class="solid"><span>￥10</span>运费</li>
+            <li class="solid"><span>￥120</span>合计</li>
+            <li class="action">
+                <div class="btn_dlg_l"><i class="ico"></i>继续购物</div>
+                <div class="btn_dlg_r"><i class="ico"></i>立即付款</div>
+            </li>
+        </ul>
+    </div>
+</div>
+<script id="cartItem" type="template">
+{%each(i,item) data%}
+<tr{%if i==data.length-1%} class="noborder"{%/if%}>
+    <td><input class="js_select" type="checkbox" /></td>
+    <td class="imgwrap"><img class="img" src="" /></td>
+    <td class="desc"><p class="name"><a href="">T名称</a></p>
+        <p class="color">白色,X</p>
+    </td>
+    <td>￥150</td>
+    <td><input class="num js_qty" type="text" value="1" data-qty="1" /></td>
+    <td>￥150</td>
+    <td><input class="btn_del js_del" type="button" /></td>
+</tr>
+{%/each%}
+</script>
+<script type="text/javascript">
+    seajs.use(['$','lib/util','sl/view','sl/validation','extentions/qty','sl/tmpl'],function ($,util,View,Validation,qtyEvents,tmpl) {
+        var CartView=View.extend({
+            events: $.extend({},qtyEvents),
+
+            htmlNoData: '<tr class="noborder"><td colspan="7">您的购物车中暂无商品，请去<a href="/">首页</a>选购吧</td></tr>',
+
+            htmlLoading: '<tr class="noborder"><td colspan="7">正在载入...</td></tr>',
+
+            initialize: function () {
+                var that=this;
+
+                that.$list=$('.js_cart_list');
+
+
+                that.$list.html(that.htmlLoading);
+
+                $.ajax({
+                    url: '/json/shop/getshoppingcart',
+                    data: {},
+                    dataType: 'json',
+                    success: function (res) {
+                        if(res.success&&res.data&&res.data.length) {
+                            var template=$('#cartItem').html();
+
+                            that.$list.html(tmpl(template,res));
+
+                        } else {
+                            that.$list.html(that.htmlNoData);
+                        }
+                    },
+                    error: function () {
+                    }
+                });
+            }
+        });
+
+        new CartView('.js_cart_bd');
+
+    });
+</script>

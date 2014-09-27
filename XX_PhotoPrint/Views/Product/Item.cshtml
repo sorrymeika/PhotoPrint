@@ -125,43 +125,14 @@
     </div>
 </div>
 <script>
-    seajs.use(['$','lib/util','sl/view','sl/validation'],function ($,util,View,Validation) {
+    seajs.use(['$','lib/util','sl/view','sl/validation','extentions/qty'],function ($,util,View,Validation,qtyEvents) {
         var product_id=$('.js_product_id').val(),
             work_id=$('.js_work_id').val();
 
         var ProductView=View.extend({
-            events: {
-                'click .js_addtocart': 'addToCart',
-                'keyup .js_qty': function (e) {
-                    var $qty=$(e.currentTarget),
-                        qty=$qty.val();
-
-                    if(qty!=''&&(!/^\d+$/.test(qty)||qty=='0')) {
-                        $qty.val($qty.data('qty')).css({
-                            background: '#f9d0d0',
-                            border: '1px solid #c00'
-                        });
-
-                        setTimeout(function () {
-                            $qty.css({
-                                background: '',
-                                border: ''
-                            });
-                        },200);
-
-                    } else if(qty!='') {
-                        $qty.data('qty',qty);
-                    }
-                },
-                'blur .js_qty': function (e) {
-                    var $qty=$(e.currentTarget),
-                        qty=$qty.val();
-
-                    if(qty=='') {
-                        $qty.val($qty.data('qty'));
-                    }
-                }
-            },
+            events: $.extend({
+                'click .js_addtocart': 'addToCart'
+            },qtyEvents),
 
             isLogining: false,
 

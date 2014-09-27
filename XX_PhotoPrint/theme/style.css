@@ -148,11 +148,12 @@ a:hover { color: #999; }
 .uccontent .creations { margin-top: 35px; }
 
 .creations .img { width: 160px; height: 160px; }
-.creations .btn_del { background: #fff url(images/site.png) no-repeat -240px 0px; width: 60px; height: 30px; border: 0; cursor: pointer; }
+.btn_del { background: #fff url(images/site.png) no-repeat -240px 0px; width: 60px; height: 30px; border: 0; cursor: pointer; }
 
 .tablelist { width: 100%; }
 .tablelist th { border-bottom: 1px solid #101322; height: 26px; font-size: 13px; }
-.tablelist td { text-align: center; padding: 20px 0; vertical-align: middle; line-height: 20px; }
+.tablelist td { text-align: center; padding: 20px 0; vertical-align: middle; line-height: 20px; border-bottom: 1px dotted #101322; }
+.tablelist .noborder td { border-bottom: 0px; }
 
 .page_list { border-top: 1px solid #101322; text-align: center; padding-top: 28px; }
 .page_list .num_list li { display: inline-block; padding: 0 5px; }
@@ -168,7 +169,7 @@ a:hover { color: #999; }
 
 .prodwrap { margin-top: 67px; padding-top: 1px; width: 900px; }
 .prod_preview { margin-top: 56px; margin-right: 125px; width: 410px; height: 410px; float: left; background: #ddd; }
-.prod_preview img {width: 100%; height: 100%; }
+.prod_preview img { width: 100%; height: 100%; }
 .prod_main_info { margin-top: 56px; overflow: hidden; }
 .prod_main_info .priceinfo { margin-left: -5px; }
 .prod_main_info .saleprice { font-size: 33px; color: #e3620e; }
@@ -182,18 +183,18 @@ a:hover { color: #999; }
 .prod_selector { margin-top: 28px; font-size: 12px; }
 .prod_selector li { height: 33px; line-height: 33px; }
 .prod_selector span { margin-right: 12px; }
-.prod_selector .color {  }
+.prod_selector .color { }
 .prod_selector .color i { vertical-align: -6px; display: inline-block; width: 13px; height: 13px; margin-right: 5px; border: 4px solid #0e1122; }
 .prod_selector .color i.curr { border: 4px solid #e94b1e; }
 .prod_selector .num { width: 60px; text-align: center; }
 
-.prod_selector .size i { vertical-align: -2px; display: inline-block; line-height: 26px; height: 26px; padding: 0 5px; margin-right: 5px; background-color:#d8dad9; min-width: 16px; font-size: 14px; text-align: center; }
-.prod_selector .size i.curr { background-color: #e94b1e; color:#fff; }
+.prod_selector .size i { vertical-align: -2px; display: inline-block; line-height: 26px; height: 26px; padding: 0 5px; margin-right: 5px; background-color: #d8dad9; min-width: 16px; font-size: 14px; text-align: center; }
+.prod_selector .size i.curr { background-color: #e94b1e; color: #fff; }
 
 .prod_main_info .img_smallist { margin-top: 13px; }
 .prod_main_info .img_smallist li { height: 50px; width: 50px; background: #ddd; }
 .prod_main_info .img_smallist li img { height: 50px; width: 50px; }
-.prod_main_info .img_smallist li.curr { height: 42px; width: 42px;border: 4px solid #ddd; }
+.prod_main_info .img_smallist li.curr { height: 42px; width: 42px; border: 4px solid #ddd; }
 .prod_main_info .img_smallist li.curr img { height: 42px; width: 42px; }
 
 .prod_main_info .actions { margin-top: 25px; }
@@ -260,3 +261,25 @@ a:hover { color: #999; }
 .join_msg_hd, .join_msg { font-size: 12px; margin-left: 48px; color: #424242; }
 .join_msg_hd { margin-top: 41px; }
 .join_msg { line-height: 22px; margin-top: 14px; }
+
+
+.cartlist { width: 100%; margin-top: 60px; }
+.cartlist img { width: 120px; height: 120px; }
+.cartlist td { vertical-align: top; padding-top: 32px; font-size: 13px; color:#2d2d2d; }
+.cartlist td.imgwrap { padding-top: 15px; }
+.cartlist td.desc, .cartlist th.desc { text-align: left; padding-left: 40px; }
+.cartlist td .num { width: 60px; height: 27px; text-align: center; }
+
+.cartinfo { border-top: 1px solid #101322;  }
+.carttips { margin-top: 18px; line-height: 22px; font-size: 14px; float: left;}
+.carttips li { padding-left: 22px; }
+.carttips .paylist { margin-top: 5px; }
+
+.cartprice { margin-top:13px;  float: right; width: 340px; font-size: 13px; }
+.cartprice li {  border-bottom: 1px dotted #101322; height: 40px;line-height: 40px; }
+.cartprice li span {  float: right; }
+.cartprice li.solid { border-bottom-style: solid; }
+.cartprice li.action {border-bottom: 0; margin-top: 20px; }
+
+.mainlast { padding-bottom:52px; }
+

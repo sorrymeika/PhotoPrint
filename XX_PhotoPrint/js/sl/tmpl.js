@@ -1,4 +1,4 @@
-﻿define('tmpl',['$'],function(require,exports,module) {
+﻿define(['$'],function (require,exports,module) {
 
     var $=require('$');
 
@@ -55,7 +55,7 @@
     };
 
     function buildTmplFn(markup) {
-        var parse_tag=function(all,slash,type,fnargs,target,parens,args) {
+        var parse_tag=function (all,slash,type,fnargs,target,parens,args) {
             if(!type) {
                 return "');__.push('";
             }
@@ -81,7 +81,7 @@
             return "');"+tag[slash?"close":"open"].split("$notnull_1").join(target?"typeof("+target+")!=='undefined' && ("+target+")!=null":"true").split("$1a").join(exprAutoFnDetect).split("$1").join(expr).split("$2").join(fnargs||def.$2||"")+"__.push('";
         };
 
-        var depreciated_parse=function() {
+        var depreciated_parse=function () {
             if(tmpl_tag[arguments[2]]) {
                 return parse_tag.apply(this,arguments);
             } else {
@@ -104,26 +104,26 @@
     }
 
     $.extend($,{
-        encode: function(text) {
+        encode: function (text) {
             return (""+text).split("<").join("&lt;").split(">").join("&gt;").split('"').join("&#34;").split("'").join("&#39;");
         }
     });
 
-    var tmpl=function(html,data) {
+    var tmpl=function (html,data) {
         var fn=buildTmplFn(html);
         return fn($,{
             data: data,
-            nest: function(s,d) {
+            nest: function (s,d) {
                 return tmpl(s,d);
             }
         });
     };
 
-    $.fn.tmpl=function(data) {
+    $.fn.tmpl=function (data) {
         return $(tmpl(this[0].innerHTML,data).join(''));
     };
 
-    $.tmpl=module.exports=function(html,data) {
+    $.tmpl=module.exports=function (html,data) {
         //不返回$()，因为如果html是“div”，将返回所有div
         return tmpl(html,data).join('');
     };
