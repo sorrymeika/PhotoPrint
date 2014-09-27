@@ -3,40 +3,40 @@
 @{
     Layout = null;
 
-    var js = new JavaScriptSerializer();
+    int uid;
+
+    if (!AuthHelper.CheckAuth(out uid))
+    {
+        Json.Write(new { success = false, returnCode = "0000", msg = "授权错误" }, Output);
+        return;
+    }
 
     var req = new Req();
-    string account = req.String("Account", false, "未输入账号");
-    string auth = req.String("Auth", false, "未输入授权");
-    string userName = req.String("UserName", false, "缺少用户姓名");
-    bool gender = req.Bool("Gender");
-    DateTime birthday = req.DateTime("Birthday");
-    string mobile = req.String("Mobile");
+
+    string userName = req.String("UserName");
+    string gender = req.String("Gender");
+    string birthday = req.String("Birthday");
+    string mobile = req.String("Mobile", regex: @"1\d{10}", regexText: "请输入正确的手机号");
+    string realName = req.String("RealName");
 
     if (req.HasError)
     {
-        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        Json.Write(new { success = false, msg = req.FirstError, errors = req.GetErrors() }, Output);
         return;
     }
 
-    auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
-    string sAuth = UserService.GetAuth(account);
-    if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
-    {
-        Output.Write(js.Serialize(new { success = false, msg = "授权错误" }));
-        return;
-    }
-
-    var user = SQL.QueryOne("select UserID,UserName,Gender,Birthday,Mobile from Users where Account=@p0", account);
+    var user = SQL.QueryOne("select UserID,UserName,Gender,Birthday,Mobile,RealName from Users where UserID=@p0", uid);
     if (user == null)
     {
-        Output.Write(js.Serialize(new { success = false, msg = "该账号不存在" }));
+        Json.Write(new { success = false, msg = "该账号不存在" }, Output);
         return;
     }
 
-    int uid = (int)user["UserID"];
-    SQL.Execute("update Users set UserName=@p0,Gender=@p1,Birthday=@p2,Mobile=@p3 where UserID=@p4", userName, gender, birthday, mobile, uid);
+    SQL.Execute("update Users set UserName=@p0,Gender=@p1,Birthday=@p2,Mobile=@p3,RealName=@p5 where UserID=@p4", userName ?? user["UserName"],
+        gender == null ? user["Gender"] : gender == "" ? null : (bool?)req.Bool("Gender"),
+        birthday == null ? user["Birthday"] : req.DateTime("Birthday"),
+        mobile ?? user["Mobile"], uid, realName ?? user["RealName"]);
 
-    Output.Write(js.Serialize(new { success = true }));
+    Json.Write(new { success = true }, Output);
     return;
 }

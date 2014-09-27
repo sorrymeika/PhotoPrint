@@ -11,7 +11,7 @@
 <div class="main cartwrap clearfix js_cart_bd">
     <table class="cartlist tablelist">
         <tr>
-            <th width="80"><input class="js_select_all" type="checkbox" />选 择</th>
+            <th width="80"><input class="js_select_all" type="checkbox" checked />选 择</th>
             <th width="120">图 片</th>
             <th class="desc" width="400">说 明</th>
             <th>单 价</th>
@@ -33,35 +33,99 @@
             <li class="paylist"><img src="/theme/images/alipay.png" /> </li>
         </ul>
         <ul class="cartprice">
-            <li><span>￥110</span>金额</li>
+            <li><span class="js_amount"></span>金额</li>
             <li class="solid"><span>￥10</span>运费</li>
-            <li class="solid"><span>￥120</span>合计</li>
-            <li class="action">
-                <div class="btn_dlg_l"><i class="ico"></i>继续购物</div>
-                <div class="btn_dlg_r"><i class="ico"></i>立即付款</div>
+            <li class="solid"><span class="js_total_amount">￥120</span>合计</li>
+            <li class="action"><a class="btn_dlg_l" href="/"><i class="ico"></i>继续购物</a>
+                <div class="btn_dlg_r js_create_order"><i class="ico"></i>立即付款</div>
             </li>
         </ul>
     </div>
 </div>
 <script id="cartItem" type="template">
 {%each(i,item) data%}
-<tr{%if i==data.length-1%} class="noborder"{%/if%}>
-    <td><input class="js_select" type="checkbox" /></td>
-    <td class="imgwrap"><img class="img" src="" /></td>
-    <td class="desc"><p class="name"><a href="">T名称</a></p>
-        <p class="color">白色,X</p>
+<tr{%if i==data.length-1%} class="noborder"{%/if%} data-delete="${item.CartID}">
+    <td><input class="js_select" type="checkbox" checked /></td>
+    <td class="imgwrap"><img class="img" src="${item.Picture}" /></td>
+    <td class="desc"><p class="name"><a href="">${item.ProductName}</a></p>
+        <p class="color">${item.Styles[0].ColorName},${item.Styles[0].SizeName}</p>
     </td>
-    <td>￥150</td>
-    <td><input class="num js_qty" type="text" value="1" data-qty="1" /></td>
-    <td>￥150</td>
-    <td><input class="btn_del js_del" type="button" /></td>
+    <td>￥${item.Price}</td>
+    <td><input class="num js_qty" type="text" value="${item.Qty}" data-qty="${item.Qty}" /></td>
+    <td class="js_total" data-price="${item.Price}">￥${item.Price*item.Qty}</td>
+    <td><input data-id="${item.CartID}" class="btn_del js_del" type="button" /></td>
 </tr>
 {%/each%}
 </script>
 <script type="text/javascript">
     seajs.use(['$','lib/util','sl/view','sl/validation','extentions/qty','sl/tmpl'],function ($,util,View,Validation,qtyEvents,tmpl) {
         var CartView=View.extend({
-            events: $.extend({},qtyEvents),
+            events: $.extend({
+                'click .js_select_all': 'selectAll',
+                'click .js_select': 'getTotal',
+                'changeQty .js_qty': function (e,qty) {
+                    var $target=$(e.currentTarget),
+                        $total=$target.closest('tr').find('.js_total');
+
+                    $total.html(qty*parseFloat($total.data('price')));
+
+                    this.getTotal();
+                },
+                'click .js_del': 'deleteSingle',
+                'click .js_create_order': 'createOrder'
+            },qtyEvents),
+
+            createOrder: function(){
+            },
+
+            deleteSingle: function (e) {
+                var $target=$(e.currentTarget),
+                    cartId=$target.data('id');
+
+                if(window.confirm('确认删除？')) {
+                    $.ajax({
+                        url: '/json/shop/deleteshoppingcart',
+                        data: {
+                            CartID: cartId
+                        },
+                        dataType: 'json',
+                        success: function (res) {
+                            if(res.success&&res.data&&res.data.length) {
+                                var template=$('#cartItem').html();
+
+                                console.log(res)
+
+                                that.$list.html(tmpl(template,res));
+
+                            } else {
+                                that.$list.html(that.htmlNoData);
+                            }
+                            that.getTotal();
+                        },
+                        error: function () {
+                            that.getTotal();
+                        }
+                    });
+                }
+            },
+
+            getTotal: function () {
+                var total=0;
+                this.$('.js_select:checked').closest('tr').find('.js_total').each(function () {
+                    total+=parseFloat($(this).html().replace('￥',''));
+                });
+                this.$('.js_amount').html('￥'+total);
+                this.$('.js_total_amount').html('￥'+(total+10));
+            },
+
+            selectAll: function (e) {
+                var $target=$(e.currentTarget);
+
+                this.$('.js_cart_list .js_select')
+                    .prop('checked',$target.prop('checked'));
+
+                this.getTotal();
+            },
 
             htmlNoData: '<tr class="noborder"><td colspan="7">您的购物车中暂无商品，请去<a href="/">首页</a>选购吧</td></tr>',
 
@@ -71,7 +135,6 @@
                 var that=this;
 
                 that.$list=$('.js_cart_list');
-
 
                 that.$list.html(that.htmlLoading);
 
@@ -83,13 +146,17 @@
                         if(res.success&&res.data&&res.data.length) {
                             var template=$('#cartItem').html();
 
+                            console.log(res)
+
                             that.$list.html(tmpl(template,res));
 
                         } else {
                             that.$list.html(that.htmlNoData);
                         }
+                        that.getTotal();
                     },
                     error: function () {
+                        that.getTotal();
                     }
                 });
             }

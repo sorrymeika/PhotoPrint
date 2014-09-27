@@ -34,10 +34,10 @@ namespace XX_PhotoPrint.Service
             }
 
             string value = this.Form[name];
-            if (string.IsNullOrEmpty(value))
+            if (value == null)
             {
                 string queryString = Request.QueryString[name];
-                if (!string.IsNullOrEmpty(queryString))
+                if (null != queryString)
                 {
                     return queryString;
                 }

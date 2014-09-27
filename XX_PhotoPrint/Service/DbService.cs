@@ -156,7 +156,7 @@ namespace XX_PhotoPrint.Service
                             else if (dr[i] == DBNull.Value)
                             {
                                 if (type == typeof(bool))
-                                    item.Add(columnName, false);
+                                    item.Add(columnName, null);
                                 else if (type.IsValueType)
                                     item.Add(columnName, 0);
                                 else

@@ -26,13 +26,15 @@
                 <dt class="avatars"><img class="img js_avatars" src="@userInfo.Avatars" /></dt>
                 <dt>ID @userInfo.Account</dt>
                 <dt>用户名</dt>
-                <dd><input class="text" value="@userInfo.UserName" type="text" /></dd>
+                <dd><input class="text" name="userName" value="@userInfo.UserName" type="text" /></dd>
                 <dt>真实姓名</dt>
-                <dd><input class="text" value="@userInfo.RealName" type="text" /></dd>
+                <dd><input class="text" name="realName" value="@userInfo.RealName" type="text" /></dd>
                 <dt>手机</dt>
-                <dd><input class="text" value="@userInfo.Mobile" type="text" /></dd>
+                <dd><input class="text" name="mobile" value="@userInfo.Mobile" type="text" /></dd>
                 <dt>性别</dt>
-                <dd><label><input type="radio" name="gender" value="1"@(userInfo.Gender == 1 ? " checked" : "") />男</label> <label><input type="radio" name="gender" value="0"@(userInfo.Gender == 0 ? " checked" : "") />女</label> <label><input type="radio" name="gender" value="0"@(userInfo.Gender == null ? " checked" : "") />保密</label></dd>
+                <dd><label><input type="radio" name="gender" value="1"@(userInfo.Gender == true ? " checked" : "") />男</label>
+                    <label><input type="radio" name="gender" value="0"@(userInfo.Gender == false ? " checked" : "") />女</label>
+                    <label><input type="radio" name="gender" value=""@(userInfo.Gender == null ? " checked" : "") />保密</label></dd>
                 <dt>生日</dt>
                 <dd><input class="text birthday" name="birthday" value="@userInfo.Birthday" type="text" /></dd>
             </dl>
@@ -73,13 +75,14 @@
     </div>
 </div>
 <script>
-    seajs.use(['$','lib/util','sl/view','sl/validation','lib/timePicker'],function($,util,View,Validation) {
+    seajs.use(['$','lib/util','sl/view','sl/validation','lib/timePicker'],function ($,util,View,Validation) {
 
         var UserView=View.extend({
             events: {
-                'click .js_avatars': 'showAvatars'
+                'click .js_avatars': 'showAvatars',
+                'click .js_update': 'update'
             },
-            initialize: function() {
+            initialize: function () {
                 var that=this,
                     now=new Date();
 
@@ -90,16 +93,50 @@
                 });
 
             },
-            showAvatars: function() {
+
+            update: function () {
+                var that=this;
+
+                var button=that.$('.js_update').addClass('disabled').html('<i class="ico"></i>请稍候...');
+
+                $.ajax({
+                    url: '/Json/User/ModifyUserInfo',
+                    data: {
+                        userName: that.$('[name="userName"]').val(),
+                        gender: that.$('[name="gender"]:checked').val(),
+                        mobile: that.$('[name="mobile"]').val(),
+                        realName: that.$('[name="realName"]').val(),
+                        birthday: that.$('[name="birthday"]').val()
+                    },
+                    dataType: 'json',
+                    success: function (res) {
+                        if(res.success) {
+                            button.removeClass('disabled').html('<i class="ico"></i>更 新');
+                            alert("修改成功");
+
+                        } else {
+                            alert(res.msg);
+                        }
+                    },
+                    error: function () {
+                        button.removeClass('disabled').html('<i class="ico"></i>更 新');
+                        alert("网络错误");
+                    }
+                })
+
+
+            },
+
+            showAvatars: function () {
                 var that=this;
 
                 if(!that.dialogView) {
                     that.dialogView=new DialogView({
                         events: {
-                            'change [name="Avatars"]': function() {
+                            'change [name="Avatars"]': function () {
                                 that.getPreview();
                             },
-                            'click .js_upload': function() {
+                            'click .js_upload': function () {
                                 that.uploadAvatars();
                             }
                         },
@@ -108,10 +145,10 @@
                 }
                 that.dialogView.show();
             },
-            getPreview: function() {
+            getPreview: function () {
                 var that=this;
 
-                util.submit('.js_preview_form','/ImagePreview',function(res) {
+                util.submit('.js_preview_form','/ImagePreview',function (res) {
                     if(res&&res.success) {
                         console.log(res);
 
@@ -122,12 +159,12 @@
                     }
                 });
             },
-            uploadAvatars: function() {
+            uploadAvatars: function () {
                 var that=this;
 
                 var button=that.dialogView.$('.js_upload').addClass('disabled').html('<i class="ico"></i>请稍候...');
 
-                util.submit('.js_preview_form','/Json/User/UploadAvatars',function(res) {
+                util.submit('.js_preview_form','/Json/User/UploadAvatars',function (res) {
                     if(res&&res.success) {
                         that.$('.js_avatars').attr({ src: res.avatars });
 
@@ -150,7 +187,7 @@
                     <div class="dialog_cont js_bd"></div>\
                 </div>',
             mask: '<div class="mask"></div><iframe class="mask" style="opacity:0;filter:alpha(opacity=0);position:absolute;z-index:98;top:0px;left:0px;" frameborder="0" scrolling="no"></iframe>',
-            initialize: function() {
+            initialize: function () {
                 var that=this,
                     options=that.options;
 
@@ -160,7 +197,7 @@
 
                 that.$el.appendTo(document.body);
             },
-            show: function() {
+            show: function () {
                 var that=this,
                     $window=$(window);
 
@@ -179,7 +216,7 @@
                     height: $(document).height()
                 }).show();
 
-                $window.on('resize',function() {
+                $window.on('resize',function () {
                     that.$el.css({
                         top: Math.max($window.scrollTop()+($window.height()-that.$el.height())/2,0),
                         left: Math.max(($window.width()-that.$el.width())/2,0)
@@ -190,7 +227,7 @@
                     });
                 });
             },
-            hide: function() {
+            hide: function () {
                 var that=this;
 
                 that.$el.hide();

@@ -21,6 +21,7 @@
 
             } else if(qty!='') {
                 $qty.data('qty',qty);
+                $qty.trigger('changeQty',qty);
             }
         },
         'blur .js_qty': function (e) {
