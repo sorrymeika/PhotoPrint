@@ -1,0 +1,204 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    ViewBag.Title = "UserCenter";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    if (!UserService.IsLogin())
+    {
+        Response.Redirect("/login.html?r=/userinfo.html");
+        return;
+    }
+
+    var userInfo = UserService.GetUserFullInfo();
+
+}
+<div class="main ucenterwrap clearfix">
+    <div class="ucsidebar">
+        <div class="hd"><i class="ico"></i><span>资料</span></div>
+        <ul>
+            <li class="curr"><i class="ico"></i><span>数据</span></li>
+            <li><a href="/"><i class="ico"></i><span>账户</span></a></li>
+        </ul>
+    </div>
+    <div class="uccontent">
+        <div class="bd js_form">
+            <dl class="uc_form">
+                <dt class="avatars"><img class="img js_avatars" src="@userInfo.Avatars" /></dt>
+                <dt>ID @userInfo.Account</dt>
+                <dt>用户名</dt>
+                <dd><input class="text" value="@userInfo.UserName" type="text" /></dd>
+                <dt>真实姓名</dt>
+                <dd><input class="text" value="@userInfo.RealName" type="text" /></dd>
+                <dt>手机</dt>
+                <dd><input class="text" value="@userInfo.Mobile" type="text" /></dd>
+                <dt>性别</dt>
+                <dd><label><input type="radio" name="gender" value="1"@(userInfo.Gender == 1 ? " checked" : "") />男</label> <label><input type="radio" name="gender" value="0"@(userInfo.Gender == 0 ? " checked" : "") />女</label> <label><input type="radio" name="gender" value="0"@(userInfo.Gender == null ? " checked" : "") />保密</label></dd>
+                <dt>生日</dt>
+                <dd><input class="text birthday" name="birthday" value="@userInfo.Birthday" type="text" /></dd>
+            </dl>
+            <div class="uc_form_action">
+                <div class="btn_dlg_r js_update"><i class="ico"></i>更 新</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="avatar_upload clearfix js_avatar_upload" style="display: none">
+    <div class="avatar_hd">
+        <div class="hd">上传头像</div>
+        <div class="msg">支持JPG且图片小于5M</div>
+    </div>
+    <div class="avatar_bd clearfix">
+        <div class="upload">
+            <div class="upload_hd"><b>上传</b> <em>你的图片</em> </div>
+            <div class="actions">
+                <form class="select_loc btn js_preview_form" method="post" enctype="multipart/form-data">
+                <i class="ico"></i>本 地 <input class="file" type="file" name="Avatars" /></form>
+                <div class="select_album btn"><i class="ico"></i>画 廊</div>
+            </div>
+        </div>
+        <div class="avatar_preview">
+            <div class="size_xl"><img class="js_preview" alt="" /><p>选择您所期望<br>
+                的方式上传头像</p>
+            </div>
+            <div class="size_l"><img class="js_preview" /><p>160X160</p>
+            </div>
+            <div class="size_m"><img class="js_preview" /><p>60X60</p>
+            </div>
+            <div class="size_s"><img class="js_preview" /><p>30X30</p>
+            </div>
+        </div>
+    </div>
+    <div class="avatar_ft">
+        <div class="update_avatar btn js_upload"><i class="ico"></i>更 新</div>
+    </div>
+</div>
+<script>
+    seajs.use(['$','lib/util','sl/view','sl/validation','lib/timePicker'],function($,util,View,Validation) {
+
+        var UserView=View.extend({
+            events: {
+                'click .js_avatars': 'showAvatars'
+            },
+            initialize: function() {
+                var that=this,
+                    now=new Date();
+
+                that.$('[name="birthday"]').timePicker({
+                    yearFrom: now.getFullYear()-80,
+                    yearTo: now.getFullYear(),
+                    showTime: false
+                });
+
+            },
+            showAvatars: function() {
+                var that=this;
+
+                if(!that.dialogView) {
+                    that.dialogView=new DialogView({
+                        events: {
+                            'change [name="Avatars"]': function() {
+                                that.getPreview();
+                            },
+                            'click .js_upload': function() {
+                                that.uploadAvatars();
+                            }
+                        },
+                        $content: $('.js_avatar_upload')
+                    });
+                }
+                that.dialogView.show();
+            },
+            getPreview: function() {
+                var that=this;
+
+                util.submit('.js_preview_form','/ImagePreview',function(res) {
+                    if(res&&res.success) {
+                        console.log(res);
+
+                        that.dialogView.$(".js_preview").attr({ src: '/ImagePreview?guid='+res.guid }).next().hide();
+
+                    } else {
+                        alert(res.msg);
+                    }
+                });
+            },
+            uploadAvatars: function() {
+                var that=this;
+
+                var button=that.dialogView.$('.js_upload').addClass('disabled').html('<i class="ico"></i>请稍候...');
+
+                util.submit('.js_preview_form','/Json/User/UploadAvatars',function(res) {
+                    if(res&&res.success) {
+                        that.$('.js_avatars').attr({ src: res.avatars });
+
+                        that.dialogView.hide();
+                        button.removeClass('disabled').html('<i class="ico"></i>更 新');
+
+                    } else {
+                        alert(res.msg);
+                    }
+                });
+            }
+        });
+
+        var DialogView=View.extend({
+            events: {
+                'click .js_close': 'hide'
+            },
+            el: '<div class="dialog avatar_dialog">\
+                    <div class="dialog_close js_close"></div>\
+                    <div class="dialog_cont js_bd"></div>\
+                </div>',
+            mask: '<div class="mask"></div><iframe class="mask" style="opacity:0;filter:alpha(opacity=0);position:absolute;z-index:98;top:0px;left:0px;" frameborder="0" scrolling="no"></iframe>',
+            initialize: function() {
+                var that=this,
+                    options=that.options;
+
+                that.$mask=$(that.mask).appendTo('body');
+
+                that.$el.find('.js_bd').append(options.$content.show());
+
+                that.$el.appendTo(document.body);
+            },
+            show: function() {
+                var that=this,
+                    $window=$(window);
+
+                that.$el.css({
+                    visibility: 'hidden',
+                    display: 'block'
+                })
+                .css({
+                    top: Math.max($window.scrollTop()+($window.height()-that.$el.height())/2,0),
+                    left: Math.max(($window.width()-that.$el.width())/2,0),
+                    visibility: ''
+                });
+
+                that.$mask.css({
+                    width: Math.max(document.documentElement.scrollWidth,document.body.scrollWidth),
+                    height: $(document).height()
+                }).show();
+
+                $window.on('resize',function() {
+                    that.$el.css({
+                        top: Math.max($window.scrollTop()+($window.height()-that.$el.height())/2,0),
+                        left: Math.max(($window.width()-that.$el.width())/2,0)
+                    });
+                    that.$mask.css({
+                        width: Math.max(document.documentElement.scrollWidth,document.body.scrollWidth),
+                        height: $(document).height()
+                    });
+                });
+            },
+            hide: function() {
+                var that=this;
+
+                that.$el.hide();
+                that.$mask.hide();
+            }
+        });
+
+        new UserView('.js_form');
+
+    });
+</script>

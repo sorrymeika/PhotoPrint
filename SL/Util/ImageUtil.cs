@@ -7,9 +7,9 @@ using System.Drawing.Drawing2D;
 using System.IO;
 using System.Drawing.Imaging;
 
-namespace INAnswer.Service
+namespace SL.Util
 {
-    public class ImageService
+    public class ImageUtil
     {
         private static Size getNewSize(int maxWidth, int maxHeight, int imageOriginalWidth, int imageOriginalHeight)
         {
@@ -115,7 +115,7 @@ namespace INAnswer.Service
         /// <param name="srcBitmap">传入的Bitmap对象</param>
         /// <param name="destStream">压缩后的Stream对象</param>
         /// <param name="level">压缩等级，0到100，0 最差质量，100 最佳</param>
-        public static void Compress(Image srcBitmap, Stream destStream, long level)
+        public static void Compress(Image srcBitmap, Stream destStream, int level)
         {
             ImageCodecInfo myImageCodecInfo;
             Encoder myEncoder;
@@ -143,7 +143,7 @@ namespace INAnswer.Service
             srcBitmap.Save(destStream, myImageCodecInfo, myEncoderParameters);
         }
 
-        public static byte[] Compress(Image srcBitmap, long level)
+        public static byte[] Compress(Image srcBitmap, int level)
         {
             using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
             {
@@ -158,6 +158,22 @@ namespace INAnswer.Service
             using (FileStream fs = new FileStream(fileName, FileMode.Open))
             {
                 image = GetThumbNailImage(System.Drawing.Image.FromStream(fs), thumMaxWidth, thumMaxHeight);
+            }
+
+            using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
+            {
+                Compress(image, ms, level);
+
+                return ms.ToArray();
+            }
+        }
+
+        public static byte[] Compress(Stream stream, int level, int thumMaxWidth, int thumMaxHeight)
+        {
+            Image image;
+            using (stream)
+            {
+                image = GetThumbNailImage(System.Drawing.Image.FromStream(stream), thumMaxWidth, thumMaxHeight);
             }
 
             using (System.IO.MemoryStream ms = new System.IO.MemoryStream())

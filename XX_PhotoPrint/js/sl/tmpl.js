@@ -123,7 +123,19 @@
         return $(tmpl(this[0].innerHTML,data).join(''));
     };
 
-    $.tmpl=module.exports=function (html,data) {
+    $.tmpl=module.exports=function(html,data) {
+        if(typeof data==='undefined') {
+            var fn=buildTmplFn(html);
+
+            return function(data) {
+                fn($,{
+                    data: data,
+                    nest: function(s,d) {
+                        return tmpl(s,d);
+                    }
+                }).join('');
+            }
+        }
         //不返回$()，因为如果html是“div”，将返回所有div
         return tmpl(html,data).join('');
     };

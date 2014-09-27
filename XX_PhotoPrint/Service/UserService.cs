@@ -19,6 +19,22 @@ namespace XX_PhotoPrint.Service
             return SessionUtil.Get<IDictionary<string, object>>("USERINFO");
         }
 
+        public static dynamic GetUserFullInfo()
+        {
+            var userId = GetUserID();
+
+            if (userId == 0) return null;
+
+            var user = SL.Data.SQL.QuerySingle("select UserID,UserName,Account,LatestLoginDate,Avatars,Gender,Birthday,Mobile,RealName,Address,RegionID from Users where UserID=@p0", userId);
+
+            if (user != null)
+            {
+                user.Avatars = "http://" + HttpContext.Current.Request.Url.Authority + "/Content/" + user.Avatars;
+            }
+
+            return user;
+        }
+
         public static string GetUserName()
         {
             return IsLogin() ? GetUser()["UserName"] as String : null;

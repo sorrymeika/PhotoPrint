@@ -121,8 +121,6 @@
 
         parsed_markup_data+="');}return __;";
 
-        console.log(parsed_markup_data);
-
         return new Function("$","$item",parsed_markup_data);
     }
 

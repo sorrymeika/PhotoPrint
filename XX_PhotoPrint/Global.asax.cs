@@ -25,7 +25,7 @@ namespace XX_PhotoPrint
                 "User",
                 "{handle}.html",
                 new { controller = "Home", action = "Index", catalog = "User" },
-                new { handle = "^Login|Register|Register1|Register2$" }
+                new { handle = "^Login|Register|Register1|Register2|UserCenter|UserInfo$" }
 
             );
 
@@ -73,6 +73,12 @@ namespace XX_PhotoPrint
                 "pay/{orderid}",
                 new { controller = "Home", action = "Pay", orderid = 0 },
                 new { orderid = @"^\d+$" }
+            );
+
+            routes.MapRoute(
+                "ImagePreview",
+                "ImagePreview",
+                new { controller = "Home", action = "ImagePreview" }
             );
 
             routes.MapRoute(

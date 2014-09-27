@@ -4,34 +4,40 @@
         sl=require('./base'),
         tmpl=require('./tmpl');
 
-    var View=function() {
+    var View=sl.Class.extend(function() {
         var that=this,
+            options,
             args=Array.prototype.slice.call(arguments),
-            selector=args.shift(),
+            selector=args.shift();
+
+        if(typeof selector!=='undefined'&&!$.isPlainObject(selector)) {
+
+            that.$el=$(selector);
             options=args.shift();
+
+        } else if(!that.$el) {
+            that.$el=$(that.el);
+            options=selector;
+        }
 
         that.options=$.extend({},that.options,options);
 
-        that.$el=$(selector);
         that.el=that.$el[0];
-
-        if(that.template) {
-            that.$el.append(tmpl(that.template,that.options));
-        }
 
         that.listen(that.events);
         that.listen(that.options.events);
 
         that.initialize.apply(that,args);
-    };
+        that.options.initialize&&that.options.initialize.apply(that,args);
 
-    View.fn=View.prototype={
+    },{
+        $el: null,
         template: '',
         options: {},
         events: null,
         _bindDelegateAttrs: [],
         _bindAttrs: [],
-        _bindResults: [],
+        _bindListenTo: [],
         _bind: function(el,name,f) {
             this._bindDelegateAttrs.push([el,name,f]);
             this.$el.delegate(el,name,$.proxy(f,this));
@@ -68,15 +74,14 @@
 
             return that;
         },
-        listenToResult: function(name,f) {
-            name='result_'+name;
-            this._bindResults.push([name,f]);
-            $(document).bind(name,$.proxy(f,this));
+
+        listenTo: function($target,name,f) {
+            this._bindListenTo.push([$target,name,f]);
+            $($target).on(name,$.proxy(f,this));
+
+            return this;
         },
-        setResult: function() {
-            var args=slice.call(arguments);
-            $(document).trigger('result_'+args.shift(),args);
-        },
+
         on: function(selector,evt,handler) {
             if(handler) {
                 this._bind(selector,evt,handler);
@@ -126,43 +131,29 @@
                 that=this;
 
             $.each(this._bindDelegateAttrs,function(i,attrs) {
-                $el.undelegate.apply($el,attrs);
+                $.fn.undelegate.apply($el,attrs);
             });
 
-            $.each(this._bindResults,function(i,attrs) {
-                $(document).unbind.apply($(document),attrs);
+            $.each(this._bindListenTo,function(i,attrs) {
+                $.fn.off.apply(attrs);
             });
 
-            this.one('Destory',function() {
+            that.one('Destory',function() {
                 $.each(that._bindAttrs,function(i,attrs) {
-                    $el.unbind.apply($el,attrs);
+                    $.fn.unbind.apply($el,attrs);
                 });
             });
-            this.trigger('Destory');
-        }
-    };
 
-    View.extend=function(prop) {
+            that.trigger('Destory');
+        }
+    });
+
+    View.extend=function(childClass,prop) {
         var that=this;
 
-        var childClass=function() {
-            that.apply(this,arguments);
-        };
+        childClass=sl.Class.extend.call(that,childClass,prop);
 
-        var F=function() { };
-        F.prototype=that.prototype;
-
-        childClass.fn=childClass.prototype=new F();
-
-        prop.options=$.extend({},that.prototype.options,prop.options);
-        prop.events=$.extend({},that.prototype.events,prop.events);
-
-        for(var key in prop) {
-            childClass.fn[key]=prop[key];
-        }
-
-        childClass.superClass=that.prototype;
-        childClass.prototype.constructor=childClass;
+        childClass.events=$.extend({},childClass.fn.superClass.events,childClass.prototype.events);
 
         childClass.extend=arguments.callee;
 

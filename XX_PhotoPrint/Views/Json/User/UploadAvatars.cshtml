@@ -1,58 +1,62 @@
 ﻿@using XX_PhotoPrint.Service
 @using System.Web.Script.Serialization
 @{
-	Layout = null;
+    Layout = null;
 
-	var js = new JavaScriptSerializer();
+    int uid;
 
-	var req = new Req();
-	string account = req.String("Account", false, "未输入账号");
-	string auth = req.String("Auth", false, "未输入授权");
-	var file = req.File("Avatars", false, "请上传头像");
-	string callback = req.String("callback");
+    if (!AuthHelper.CheckAuth(out uid))
+    {
+        Json.Write(new { success = false, returnCode = "0000", msg = "授权错误" }, Output);
+        return;
+    }
 
-	if (req.HasError)
-	{
-		Output.Write(HtmlService.CallbackResult(callback, new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
-		return;
-	}
+    var js = new JavaScriptSerializer();
 
-	auth = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(auth, "md5");
-	string sAuth = UserService.GetAuth(account);
-	if (!auth.Equals(sAuth, StringComparison.OrdinalIgnoreCase))
-	{
-		Output.Write(HtmlService.CallbackResult(callback, new { success = false, msg = "授权错误" }));
-		return;
-	}
+    var req = new Req();
 
-	var user = SQL.QueryOne("select UserID,UserName,Avatars from Users where Account=@p0", account);
-	if (user == null)
-	{
-		Output.Write(HtmlService.CallbackResult(callback, new { success = false, msg = "该账号不存在" }));
-		return;
-	}
-	string origAvatars = (string)user["Avatars"];
-	if (!string.IsNullOrEmpty(origAvatars))
-	{
-		origAvatars = Server.MapPath("~/Content/" + origAvatars);
-		System.IO.File.Delete(origAvatars);
-	}
-	int uid = (int)user["UserID"];
-	var ext = file.FileName.Substring(file.FileName.LastIndexOf("."));
-	string avatars = "Avatars/" + uid + ext;
+    var file = req.File("Avatars", false, "请上传头像");
+    string callback = req.String("callback");
 
-	string savePath = Server.MapPath("~/Content/" + avatars);
-	string dir = System.IO.Path.GetDirectoryName(savePath);
+    if (req.HasError)
+    {
+        Output.Write(HtmlService.CallbackResult(callback, new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
 
-	if (!System.IO.Directory.Exists(dir))
-	{
-		System.IO.Directory.CreateDirectory(dir);
-	}
+    var user = SQL.QueryOne("select UserID,UserName,Avatars from Users where UserID=@p0", uid);
+    if (user == null)
+    {
+        Output.Write(HtmlService.CallbackResult(callback, new { success = false, msg = "该账号不存在" }));
+        return;
+    }
 
-	file.SaveAs(savePath);
+    string origAvatars = (string)user["Avatars"];
+    if (!string.IsNullOrEmpty(origAvatars))
+    {
+        origAvatars = Server.MapPath("~/Content/" + origAvatars);
+        System.IO.File.Delete(origAvatars);
+    }
+    var ext = file.FileName.Substring(file.FileName.LastIndexOf("."));
+    string avatars = "Avatars/" + uid + ext;
 
-	SQL.Execute("update Users set Avatars=@p0 where UserID=@p1", avatars, uid);
+    string savePath = Server.MapPath("~/Content/" + avatars);
+    string dir = System.IO.Path.GetDirectoryName(savePath);
 
-	Output.Write(HtmlService.CallbackResult(callback, new { success = true, avatars = "http://" + Request.Url.Authority + "/Content/" + avatars }));
-	return;
+    if (!System.IO.Directory.Exists(dir))
+    {
+        System.IO.Directory.CreateDirectory(dir);
+    }
+
+    file.SaveAs(savePath);
+
+    SQL.Execute("update Users set Avatars=@p0 where UserID=@p1", avatars, uid);
+
+    if (UserService.IsLogin())
+    {
+        UserService.GetUser()["Avatars"] = "http://" + Request.Url.Authority + "/Content/" + avatars;
+    }
+
+    Output.Write(HtmlService.CallbackResult(callback, new { success = true, avatars = "http://" + Request.Url.Authority + "/Content/" + avatars }));
+    return;
 }

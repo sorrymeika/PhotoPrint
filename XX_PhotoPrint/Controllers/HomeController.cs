@@ -8,6 +8,8 @@ using XX_PhotoPrint.Service;
 using System.IO;
 using System.Globalization;
 using System.Web.Script.Serialization;
+using System.Drawing;
+using SL.Util;
 
 namespace XX_PhotoPrint.Controllers
 {
@@ -324,5 +326,50 @@ namespace XX_PhotoPrint.Controllers
             }
         }
         #endregion
+
+
+        #region 图片预览
+
+        [HttpPost]
+        public ActionResult ImagePreview()
+        {
+            RequestUtil req = new RequestUtil();
+
+            string callback = req.String("callback");
+            int width = req.Int("width", defaultValue: 640);
+            int height = req.Int("height", defaultValue: 1024);
+
+            HttpPostedFileBase pic = Request.Files.Count == 0 ? null : Request.Files[0];
+            if (pic != null && pic.ContentLength != 0)
+            {
+                byte[] imageBuffer = ImageUtil.Compress(pic.InputStream, 40, width, height);
+
+                string guid = System.Guid.NewGuid().ToString("N");
+
+                CacheUtil.CreateCache("preview-" + guid, 0.1, imageBuffer);
+
+                return Content(HtmlUtil.CallbackResult(callback, new { success = true, guid = guid, name = Request.Files.Keys[0] }));
+            }
+            else
+            {
+                return Content(HtmlUtil.CallbackResult(callback, new { success = false, msg = "您还未选择图片" }));
+            }
+        }
+
+        public ActionResult ImagePreview(string guid)
+        {
+            guid = "preview-" + guid;
+
+            if (CacheUtil.ExistCache(guid))
+            {
+                byte[] imageBuffer = CacheUtil.Get<byte[]>(guid);
+                return File(imageBuffer, "image/Jpeg");
+            }
+            else
+                return Content("图片不存在！"+guid);
+
+        }
+        #endregion
+
     }
 }

@@ -1,0 +1,30 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    ViewBag.Title = "UserCenter";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var user = UserService.GetUser();
+
+    var avatars = (string)user["Avatars"];
+}
+<div class="main">
+    <div class="ucwrap">
+        <div class="userinfo">
+            <div class="avatars"><img src="@avatars" /></div>
+            <div class="hd">@UserService.GetUserName()</div>
+            <div class="message">
+                <p>这是您的个人中心来管理信息。您可以检查订单状态，</p>
+                <p>更改您的密码和电子邮件并</p>
+                <p>解决并更新您的发货和账单信息。</p>
+            </div>
+            <div class="ucnav">
+                <ul class="clearfix">
+                    <li><a href="/userinfo.html"><i class="ico ico_resource"></i><span>资 料</span></a></li>
+                    <li><a href="/user/manage"><i class="ico ico_manage"></i><span>管 理</span></a></li>
+                    <li><a href="/user/mycreations"><i class="ico ico_custom"></i><span>定 制</span></a></li>
+                    <li><a href="/signout"><i class="ico ico_signout"></i><span>退 出</span></a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
