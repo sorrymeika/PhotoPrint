@@ -27,10 +27,11 @@
     </table>
     <div class="cartinfo clearfix mainlast">
         <ul class="carttips">
-            <li>本清单已包含税费</li>
-            <li>如果您购买600元以上，并提供免费送货服务</li>
-            <li>本清单支持下列付款方式</li>
-            <li class="paylist"><img src="/theme/images/alipay.png" /> </li>
+            <li><i>·</i>本清单已包含税费</li>
+            <li><i>·</i>如果您购买600元以上，并提供免费送货服务</li>
+            <li><i>·</i>本清单支持下列付款方式</li>
+            <li class="paylist"><img src="/theme/images/alipay.png" />
+            </li>
         </ul>
         <ul class="cartprice">
             <li><span class="js_amount"></span>金额</li>
@@ -44,7 +45,7 @@
 </div>
 <script id="cartItem" type="template">
 {%each(i,item) data%}
-<tr{%if i==data.length-1%} class="noborder"{%/if%} data-delete="${item.CartID}">
+<tr{%if i==data.length-1%} class="noborder"{%/if%} data-rowid="${item.CartID}">
     <td><input class="js_select" type="checkbox" checked /></td>
     <td class="imgwrap"><img class="img" src="${item.Picture}" /></td>
     <td class="desc"><p class="name"><a href="">${item.ProductName}</a></p>
@@ -58,12 +59,12 @@
 {%/each%}
 </script>
 <script type="text/javascript">
-    seajs.use(['$','lib/util','sl/view','sl/validation','extentions/qty','sl/tmpl'],function ($,util,View,Validation,qtyEvents,tmpl) {
+    seajs.use(['$','lib/util','sl/view','sl/validation','extentions/qty','sl/tmpl'],function($,util,View,Validation,qtyEvents,tmpl) {
         var CartView=View.extend({
             events: $.extend({
                 'click .js_select_all': 'selectAll',
                 'click .js_select': 'getTotal',
-                'changeQty .js_qty': function (e,qty) {
+                'changeQty .js_qty': function(e,qty) {
                     var $target=$(e.currentTarget),
                         $total=$target.closest('tr').find('.js_total');
 
@@ -75,11 +76,20 @@
                 'click .js_create_order': 'createOrder'
             },qtyEvents),
 
-            createOrder: function(){
+            createOrder: function(e) {
+                var that=this,
+                    ids=[];
+
+                that.$('.js_select:checked').closest('tr').each(function() {
+                    ids.push($(this).data('rowid'));
+                });
+
+                location.href="/order?ids="+ids.join(',');
             },
 
-            deleteSingle: function (e) {
-                var $target=$(e.currentTarget),
+            deleteSingle: function(e) {
+                var that=this,
+                    $target=$(e.currentTarget),
                     cartId=$target.data('id');
 
                 if(window.confirm('确认删除？')) {
@@ -89,36 +99,38 @@
                             CartID: cartId
                         },
                         dataType: 'json',
-                        success: function (res) {
-                            if(res.success&&res.data&&res.data.length) {
-                                var template=$('#cartItem').html();
-
+                        success: function(res) {
+                            if(res.success) {
                                 console.log(res)
 
-                                that.$list.html(tmpl(template,res));
+                                that.$list.find('[data-rowid="'+cartId+'"]').remove();
 
+                                if(that.getTotal()==0) {
+                                    location.reload();
+                                }
                             } else {
-                                that.$list.html(that.htmlNoData);
+                                alert('删除失败！');
                             }
-                            that.getTotal();
                         },
-                        error: function () {
-                            that.getTotal();
+                        error: function() {
+                            alert('网络错误！');
                         }
                     });
                 }
             },
 
-            getTotal: function () {
+            getTotal: function() {
                 var total=0;
-                this.$('.js_select:checked').closest('tr').find('.js_total').each(function () {
+                this.$('.js_select:checked').closest('tr').find('.js_total').each(function() {
                     total+=parseFloat($(this).html().replace('￥',''));
                 });
                 this.$('.js_amount').html('￥'+total);
                 this.$('.js_total_amount').html('￥'+(total+10));
+
+                return total;
             },
 
-            selectAll: function (e) {
+            selectAll: function(e) {
                 var $target=$(e.currentTarget);
 
                 this.$('.js_cart_list .js_select')
@@ -131,7 +143,7 @@
 
             htmlLoading: '<tr class="noborder"><td colspan="7">正在载入...</td></tr>',
 
-            initialize: function () {
+            initialize: function() {
                 var that=this;
 
                 that.$list=$('.js_cart_list');
@@ -142,7 +154,7 @@
                     url: '/json/shop/getshoppingcart',
                     data: {},
                     dataType: 'json',
-                    success: function (res) {
+                    success: function(res) {
                         if(res.success&&res.data&&res.data.length) {
                             var template=$('#cartItem').html();
 
@@ -155,7 +167,7 @@
                         }
                         that.getTotal();
                     },
-                    error: function () {
+                    error: function() {
                         that.getTotal();
                     }
                 });

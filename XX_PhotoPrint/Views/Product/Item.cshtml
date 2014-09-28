@@ -157,7 +157,10 @@
                     dataType: 'json',
                     success: function (res) {
                         if(res.success) {
-                            alert('加入购物车成功！');
+                            if (window.confirm('加入购物车成功！是否去购物车结算？')){
+                                location.href="/cart"
+                            }
+
                         } else if(res.returnCode=='0000') {
                             location.href='/login.html?r='+encodeURIComponent(location.href);
                         } else {

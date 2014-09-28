@@ -20,6 +20,16 @@
             options=selector;
         }
 
+        if(options.override) {
+            var overrideFn;
+            $.each(options.override,function(key,fn) {
+                overrideFn=that[key];
+                (typeof overrideFn!='undefined')&&(that.sealed[key]=overrideFn,fn.sealed=overrideFn);
+                that[key]=fn;
+            });
+            delete options.override;
+        }
+
         that.options=$.extend({},that.options,options);
 
         that.el=that.$el[0];
@@ -33,6 +43,7 @@
     },{
         $el: null,
         template: '',
+        sealed: {},
         options: {},
         events: null,
         _bindDelegateAttrs: [],
@@ -156,8 +167,51 @@
         childClass.events=$.extend({},childClass.fn.superClass.events,childClass.prototype.events);
 
         childClass.extend=arguments.callee;
+        childClass.plugin=function(plugin) {
+            that.plugin.call(childClass,plugin);
+        };
 
         return childClass;
+    };
+
+    View.plugin=function(plugin) {
+        var that=this,
+            prototype=this.prototype;
+
+        if(plugin.events) {
+            $.extend(prototype.events,plugin.events);
+            delete plugin.events;
+        }
+
+        if(plugin.override) {
+            var overrideFn;
+            $.each(plugin.override,function(key,fn) {
+                overrideFn=prototype[key];
+                (typeof overrideFn!='undefined')&&(prototype.sealed[key]=overrideFn,fn.sealed=overrideFn);
+                prototype[key]=fn;
+            });
+            delete plugin.override;
+        }
+
+        $.each(plugin,function(key,fn) {
+            var proto=prototype[key];
+
+            if(typeof proto==='undefined') {
+                prototype[key]=fn;
+
+            } else if($.isFunction(proto)&&$.isFunction(fn)) {
+                prototype[key]=function() {
+                    proto.apply(this,arguments);
+                    return fn.apply(this,arguments);
+                };
+
+            } else if($.isPlainObject(proto)&&$.isPlainObject(fn)) {
+                prototype[key]=$.extend({},fn,prototype[key]);
+
+            } else
+                prototype[key]=fn;
+
+        });
     };
 
     sl.View=View;
