@@ -7,215 +7,38 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 <div class="main prodwrap clearfix ">
-    <div class="js_waterfall waterfall">
-        <div class="wf_item"><img src="http://" /></div>
-        <div class="wf_item">asd2fa<br>
-            sdf</div>
-        <div class="wf_item">asd3fasdf</div>
-        <div class="wf_item">asd4fasdf</div>
-        <div class="wf_item">asd5fasdf</div>
-        <div class="wf_item">asd6fa<br>
-            <br>
-            sdf</div>
+    <div class="gallerywrap js_container">
+        <div class="galleryhd">
+            <div class="hd">让你的艺术创作变成现实</div>
+            <div class="hd1">轻触屏幕，速纺将你的艺术创作印制成独一<br>
+                无二的纯棉T恤，随心个性定制</div>
+            <div class="slide_down">SLIDE DOWN</div>
+        </div>
+        <div class="js_waterfall waterfall">
+            <div class="wf_item"><img src="http://" /></div>
+            <div class="wf_item">asd2fa<br>
+                sdf</div>
+            <div class="wf_item">asd3fasdf</div>
+            <div class="wf_item">asd4fasdf</div>
+            <div class="wf_item">asd5fasdf</div>
+            <div class="wf_item">asd6fa<br>
+                <br>
+                sdf</div>
+        </div>
     </div>
 </div>
 <script>
-    seajs.use(['$','sl/view','sl/widget/waterfall'],function($,view,Waterfall) {
+    seajs.use(['$','sl/view','sl/widget/waterfall','sl/widget/loading'],function ($,view,Waterfall,LoadingView) {
         var waterfall=new Waterfall('.js_waterfall',{
             itemSelector: '.wf_item'
         });
 
-        var LoadingView=view.extend({
-            events: {},
-
-            options: {},
-
-            pageIndex: 1,
-
-            pageSize: 25,
-
-            initialize: function() {
-                var that=this;
-
-                that.pageIndex=1;
-
-            },
-
-            showDataLoading: function() {
-                var that=this;
-
-                if(that.pageIndex==1) {
-                    that.showLoading();
-                    that.$refreshing.hide();
-                } else {
-                    that.$refreshing.find('p').html('加载中');
-                    that.$refreshing.show().find('div.cui-i').show();
-                }
-
-            },
-
-            hideDataLoading: function() {
-                var that=this;
-
-                if(that.pageIndex==1) {
-                    that.hideLoading();
-                }
-            },
-
-            showMsg: function(msg) {
-                this.$refreshing.find('p').html(msg);
-                this.$refreshing.show().find('div.cui-i').hide();
-            },
-
-            showError: function() {
-                var that=this;
-                if(that.pageIndex==1) {
-                    var biz=that.bizStore.getBiz(that.biz);
-                    that.$list.html('加载失败'));
-
-                } else {
-                    if(that.isError) {
-                        that.showMsg('加载失败，请点击重试<i class="i-refresh"></i>');
-                    }
-                }
-            },
-
-            hasData: function(data) {
-                return data.FavoriteList&&data.FavoriteList.length!=0;
-            },
-
-            reload: function() {
-                var that=this,
-                    param=that.listModel.getParam();
-
-                if(that.isLoading) return;
-
-                that.pageIndex=1;
-
-                that.$refreshing.hide();
-                window.scrollTo(0,0);
-
-                that.load(true);
-            },
-
-            load: function(isClearList) {
-                var that=this;
-
-                if(that.isLoading) return;
-
-                that.listModel.abort();
-
-                that.showDataLoading();
-
-                that.isLoading=true;
-                that.isError=false;
-
-                if(that.biz=="all") {
-                    that.param.NextCursor=that.nextCursor;
-                } else {
-                    that.param.StartOffset=(that.pageIndex-1)*that.pageSize+1;
-                }
-                that.param.ReturnCount=that.pageSize;
-
-                that.listModel.setParam(that.param);
-                that.listModel.excute(function(data) {
-                    if(isClearList===true) that.$list.html('');
-
-                    that.hideDataLoading();
-                    that.isLoading=false;
-
-                    that.nextCursor=data.NextCursor||'';
-
-                    if(that.hasData(data)) {
-                        that.render(data);
-                        that.checkAutoRefreshing(data);
-
-                    } else {
-                        that._dataNotFound();
-                    }
-
-
-                },function(e) {
-                    that.isError=true;
-                    that.isLoading=false;
-
-                    that.hideDataLoading();
-                    that.showError();
-
-                },false,that);
-
-            },
-
-            _dataNotFound: function() {
-                var that=this;
-
-                if(that.pageIndex==1) {
-                    that.$list.html('暂无数据');
-                } else {
-                    that.showMsg('没有更多数据了');
-                }
-                that.disableAutoRefreshing();
-            },
-
-            _refresh: function() {
-                this.load();
-            },
-
-            _scroll: function() {
-                var that=this;
-
-                if(!that.isLoading
-                &&that._scrollY<window.scrollY
-                &&window.scrollY+window.innerHeight>=that.$refreshing.position().top) {
-
-                    that._refresh();
-                }
-
-                that._scrollY=window.scrollY;
-            },
-
-            _autoRefreshingEnabled: false,
-
-            checkAutoRefreshing: function(res) {
-                var that=this;
-
-                if(that.pageIndex*that.pageSize<res.TotalRecord) {
-                    that.pageIndex++;
-                    that.showMsg('继续加载');
-                    that.enableAutoRefreshing();
-
-                } else {
-                    that.showMsg('没有更多数据了');
-                    that.disableAutoRefreshing();
-                }
-            },
-
-            enableAutoRefreshing: function() {
-                if(this._autoRefreshingEnabled) return;
-                this._autoRefreshingEnabled=true;
-
-                $(window).on('scroll',$.proxy(this._scroll,this));
-
-                this._scrollY=window.scrollY;
-
-                if(window.scrollY+window.innerHeight>=this.$refreshing.offset().top) {
-                    this._refresh();
-                }
-            },
-
-            disableAutoRefreshing: function() {
-                if(!this._autoRefreshingEnabled) return;
-                this._autoRefreshingEnabled=false;
-
-                $(window).off('scroll',this._scroll);
-            },
-
-            onHide: function() {
-                this.disableAutoRefreshing();
+        new LoadingView('.js_container',{
+            url: '',
+            initialize: function () {
+                this.$list=this.$el.find('.js_waterfall');
             }
         });
-
-        new ScrollView();
 
     });
 </script>

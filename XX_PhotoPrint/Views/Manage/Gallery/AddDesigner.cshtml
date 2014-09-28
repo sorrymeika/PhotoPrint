@@ -1,0 +1,101 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    if (Request.HttpMethod == "POST")
+    {
+        Layout = null;
+
+        var js = new System.Web.Script.Serialization.JavaScriptSerializer();
+        Req req = new Req();
+        int parentId = req.Int("ParentID");
+        string categoryName = req.String("CategoryName", false, "请填写类别名");
+
+        if (req.HasError)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+            return;
+        }
+
+        if (parentId == 0)
+        {
+            if (SQL.QueryScalar<bool>("if exists (select 1 from Category where CategoryName=@p0) select 1 else select 0", categoryName))
+            {
+                Output.Write(js.Serialize(new { success = false, msg = "类别已存在" }));
+                return;
+            }
+
+            SQL.Execute("insert into Category (CategoryName) values (@p0)", categoryName);
+        }
+        else
+        {
+            if (SQL.QueryScalar<bool>("if exists (select 1 from SubCate where CategoryID=@p0 and SubName=@p1) select 1 else select 0", parentId, categoryName))
+            {
+                Output.Write(js.Serialize(new { success = false, msg = "类别已存在" }));
+                return;
+            }
+
+            SQL.Execute("insert into SubCate (CategoryID,SubName) values (@p0,@p1)", parentId, categoryName);
+        }
+        Output.Write(js.Serialize(new { success = true }));
+        return;
+    }
+    Layout = "~/Views/Shared/_ManageLayout.cshtml";
+    var data = SQL.Query("select CategoryID,CategoryName from Category order by CategoryName");
+}
+<h1>添加商品分类</h1>
+<div class="form">
+    <table>
+        <tr>
+            <th>父类</th>
+            <td>
+                <select id="parentId">
+                    <option value="0">不选择父类</option>
+                    @if (data != null)
+                    {
+                        foreach (var item in data)
+                        { 
+                        <option value="@item["CategoryID"]">@item["CategoryName"]</option>
+                        }
+                    }
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <th>类别名</th>
+            <td><input id="categoryName" class="text" /></td>
+        </tr>
+    </table>
+</div>
+<div class="action">
+    <button id="insert" class="button">添加</button>
+    <a class="button" href="categories">取消</a>
+</div>
+<script>
+    seajs.use(['jquery','lib/validation','lib/global.css'],function ($,Validation) {
+        var valid=new Validation([{
+            id: '#categoryName',
+            emptyAble: false,
+            emptyText: '请填写类别名'
+        }]);
+
+        $('#insert').click(function () {
+            if(valid.validate()) {
+                $.ajax({
+                    url: 'addcategory',
+                    type: 'post',
+                    data: {
+                        parentId: document.getElementById('parentId').value,
+                        categoryName: $('#categoryName').val()
+                    },
+                    dataType: 'json',
+                    success: function (res) {
+                        if(res.success) {
+                            alert('添加成功！');
+                            location.href='categories';
+                        } else
+                            alert(res.msg);
+                    }
+                });
+            }
+        });
+    });
+</script>

@@ -309,3 +309,21 @@ alter table Users add Address varchar(500)
 alter table Users add RegionID int
 
 alter table Product add OrigPrice decimal(28,2)
+
+
+--2014-09-29
+--·þÎñ¶ËÎ´Ö´ÐÐ
+create table Designer (
+DesignerID int identity primary key,
+DesignerName varchar(50),
+Description varchar(100),
+Avatars varchar(255)
+)
+
+create table Gallery (
+GalleryID int identity primary key,
+GalleryName varchar(100),
+DesignerID int,
+Picture varchar(255),
+Votes int
+)

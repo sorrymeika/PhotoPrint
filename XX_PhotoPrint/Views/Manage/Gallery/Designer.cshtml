@@ -1,0 +1,128 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    if ("post".Equals(Request["method"], StringComparison.OrdinalIgnoreCase))
+    {
+        Layout = null;
+
+        SL.Util.RequestUtil req = new SL.Util.RequestUtil();
+
+        string keywords = req.String("keywords");
+
+        string sql = "select DesignerID,DesignerName,Description,Avatars from Designer{0} order by DesignerID desc";
+
+        IList<dynamic> result;
+
+        if (!string.IsNullOrEmpty(keywords))
+        {
+            string where = " where DesignerName like '%'+@p0+'%'";
+            result = SL.Data.SQL.Query(string.Format(sql, where), keywords);
+        }
+        else
+        {
+            result = SL.Data.SQL.Query(string.Format(sql, ""));
+        }
+
+        Json.Write(new
+        {
+            success = true,
+            data = result
+        }, Output);
+        return;
+    }
+    Layout = "~/Views/Shared/_ManageLayout.cshtml";
+}
+<h1>设计师</h1>
+<div id="toolbar" class="toolbar"></div>
+<div id="grid"></div>
+<script>
+    seajs.use(['jquery','lib/buttons','lib/grid','lib/global.css'],function ($,Buttons) {
+        var buttons=new Buttons('#toolbar',[{
+            text: "添加",
+            ico: "add",
+            disabled: false,
+            handle: function () {
+                location.href="addDesigner";
+            }
+        },{
+            text: "修改",
+            ico: "modify",
+            disabled: true,
+            handle: function () {
+                var data=grid.selectedRow().data;
+                location.href="modifyDesigner?id="+data.DesignerID;
+            }
+        },{
+            text: "删除",
+            ico: "delete",
+            disabled: true,
+            handle: function () {
+                if(!window.confirm('确认删除？')) return;
+
+                var data=grid.selectedRow().data;
+
+                $.ajax({
+                    url: "designer?method=delete",
+                    type: 'post',
+                    data: {
+                        DesignerID: data.DesignerID
+                    },
+                    dataType: 'json',
+                    success: function (res) {
+                        if(res.success) {
+                            alert('删除成功！');
+                            grid.load();
+                        } else
+                            alert(res.msg);
+                    }
+                });
+
+            }
+        }]);
+
+        var grid=$('#grid').grid({
+
+            search: {
+                url: "designer?method=post",
+                beforeSend: function () {
+                    buttons.disable(1,2);
+                },
+                data: {
+                    keywords: {
+                        label: "关键字：",
+                        type: 'text'
+                    }
+                }
+            },
+
+            onRowSelect: function (row,data) {
+                buttons.enable(1,2);
+            },
+            columns: [{
+                text: "编号",
+                bind: "DesignerID",
+                width: 2
+            },{
+                text: "设计师名",
+                bind: "DesignerName",
+                width: 10
+            },{
+                text: "描述",
+                bind: "Descrption",
+                width: 10
+            },{
+                text: "添加作品",
+                bind: "DesignerID",
+                width: 5,
+                render: function (cell,data) {
+                    var link=$('<a href="javascript:;" style="color:#c00">[添加作品]</a>');
+
+                    link.on('click',function () {
+                    });
+
+                    cell.append(link);
+                }
+            }]
+
+        }).search();
+    });
+</script>

@@ -1,60 +1,62 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-	<title>@ViewBag.Title</title>
-	<script src="/js/seajs/sea.js"></script>
-	<script>
-		seajs.config({
-			alias: {
-				"jquery": "lib/jquery-1.7.2.min"
-			}
-		});
-	</script>
-	<style>
-		body, html { background: #f1f1f1; }
-		.main { width: 1000px; margin: 20px auto; background: #fff; overflow: hidden; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; }
-		.menu { float: left; width: 99px; height: 100%; overflow: hidden; border-right: 1px solid #ddd; padding-top: 20px; margin-bottom: -10000px; padding-bottom: 10000px; }
-		.menu .hd { line-height: 20px; background: #64a0de; border-right: 3px solid #4c88c7; font-size: 18px; color: #fff; overflow: hidden; padding: 10px 20px; text-align: right; float: right; }
-		.menu dl { clear: both; text-align: right; color: #000; overflow: hidden; padding-bottom: 20px; }
-		.menu dl dt { height: 25px; font-weight: bold; margin: 10px 0 0 0; line-height: 30px; padding-right: 5px; }
-		.menu dl dd { line-height: 24px; padding-right: 5px; }
-		.menu dl dd.curr { background: #ddd; }
-		.menu dl dd a { color: #666; }
-		.body { padding: 20px 10px; width: 880px; float: right; }
-	</style>
+    <title>@ViewBag.Title</title>
+    <script src="/js/seajs/sea.js"></script>
+    <script>
+        seajs.config({
+            alias: {
+                "jquery": "lib/jquery-1.7.2.min"
+            }
+        });
+    </script>
+    <style>
+        body, html { background: #f1f1f1; }
+        .main { width: 1000px; margin: 20px auto; background: #fff; overflow: hidden; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; }
+        .menu { float: left; width: 99px; height: 100%; overflow: hidden; border-right: 1px solid #ddd; padding-top: 20px; margin-bottom: -10000px; padding-bottom: 10000px; }
+        .menu .hd { line-height: 20px; background: #64a0de; border-right: 3px solid #4c88c7; font-size: 18px; color: #fff; overflow: hidden; padding: 10px 20px; text-align: right; float: right; }
+        .menu dl { clear: both; text-align: right; color: #000; overflow: hidden; padding-bottom: 20px; }
+        .menu dl dt { height: 25px; font-weight: bold; margin: 10px 0 0 0; line-height: 30px; padding-right: 5px; }
+        .menu dl dd { line-height: 24px; padding-right: 5px; }
+        .menu dl dd.curr { background: #ddd; }
+        .menu dl dd a { color: #666; }
+        .body { padding: 20px 10px; width: 880px; float: right; }
+    </style>
 </head>
 <body>
-	<div class="main">
-		<div class="menu">
-			<div class="hd">菜单</div>
-			<dl>
-				<dt>用户管理</dt>
-				<dd><a href="/manage/user/users">用户管理</a></dd>
-				<dt>商品管理</dt>
-				<dd><a href="/manage/product/categories">商品分类</a></dd>
-				<dd><a href="/manage/product/products">商品管理</a></dd>
-				<dt>订单管理</dt>
-				<dd><a href="/manage/shop/orders">订单管理</a></dd>
-				<dt>优惠活动</dt>
-				<dd><a href="/manage/coupon/categories">优惠券分类</a></dd>
-				<dd><a href="/manage/coupon/coupons">优惠券管理</a></dd>
-				<dt>广告资讯</dt>
-				<dd><a href="/manage/activity/activities">广告资讯</a></dd>
-				<dt>系统管理</dt>
-				<dd><a href="/manage/admin/modifypwd">修改密码</a></dd>
-				<dd><a href="/manage/admin/ServiceEmail">设置邮箱</a></dd>
-				<dd><a href="/manage/admin/feedback">反馈信息</a></dd>
-			</dl>
-		</div>
-		<div class="body">
-			@RenderBody()
-		</div>
-	</div>
-	<script>
-		seajs.use('jquery',function ($) {
-			var pathname=window._pathname||location.pathname;
-			$('.menu a[href*="'+pathname+'"]').parent().addClass('curr').siblings('.curr').removeClass('curr');
-		});
-	</script>
+    <div class="main">
+        <div class="menu">
+            <div class="hd">菜单</div>
+            <dl>
+                <dt>用户管理</dt>
+                <dd><a href="/manage/user/users">用户管理</a></dd>
+                <dd><a href="/manage/gallery/designer">设计师</a></dd>
+                <dd><a href="/manage/gallery/gallery">画廊</a></dd>
+                <dt>商品管理</dt>
+                <dd><a href="/manage/product/categories">商品分类</a></dd>
+                <dd><a href="/manage/product/products">商品管理</a></dd>
+                <dt>订单管理</dt>
+                <dd><a href="/manage/shop/orders">订单管理</a></dd>
+                <dt>优惠活动</dt>
+                <dd><a href="/manage/coupon/categories">优惠券分类</a></dd>
+                <dd><a href="/manage/coupon/coupons">优惠券管理</a></dd>
+                <dt>广告资讯</dt>
+                <dd><a href="/manage/activity/activities">广告资讯</a></dd>
+                <dt>系统管理</dt>
+                <dd><a href="/manage/admin/modifypwd">修改密码</a></dd>
+                <dd><a href="/manage/admin/ServiceEmail">设置邮箱</a></dd>
+                <dd><a href="/manage/admin/feedback">反馈信息</a></dd>
+            </dl>
+        </div>
+        <div class="body">
+            @RenderBody()
+        </div>
+    </div>
+    <script>
+        seajs.use('jquery',function ($) {
+            var pathname=window._pathname||location.pathname;
+            $('.menu a[href*="'+pathname+'"]').parent().addClass('curr').siblings('.curr').removeClass('curr');
+        });
+    </script>
 </body>
 </html>

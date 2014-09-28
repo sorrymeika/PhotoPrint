@@ -40,6 +40,8 @@
         that.initialize.apply(that,args);
         that.options.initialize&&that.options.initialize.apply(that,args);
 
+        that.on('Destory',that.onDestory);
+
     },{
         $el: null,
         template: '',
@@ -137,6 +139,9 @@
         },
         initialize: function() {
         },
+
+        onDestory: function(){},
+
         destory: function() {
             var $el=this.$el,
                 that=this;
