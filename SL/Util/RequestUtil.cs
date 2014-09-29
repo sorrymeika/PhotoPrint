@@ -336,6 +336,12 @@ namespace SL.Util
             }
         }
 
+        public static void Delete(string src)
+        {
+            string savePath = System.Web.HttpContext.Current.Server.MapPath("~/" + src);
+            System.IO.File.Delete(savePath);
+        }
+
         public string Save()
         {
             if (!isEmpty)

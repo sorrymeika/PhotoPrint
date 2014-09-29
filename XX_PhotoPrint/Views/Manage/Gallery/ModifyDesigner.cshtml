@@ -1,14 +1,15 @@
 ﻿@using XX_PhotoPrint.Service
 @{
-    if ("add".Equals(Request.QueryString["action"]))
+    SL.Util.RequestUtil req = new SL.Util.RequestUtil();
+
+    if ("modify".Equals(Request.QueryString["action"]))
     {
         Layout = null;
 
-        SL.Util.RequestUtil req = new SL.Util.RequestUtil();
-
+        int designerId = req.Int("DesignerID", false, "请填写设计师ID");
         string designer = req.String("DesignerName", false, "请填写设计师");
-        string descrption = req.String("Description", false, "设计师头衔");
-        SL.Util.RequestFile avatars = req.File("Avatars", false, "设计师头像");
+        string descrption = req.String("Description", false, "请填写设计师头衔");
+        SL.Util.RequestFile avatars = req.File("Avatars");
 
         if (req.HasError)
         {
@@ -16,27 +17,42 @@
             return;
         }
 
-        string src = avatars.Save();
+        string original = SL.Data.SQL.QueryValue<string>("select Avatars from Designer where DesignerID=@p0", designerId);
 
-        SL.Data.SQL.Execute("insert into Designer (DesignerName,Description,Avatars) values (@p0,@p1,@p2)", designer, descrption, src);
+        string src = original;
+
+        if (!avatars.IsEmpty)
+        {
+            SL.Util.RequestFile.Delete(original);
+            src = avatars.Save();
+        }
+
+        SL.Data.SQL.Execute("update Designer set DesignerName=@p1,Description=@p2,Avatars=@p3 where DesignerID=@p0", designerId, designer, descrption, src);
 
         SL.Util.HtmlUtil.OutputResult(new { success = true });
         return;
     }
 
     Layout = "~/Views/Shared/_ManageLayout.cshtml";
+
+    var data = SL.Data.SQL.QuerySingle("select Avatars,DesignerName,Description,Avatars from Designer where DesignerID=@p0", req.Int("id"));
+    
 }
 <div id="form" class="form"></div>
 <script>
-    seajs.use(['jquery','lib/form','lib/global.css'],function($,Form) {
-
+    seajs.use(['jquery','lib/util','lib/form','lib/global.css'],function($,util,Form) {
         var form=new Form('#form',{
-            title: '添加设计师',
-            url: "addDesigner?action=add",
+            title: '修改设计师',
+            url: "modifyDesigner?action=modify",
             controls: [{
+                type: 'hidden',
+                name: 'DesignerID',
+                value: util.query('?id')
+            },{
                 type: 'text',
                 name: 'DesignerName',
                 label: '设计师',
+                value: '@data.DesignerName',
                 validation: {
                     emptyAble: false,
                     emptyText: '请填写设计师'
@@ -45,6 +61,7 @@
                 type: 'text',
                 name: 'Description',
                 label: '设计师头衔',
+                value: '@data.Description',
                 validation: {
                     emptyAble: false,
                     emptyText: '请填写设计师头衔'
@@ -56,11 +73,11 @@
                 name: 'Avatars'
             }],
             buttons: [{
-                text: '添加',
+                text: '修改',
                 handle: function() {
                     form.submit(function(res) {
                         if(res.success) {
-                            alert("添加成功");
+                            alert("修改成功");
                             location.href="designer";
                         } else
                             alert(res.msg);

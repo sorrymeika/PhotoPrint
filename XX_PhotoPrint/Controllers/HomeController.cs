@@ -348,11 +348,11 @@ namespace XX_PhotoPrint.Controllers
 
                 CacheUtil.CreateCache("preview-" + guid, 0.1, imageBuffer);
 
-                return Content(HtmlUtil.CallbackResult(callback, new { success = true, guid = guid, name = Request.Files.Keys[0] }));
+                return Content(HtmlUtil.Result(callback, new { success = true, guid = guid, name = Request.Files.Keys[0] }));
             }
             else
             {
-                return Content(HtmlUtil.CallbackResult(callback, new { success = false, msg = "您还未选择图片" }));
+                return Content(HtmlUtil.Result(callback, new { success = false, msg = "您还未选择图片" }));
             }
         }
 

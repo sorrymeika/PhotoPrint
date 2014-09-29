@@ -8,12 +8,7 @@ namespace SL.Util
 {
     public class HtmlUtil
     {
-        public static string SubmitResult(string func, dynamic obj)
-        {
-            return "<script>window.parent." + func + "(" + Json.Encode(obj) + ");</script>";
-        }
-
-        public static string CallbackResult(string callback, dynamic obj)
+        public static string Result(string callback, dynamic obj)
         {
             if (string.IsNullOrEmpty(callback))
             {

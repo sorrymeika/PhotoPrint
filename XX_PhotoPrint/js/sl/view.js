@@ -20,7 +20,7 @@
             options=selector;
         }
 
-        if(options.override) {
+        if(options&&options.override) {
             var overrideFn;
             $.each(options.override,function(key,fn) {
                 overrideFn=that[key];
@@ -140,7 +140,7 @@
         initialize: function() {
         },
 
-        onDestory: function(){},
+        onDestory: function() { },
 
         destory: function() {
             var $el=this.$el,
