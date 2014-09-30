@@ -47,6 +47,22 @@ namespace SL.Data
             }
         }
 
+        public static IList<dynamic> QueryPage(string pks,
+            string select,
+            string from,
+            string where,
+            int page,
+            int pageSize,
+            object[] parameters,
+            out int total,
+            IDictionary<string, bool> sorts = null)
+        {
+            using (Database db = Database.Open())
+            {
+                return db.QueryPage(pks.Split(','), select, from, where, page, pageSize, parameters, out total, sorts);
+            }
+        }
+
         public static IList<dynamic> QueryPage(string[] pks,
             string select,
             string from,

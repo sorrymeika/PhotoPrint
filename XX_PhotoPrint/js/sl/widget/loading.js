@@ -1,4 +1,4 @@
-﻿define(['$','./../view'],function (require,exports,module) {
+﻿define(['$','./../view'],function(require,exports,module) {
     var $=require('$'),
         view=require('./../view');
 
@@ -7,29 +7,29 @@
 
         options: {
             url: '',
+            pageIndex: 1,
+            pageSize: 25,
             param: {}
         },
 
-        pageIndex: 1,
-
-        pageSize: 25,
-
-        initialize: function () {
+        initialize: function() {
             var that=this;
 
             that.pageIndex=1;
             that.url=that.options.url;
             that.param=that.options.param;
+            that.pageSize=that.options.pageSize;
+            that.pageIndex=that.options.pageIndex;
 
         },
 
-        showLoading: function () {
+        showLoading: function() {
         },
 
-        hideLoading: function () {
+        hideLoading: function() {
         },
 
-        showDataLoading: function () {
+        showDataLoading: function() {
             var that=this;
 
             if(that.pageIndex==1) {
@@ -42,7 +42,7 @@
 
         },
 
-        hideDataLoading: function () {
+        hideDataLoading: function() {
             var that=this;
 
             if(that.pageIndex==1) {
@@ -50,28 +50,29 @@
             }
         },
 
-        showMsg: function (msg) {
+        showMsg: function(msg) {
             this.$refreshing.find('p').html(msg);
             this.$refreshing.show().find('i').hide();
         },
 
-        showError: function () {
+        showError: function() {
             var that=this;
             if(that.pageIndex==1) {
                 that.$list.html('加载失败');
 
             } else {
                 if(that.isError) {
-                    that.showMsg('加载失败，请点击重试<i class="i-refresh"></i>');
+                    //，请点击重试<i class="i-refresh"></i>
+                    that.showMsg('加载失败');
                 }
             }
         },
 
-        hasData: function (data) {
+        hasData: function(data) {
             return data.data&&data.data.length!=0;
         },
 
-        reload: function () {
+        reload: function() {
             var that=this,
                 param=that.param;
 
@@ -85,7 +86,7 @@
             that.load(true);
         },
 
-        load: function (isClearList) {
+        load: function(isClearList) {
             var that=this;
 
             if(that.isLoading) return;
@@ -104,7 +105,7 @@
                 url: that.url,
                 data: that.param,
                 dataType: that.options.dataType||'json',
-                success: function (data) {
+                success: function(data) {
 
                     if(isClearList===true) that.$list.html('');
 
@@ -119,23 +120,23 @@
                         that._dataNotFound();
                     }
                 },
-                error: function () {
+                error: function() {
                     that.isError=true;
                     that.isLoading=false;
 
                     that.hideDataLoading();
                     that.showError();
                 },
-                complete: function () {
+                complete: function() {
                     that.ajax=null;
                 }
             });
 
         },
 
-        render: function () { },
+        render: function() { },
 
-        _dataNotFound: function () {
+        _dataNotFound: function() {
             var that=this;
 
             if(that.pageIndex==1) {
@@ -146,26 +147,26 @@
             that.disableAutoRefreshing();
         },
 
-        _refresh: function () {
+        _refresh: function() {
             this.load();
         },
 
-        _scroll: function () {
+        _scroll: function() {
             var that=this;
 
             if(!that.isLoading
-                &&that._scrollY<window.scrollY
-                &&window.scrollY+window.innerHeight>=that.$refreshing.position().top) {
+                &&that._scrollY<$(window).scrollTop()
+                &&$(window).scrollTop()+$(window).height()>=that.$refreshing.position().top) {
 
                 that._refresh();
             }
 
-            that._scrollY=window.scrollY;
+            that._scrollY=$(window).scrollTop();
         },
 
         _autoRefreshingEnabled: false,
 
-        checkAutoRefreshing: function (res) {
+        checkAutoRefreshing: function(res) {
             var that=this;
 
             if(that.pageIndex*that.pageSize<res.total) {
@@ -179,27 +180,28 @@
             }
         },
 
-        enableAutoRefreshing: function () {
+        enableAutoRefreshing: function() {
             if(this._autoRefreshingEnabled) return;
             this._autoRefreshingEnabled=true;
 
             $(window).on('scroll',$.proxy(this._scroll,this));
 
-            this._scrollY=window.scrollY;
+            this._scrollY=$(window).scrollTop();
 
-            if(window.scrollY+window.innerHeight>=this.$refreshing.offset().top) {
+
+            if(this._scrollY+$(window).height()>=this.$refreshing.offset().top) {
                 this._refresh();
             }
         },
 
-        disableAutoRefreshing: function () {
+        disableAutoRefreshing: function() {
             if(!this._autoRefreshingEnabled) return;
             this._autoRefreshingEnabled=false;
 
             $(window).off('scroll',this._scroll);
         },
 
-        onDestory: function () {
+        onDestory: function() {
             this.disableAutoRefreshing();
         }
     });

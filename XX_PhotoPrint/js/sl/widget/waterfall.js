@@ -59,11 +59,11 @@
                     }
 
                     arr.sort(function(a,b) {
-                        return a.height<=b.height
+                        return a.height<b.height
                     });
 
                     columns.sort(function(a,b) {
-                        return a.top>=b.top
+                        return a.top>b.top
                     });
 
                     for(var j=0,column;j<arr.length;j++) {

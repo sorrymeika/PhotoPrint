@@ -1,0 +1,92 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    SL.Util.RequestUtil req = new SL.Util.RequestUtil();
+
+    int designerId = req.Int("id", false, "请传入设计师ID");
+
+    if ("add".Equals(Request.QueryString["action"]))
+    {
+        Layout = null;
+
+        string galleryName = req.String("GalleryName", false, "请填写设计师");
+        int votes = req.Int("Votes", false, "请填写投票");
+        SL.Util.RequestFile picture = req.File("Picture", false, "请上传图片");
+
+        if (req.HasError)
+        {
+            SL.Util.HtmlUtil.OutputResult(new { success = false, msg = req.FirstError, errors = req.GetErrors() });
+            return;
+        }
+
+        string src = picture.Save();
+
+        SL.Data.SQL.Execute("insert into Gallery (GalleryName,Votes,Picture,DesignerID) values (@p0,@p1,@p2,@p3)", galleryName, votes, src, designerId);
+
+        SL.Util.HtmlUtil.OutputResult(new { success = true });
+        return;
+    }
+
+    Layout = "~/Views/Shared/_ManageLayout.cshtml";
+
+    var data = SL.Data.SQL.QuerySingle("select DesignerName,Description from Designer where DesignerID=@p0", designerId);
+}
+<div id="form" class="form"></div>
+<script>
+    seajs.use(['jquery','lib/util','lib/form','lib/global.css'],function($,util,Form) {
+
+        var form=new Form('#form',{
+            title: '添加画作',
+            url: "addGallery?action=add",
+            controls: [{
+                label: '设计师',
+                render: function() {
+                    return "@data.DesignerName";
+                }
+            },{
+                type: 'hidden',
+                name: 'id',
+                value: util.query('?id')
+            },{
+                type: 'text',
+                name: 'GalleryName',
+                label: '画作名',
+                validation: {
+                    emptyAble: false,
+                    emptyText: '请填写画作名'
+                }
+            },{
+                type: 'file',
+                label: '画作',
+                emptyAble: false,
+                name: 'Picture'
+            },{
+                type: 'text',
+                name: 'Votes',
+                label: '投票数',
+                value: "0",
+                validation: {
+                    emptyAble: false,
+                    emptyText: '请填写投票'
+                }
+            }],
+            buttons: [{
+                text: '添加',
+                handle: function() {
+                    form.submit(function(res) {
+                        if(res.success) {
+                            alert("添加成功");
+                            location.reload();
+                        } else
+                            alert(res.msg);
+                    });
+                }
+            },{
+                text: '取消',
+                handle: function() {
+                    location.href="gallery";
+                }
+            }]
+        });
+
+    });
+</script>

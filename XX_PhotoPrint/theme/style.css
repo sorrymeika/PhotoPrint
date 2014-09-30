@@ -294,4 +294,20 @@ a.btn_dlg_r:hover, a.btn_dlg_l:hover { color: #fff; }
 .mainlast { padding-bottom: 52px; }
 
 .waterfall { position: relative; }
-.waterfall .wf_item { position: absolute; width: 30%; background: #ddd; border: 1px solid #ccc; display: none; -webkit-transition: opacity,-webkit-transform 300ms ease-out 0ms; opacity: 0; -webkit-transform: scale(.5,.5); }
+.waterfall .wf_item { position: absolute; width: 33%; display: none; -webkit-transition: opacity,-webkit-transform 300ms ease-out 0ms; opacity: 0; -webkit-transform: scale(.5,.5); }
+
+.galleryhd { text-align: center; }
+.galleryhd .hd { font-weight: bold; font-size: 18px; color:#000; }
+.galleryhd .hd1 { margin-top: 10px; font-size: 14px; line-height: 18px; }
+.galleryhd .slide_down { font-size: 12px; margin-top: 20px; color:#ff4208; }
+.galleryhd .slide_down:before { content: ''; height: 15px; border-top: 1px solid #ddd;width: 50px; display: block; margin: 0px auto; }
+.gallerylist {}
+.gallerylist .wf_item { text-align: center; }
+.gallerylist .wf_item img { width: 90%; margin: 30px 0 20px 0; }
+.gallerylist .wf_item i { display: none; width: 90%; position: absolute; bottom: 20px; left: 5%; text-align: center; background:#000; color:#fff; height: 30px; line-height: 30px; }
+.gallerylist .wf_item i em { width: 28px; height: 28px; display: inline-block; background: url(images/fav.png) no-repeat; vertical-align: -8px; }
+.gallerylist .wf_item a:hover i {display: block;}
+
+.refresh { height: 60px; line-height: 60px; text-align: center; font-size: 16px; display: none; }
+.refresh i.ico_loading { background: url(images/ico_loading.gif) no-repeat; width: 16px; height: 16px; vertical-align: -2px; display: inline-block; margin-right: 5px; }
+.refresh p { display: inline-block; color:#ccc; }

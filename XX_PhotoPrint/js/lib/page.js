@@ -32,15 +32,15 @@
                 container=$('<div></div>').appendTo(container);
 
                 var html='',
-                page=options.page,
+                page=parseInt(options.page),
                 total=options.total,
                 pageSize=options.pageSize,
                 onChange=options.onChange,
                 oneButton=bind(this._oneButton,this),
                 serialButtons=bind(this._serialButtons,this);
 
-                if(page==1) html+="<span>第一页</span>";
-                else html+=oneButton(1,"第一页");
+                if(page==1) html+="<span>第一页</span><span>上一页</span>";
+                else html+=oneButton(1,"第一页")+oneButton(page-1,"上一页");
 
                 if(totalPages<=7)
                     html+=serialButtons(1,totalPages);
@@ -57,7 +57,7 @@
                     html+=serialButtons(totalPages,totalPages);
                 }
 
-                html+=totalPages==page?'<span>最后一页</span>':oneButton(totalPages,"最后一页");
+                html+=totalPages==page?'<span>下一页</span><span>最后一页</span>':(oneButton(page+1,"下一页")+oneButton(totalPages,"最后一页"));
 
                 container.html(html)
                 .find("a")

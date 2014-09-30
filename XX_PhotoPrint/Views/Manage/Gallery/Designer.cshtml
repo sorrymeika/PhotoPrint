@@ -31,8 +31,16 @@
     else if ("delete".Equals(Request["method"], StringComparison.OrdinalIgnoreCase))
     {
         Layout = null;
-        
+
         int designerId = req.Int("DesignerID", false, "请填写设计师ID");
+
+        using (SL.Data.Database db = SL.Data.Database.Open())
+        {
+            db.Execute("delete from Designer where DesignerID=@p0", designerId);
+            db.Execute("delete from Gallery where DesignerID=@p0", designerId);
+        }
+        Json.Write(new { success = true }, Output);
+        return;
     }
 
     Layout = "~/Views/Shared/_ManageLayout.cshtml";
@@ -120,10 +128,7 @@
                 bind: "DesignerID",
                 width: 5,
                 render: function(cell,data) {
-                    var link=$('<a href="javascript:;" style="color:#c00">[添加作品]</a>');
-
-                    link.on('click',function() {
-                    });
+                    var link=$('<a href="addGallery?id='+data.DesignerID+'" style="color:#c00">[添加作品]</a>');
 
                     cell.append(link);
                 }

@@ -1,80 +1,83 @@
 ﻿@using XX_PhotoPrint.Service
 @{
     SL.Util.RequestUtil req = new SL.Util.RequestUtil();
+
     if ("post".Equals(Request["method"], StringComparison.OrdinalIgnoreCase))
     {
         Layout = null;
 
         string keywords = req.String("keywords");
-
-        string sql = "select GalleryID,GalleryName,a.DesignerID,Picture,Votes,DesignerName from Gallery a join Designer b on a.DesignerID=b.DesignerID{0} order by GalleryID desc";
+        int page = req.Int("page", defaultValue: 1);
+        int pageSize = req.Int("pageSize", defaultValue: 15);
 
         IList<dynamic> result;
+        int total;
+        string where = "1=1";
         List<object> parameters = new List<object>();
 
         if (!string.IsNullOrEmpty(keywords))
         {
-            string where = " where DesignerName like '%'+@p0+'%'";
-            result = SL.Data.SQL.Query(string.Format(sql, where), keywords);
-        }
-        else
-        {
-            result = SL.Data.SQL.Query(string.Format(sql, ""));
+            where += " and (GalleryName like '%'+@p0+'%' or DesignerName like '%'+@p0+'%')";
+            parameters.Add(keywords);
         }
 
-        Json.Write(new
-        {
-            success = true,
-            data = result
-        }, Output);
+        result = SL.Data.SQL.QueryPage(new[] { "GalleryID" },
+                "GalleryID,GalleryName,a.DesignerID,Picture,Votes,DesignerName",
+                "Gallery a join Designer b on a.DesignerID=b.DesignerID",
+                where,
+                page,
+                pageSize,
+                parameters.ToArray(),
+                out total);
+
+        Json.Write(new { success = true, data = result, total = total }, Output);
         return;
     }
     else if ("delete".Equals(Request["method"], StringComparison.OrdinalIgnoreCase))
     {
         Layout = null;
+        int galleryId = req.Int("GalleryID", false, "请填写作品ID");
 
-        int designerId = req.Int("DesignerID", false, "请填写设计师ID");
+        using (SL.Data.Database db = SL.Data.Database.Open())
+        {
+            db.Execute("delete from Gallery where GalleryID=@p0", galleryId);
+        }
+        Json.Write(new { success = true }, Output);
+        return;
     }
 
     Layout = "~/Views/Shared/_ManageLayout.cshtml";
 }
-<h1>设计师</h1>
+<h1>画廊</h1>
 <div id="toolbar" class="toolbar"></div>
 <div id="grid"></div>
 <script>
-    seajs.use(['jquery','lib/buttons','lib/grid','lib/global.css'],function ($,Buttons) {
+    seajs.use(['jquery','lib/buttons','lib/grid','lib/global.css'],function($,Buttons) {
         var buttons=new Buttons('#toolbar',[{
-            text: "添加",
-            ico: "add",
-            disabled: false,
-            handle: function () {
-                location.href="addDesigner";
-            }
-        },{
             text: "修改",
             ico: "modify",
             disabled: true,
-            handle: function () {
+            handle: function() {
                 var data=grid.selectedRow().data;
-                location.href="modifyDesigner?id="+data.DesignerID;
+                location.href="modifyGallery?id="+data.GalleryID;
             }
         },{
             text: "删除",
             ico: "delete",
             disabled: true,
-            handle: function () {
+            handle: function() {
                 if(!window.confirm('确认删除？')) return;
 
                 var data=grid.selectedRow().data;
 
                 $.ajax({
-                    url: "designer?method=delete",
+                    url: "gallery?method=delete",
                     type: 'post',
                     data: {
-                        DesignerID: data.DesignerID
+                        GalleryID: data.GalleryID
                     },
                     dataType: 'json',
-                    success: function (res) {
+                    success: function(res) {
                         if(res.success) {
                             alert('删除成功！');
                             grid.load();
@@ -87,11 +90,11 @@
         }]);
 
         var grid=$('#grid').grid({
-
+            pageEnabled: true,
             search: {
-                url: "designer?method=post",
-                beforeSend: function () {
-                    buttons.disable(1,2);
+                url: "gallery?method=post",
+                beforeSend: function() {
+                    buttons.disable(1,0);
                 },
                 data: {
                     keywords: {
@@ -101,33 +104,25 @@
                 }
             },
 
-            onRowSelect: function (row,data) {
-                buttons.enable(1,2);
+            onRowSelect: function(row,data) {
+                buttons.enable(1,0);
             },
             columns: [{
                 text: "编号",
-                bind: "DesignerID",
+                bind: "GalleryID",
                 width: 2
             },{
-                text: "设计师名",
+                text: "画作名",
+                bind: "GalleryName",
+                width: 10
+            },{
+                text: "设计师",
                 bind: "DesignerName",
                 width: 10
             },{
-                text: "描述",
-                bind: "Description",
-                width: 10
-            },{
-                text: "添加作品",
-                bind: "DesignerID",
-                width: 5,
-                render: function (cell,data) {
-                    var link=$('<a href="javascript:;" style="color:#c00">[添加作品]</a>');
-
-                    link.on('click',function () {
-                    });
-
-                    cell.append(link);
-                }
+                text: "投票数",
+                bind: "Votes",
+                width: 5
             }]
 
         }).search();

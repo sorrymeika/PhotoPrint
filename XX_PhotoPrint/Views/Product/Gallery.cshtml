@@ -1,8 +1,48 @@
 ﻿@using XX_PhotoPrint.Service
 @using SL.Util
 @using System.Web.Script.Serialization
+@functions {
+    IList<dynamic> getList(string keywords, int page, int pageSize, out int total)
+    {
+        IList<dynamic> result;
+        string where = "1=1";
+        List<object> parameters = new List<object>();
+
+        if (!string.IsNullOrEmpty(keywords))
+        {
+            where += " and (GalleryName like '%'+@p0+'%' or DesignerName like '%'+@p0+'%')";
+            parameters.Add(keywords);
+        }
+
+        result = SL.Data.SQL.QueryPage("GalleryID",
+                "GalleryID,GalleryName,a.DesignerID,Picture,Votes,DesignerName",
+                "Gallery a join Designer b on a.DesignerID=b.DesignerID",
+                where,
+                page,
+                pageSize,
+                parameters.ToArray(),
+                out total);
+
+        return result;
+    }
+}
 @{
     RequestUtil req = new RequestUtil();
+
+    int total;
+
+    if ("get".Equals(Request.QueryString["method"]))
+    {
+        Layout = null;
+
+        var result = getList(null, req.Int("page"), 10, out total);
+
+        Json.Write(new { data = result, success = true, total = total }, Output);
+        return;
+    }
+
+    var data = getList(null, 1, 10, out total);
+
 
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -14,30 +54,49 @@
                 无二的纯棉T恤，随心个性定制</div>
             <div class="slide_down">SLIDE DOWN</div>
         </div>
-        <div class="js_waterfall waterfall">
-            <div class="wf_item"><img src="http://" /></div>
-            <div class="wf_item">asd2fa<br>
-                sdf</div>
-            <div class="wf_item">asd3fasdf</div>
-            <div class="wf_item">asd4fasdf</div>
-            <div class="wf_item">asd5fasdf</div>
-            <div class="wf_item">asd6fa<br>
-                <br>
-                sdf</div>
+        <div class="js_waterfall waterfall gallerylist">
+            @if (data != null)
+            {
+                for (int i = 0; i < data.Count; i++)
+                {
+                <div class="wf_item"><a href="/gallery/@(data[i].GalleryID).html"><img src="@data[i].Picture" /><i><em></em>@data[i].Votes</i></a></div>
+                }
+            }
+        </div>
+        <div class="refresh"><i class="ico_loading"></i>
+            <p></p>
         </div>
     </div>
 </div>
 <script>
-    seajs.use(['$','sl/view','sl/widget/waterfall','sl/widget/loading'],function ($,view,Waterfall,LoadingView) {
+    seajs.use(['$','sl/view','sl/widget/waterfall','sl/widget/loading'],function($,view,Waterfall,LoadingView) {
         var waterfall=new Waterfall('.js_waterfall',{
             itemSelector: '.wf_item'
         });
 
-        new LoadingView('.js_container',{
-            url: '',
-            initialize: function () {
+        var loading=new LoadingView('.js_container',{
+            url: '?method=get',
+            page: 2,
+            pageSize: 10,
+            initialize: function() {
                 this.$list=this.$el.find('.js_waterfall');
+                this.$refreshing=this.$el.find('.refresh');
+            },
+            override: {
+                render: function(data){
+                    var html=[];
+
+                    $.each(data.data,function(i,item){
+                        html.push('<div class="wf_item"><a href="/gallery/'+item.GalleryID+'.html"><img src="'+item.Picture+'" /></div>');
+                    });
+
+                    waterfall.append(html.join(''));
+                }
             }
+        });
+
+        loading.checkAutoRefreshing({
+            total: @total
         });
 
     });
