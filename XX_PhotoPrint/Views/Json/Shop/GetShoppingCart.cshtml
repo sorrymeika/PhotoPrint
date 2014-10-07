@@ -10,11 +10,21 @@
         return;
     }
 
+    SL.Util.RequestUtil req = new SL.Util.RequestUtil();
+
     IList<Dictionary<string, object>> data;
     string url = "http://" + Request.Url.Authority + "/Content/";
     using (DbService db = new DbService())
     {
-        data = db.Query("select a.CartID,a.UserWorkID,a.Qty,b.ProductID,c.ProductName,b.Picture,c.Price from Cart a join UserWork b on a.UserWorkID=b.UserWorkID join Product c on b.ProductID=c.ProductID where a.UserID=@p0 and c.Deleted=0", uid);
+        string sql = "select a.CartID,a.UserWorkID,a.Qty,b.ProductID,c.ProductName,b.Picture,c.Price from Cart a join UserWork b on a.UserWorkID=b.UserWorkID join Product c on b.ProductID=c.ProductID where a.UserID=@p0 and c.Deleted=0";
+
+        string ids = req.String("ids", false, "", regex: @"\d+(,\d+)*", regexText: "");
+        if (!req.HasError)
+        {
+            sql += " and a.CartID in (" + ids + ")";
+        }
+
+        data = db.Query(sql, uid);
         if (data != null)
         {
             Dictionary<string, object> item;

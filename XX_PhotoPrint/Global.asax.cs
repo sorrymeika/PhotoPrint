@@ -45,9 +45,9 @@ namespace XX_PhotoPrint
 
             routes.MapRoute(
                 "Item",
-                "item/{id}.html",
-                new { controller = "Home", action = "Index", catalog = "Product", handle = "Item" },
-                new { id = "^\\d+$" }
+                "{handle}/{id}.html",
+                new { controller = "Home", action = "Index", catalog = "Product" },
+                new { handle = "^Gallery|Item$", id = "^\\d+$" }
             );
 
             routes.MapRoute(

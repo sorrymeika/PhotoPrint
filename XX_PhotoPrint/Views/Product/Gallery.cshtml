@@ -27,8 +27,34 @@
     }
 }
 @{
+    var route = System.Text.RegularExpressions.Regex.Match(Request.Path, @"/gallery/(\d+)\.html", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
     RequestUtil req = new RequestUtil();
+}
+@if (route.Success)
+{
+    var galleryId = int.Parse(route.Groups[1].Value);
 
+    var data = SL.Data.SQL.QuerySingle("select GalleryID,GalleryName,a.DesignerID,Picture,Votes,DesignerName,Avatars,Description from Gallery a join Designer b on a.DesignerID=b.DesignerID where GalleryID=@p0", galleryId);
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    
+    <div class="main clearfix ">
+        <div class="gallery_img"><img src="/@data.Picture" /></div>
+        <div class="g_designer_info"><div class="g_designer_hd">自由设计师</div>
+            <div class="avatars"><img src="/@data.Avatars" /></div>
+            <div class="g_designer_name">@data.DesignerName</div>
+            <div class="g_designer_desc">@data.Description</div>
+            <div class="g_votes_wrap">
+                <div class="g_votes_hd">大众投票</div>
+                <div class="g_votes_bd">
+                    <i></i><em>@data.Votes</em>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
     int total;
 
     if ("get".Equals(Request.QueryString["method"]))
@@ -45,30 +71,29 @@
 
 
     Layout = "~/Views/Shared/_Layout.cshtml";
-}
-<div class="main prodwrap clearfix ">
-    <div class="gallerywrap js_container">
-        <div class="galleryhd">
-            <div class="hd">让你的艺术创作变成现实</div>
-            <div class="hd1">轻触屏幕，速纺将你的艺术创作印制成独一<br>
-                无二的纯棉T恤，随心个性定制</div>
-            <div class="slide_down">SLIDE DOWN</div>
-        </div>
-        <div class="js_waterfall waterfall gallerylist">
-            @if (data != null)
-            {
-                for (int i = 0; i < data.Count; i++)
+    
+    <div class="main prodwrap clearfix ">
+        <div class="gallerywrap js_container">
+            <div class="galleryhd">
+                <div class="hd">让你的艺术创作变成现实</div>
+                <div class="hd1">轻触屏幕，速纺将你的艺术创作印制成独一<br>
+                    无二的纯棉T恤，随心个性定制</div>
+                <div class="slide_down">SLIDE DOWN</div>
+            </div>
+            <div class="js_waterfall waterfall gallerylist">
+                @if (data != null)
                 {
-                <div class="wf_item"><a href="/gallery/@(data[i].GalleryID).html"><img src="@data[i].Picture" /><i><em></em>@data[i].Votes</i></a></div>
+                    for (int i = 0; i < data.Count; i++)
+                    {
+                    <div class="wf_item"><a href="/gallery/@(data[i].GalleryID).html"><img src="@data[i].Picture" /><i><em></em>@data[i].Votes</i></a></div>
+                    }
                 }
-            }
-        </div>
-        <div class="refresh"><i class="ico_loading"></i>
-            <p></p>
+            </div>
+            <div class="refresh"><i class="ico_loading"></i><p></p>
+            </div>
         </div>
     </div>
-</div>
-<script>
+    <script>
     seajs.use(['$','sl/view','sl/widget/waterfall','sl/widget/loading'],function($,view,Waterfall,LoadingView) {
         var waterfall=new Waterfall('.js_waterfall',{
             itemSelector: '.wf_item'
@@ -87,7 +112,7 @@
                     var html=[];
 
                     $.each(data.data,function(i,item){
-                        html.push('<div class="wf_item"><a href="/gallery/'+item.GalleryID+'.html"><img src="'+item.Picture+'" /></div>');
+                        html.push('<div class="wf_item"><a href="/gallery/'+item.GalleryID+'.html"><img src="'+item.Picture+'" /><i><em></em>'+item.Votes+'</i></a></div>');
                     });
 
                     waterfall.append(html.join(''));
@@ -100,4 +125,6 @@
         });
 
     });
-</script>
+    </script>
+
+}

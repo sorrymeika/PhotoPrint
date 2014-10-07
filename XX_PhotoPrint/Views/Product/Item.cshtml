@@ -35,7 +35,7 @@
 <div class="main prodwrap clearfix js_form">
     <div class="prod_preview"><img src="@StyleColorPic.First().Picture" /></div>
     <div class="prod_main_info">
-        <div class="priceinfo"><span class="saleprice">￥100</span><del class="origprice">￥200</del><i class="ico_sale">促销</i></div>
+        <div class="priceinfo"><span class="saleprice">￥@Item.Price.ToString("0.##")</span></div>
         <h1>@Item.WorkName@Item.ProductName</h1>
         <div class="character">
             <div class="text">T-SHIRT可与皮肤直接接触</div>

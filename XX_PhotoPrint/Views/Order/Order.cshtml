@@ -8,142 +8,101 @@
     }
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<div class="main cartwrap clearfix js_cart_bd">
-    <table class="cartlist tablelist">
-        <tr>
-            <th width="80"><input class="js_select_all" type="checkbox" checked />选 择</th>
-            <th width="120">图 片</th>
-            <th class="desc" width="400">说 明</th>
-            <th>单 价</th>
-            <th>数 量</th>
-            <th>价 格</th>
-            <th>删 除</th>
-        </tr>
-        <tbody class="js_cart_list">
-            <tr class="noborder">
-                <td colspan="7">正在载入...</td>
+<div class="main orderwrap clearfix js_cart_bd">
+    <div class="order_steps">
+        <ul class="clearfix">
+            <li><a href="/cart"><i>1</i><span>查看购物车</span></a><em></em></li>
+            <li><i>2</i><span>确认订单</span><em></em></li>
+            <li class="next last"><i>3</i><span>支付相关费用</span></li>
+        </ul>
+    </div>
+    <div class="order_address">
+        <div class="edit">编辑</div>
+        <ul>
+            <li><span>姓名</span> xxx</li>
+            <li><span>电话</span> xxx</li>
+            <li><span>收货地址</span> xxx</li>
+        </ul>
+    </div>
+    <div class="order_cart">
+        <table class="cartlist tablelist">
+            <tr>
+                <th width="150">图 片</th>
+                <th class="desc" width="300">说 明</th>
+                <th>单 价</th>
+                <th>数 量</th>
+                <th>价 格</th>
             </tr>
-        </tbody>
-    </table>
-    <div class="cartinfo clearfix mainlast">
-        <ul class="carttips">
-            <li><i>·</i>本清单已包含税费</li>
-            <li><i>·</i>如果您购买600元以上，并提供免费送货服务</li>
-            <li><i>·</i>本清单支持下列付款方式</li>
-            <li class="paylist"><img src="/theme/images/alipay.png" />
-            </li>
-        </ul>
-        <ul class="cartprice">
-            <li><span class="js_amount"></span>金额</li>
-            <li class="solid"><span>￥10</span>运费</li>
-            <li class="solid"><span class="js_total_amount">￥120</span>合计</li>
-            <li class="action"><a class="btn_dlg_l" href="/"><i class="ico"></i>继续购物</a>
-                <div class="btn_dlg_r js_create_order"><i class="ico"></i>立即付款</div>
-            </li>
-        </ul>
+            <tbody class="js_cart_list">
+                <tr class="noborder">
+                    <td colspan="7">正在载入...</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="cartinfo clearfix mainlast">
+            <div class="leave_msg">
+                <div class="hd">给速纺留言</div>
+                <div class="bd"><textarea class="txt_leave_msg"></textarea></div>
+            </div>
+            <ul class="cartprice">
+                <li><span class="js_amount"></span>金额</li>
+                <li class="solid"><span>￥10</span>运费</li>
+                <li class="solid"><span class="js_total_amount">￥120</span>合计</li>
+                <li class="action">
+                    <div class="btn_dlg_r js_create_order" style="width: 120px;"><i class="ico"></i>确认并付款</div>
+                </li>
+            </ul>
+        </div>
     </div>
 </div>
 <script id="cartItem" type="template">
 {%each(i,item) data%}
 <tr{%if i==data.length-1%} class="noborder"{%/if%} data-rowid="${item.CartID}">
-    <td><input class="js_select" type="checkbox" checked /></td>
     <td class="imgwrap"><img class="img" src="${item.Picture}" /></td>
     <td class="desc"><p class="name"><a href="">${item.ProductName}</a></p>
         <p class="color">${item.Styles[0].ColorName},${item.Styles[0].SizeName}</p>
     </td>
     <td>￥${item.Price}</td>
-    <td><input class="num js_qty" type="text" value="${item.Qty}" data-qty="${item.Qty}" /></td>
+    <td>${item.Qty}</td>
     <td class="js_total" data-price="${item.Price}">￥${item.Price*item.Qty}</td>
-    <td><input data-id="${item.CartID}" class="btn_del js_del" type="button" /></td>
 </tr>
 {%/each%}
 </script>
 <script type="text/javascript">
-    seajs.use(['$','lib/util','sl/view','sl/validation','extentions/qty','sl/tmpl'],function($,util,View,Validation,qtyEvents,tmpl) {
+    seajs.use(['$','lib/util','sl/view','sl/validation','extentions/qty','sl/tmpl'],function ($,util,View,Validation,qtyEvents,tmpl) {
         var CartView=View.extend({
             events: $.extend({
-                'click .js_select_all': 'selectAll',
-                'click .js_select': 'getTotal',
-                'changeQty .js_qty': function(e,qty) {
-                    var $target=$(e.currentTarget),
-                        $total=$target.closest('tr').find('.js_total');
-
-                    $total.html(qty*parseFloat($total.data('price')));
-
-                    this.getTotal();
-                },
                 'click .js_del': 'deleteSingle',
                 'click .js_create_order': 'createOrder'
             },qtyEvents),
 
-            createOrder: function(e) {
+            createOrder: function (e) {
                 var that=this,
                     ids=[];
 
-                that.$('.js_select:checked').closest('tr').each(function() {
+                that.$('.js_select:checked').closest('tr').each(function () {
                     ids.push($(this).data('rowid'));
                 });
 
                 location.href="/order?ids="+ids.join(',');
             },
 
-            deleteSingle: function(e) {
-                var that=this,
-                    $target=$(e.currentTarget),
-                    cartId=$target.data('id');
-
-                if(window.confirm('确认删除？')) {
-                    $.ajax({
-                        url: '/json/shop/deleteshoppingcart',
-                        data: {
-                            CartID: cartId
-                        },
-                        dataType: 'json',
-                        success: function(res) {
-                            if(res.success) {
-                                console.log(res)
-
-                                that.$list.find('[data-rowid="'+cartId+'"]').remove();
-
-                                if(that.getTotal()==0) {
-                                    location.reload();
-                                }
-                            } else {
-                                alert('删除失败！');
-                            }
-                        },
-                        error: function() {
-                            alert('网络错误！');
-                        }
-                    });
-                }
-            },
-
-            getTotal: function() {
+            getTotal: function () {
                 var total=0;
-                this.$('.js_select:checked').closest('tr').find('.js_total').each(function() {
+                this.$('tr').find('.js_total').each(function () {
                     total+=parseFloat($(this).html().replace('￥',''));
                 });
                 this.$('.js_amount').html('￥'+total);
-                this.$('.js_total_amount').html('￥'+(total+10));
+                this.$('.js_total_amount').html('￥'+(total+(total<600?10:0)));
 
                 return total;
-            },
-
-            selectAll: function(e) {
-                var $target=$(e.currentTarget);
-
-                this.$('.js_cart_list .js_select')
-                    .prop('checked',$target.prop('checked'));
-
-                this.getTotal();
             },
 
             htmlNoData: '<tr class="noborder"><td colspan="7">您的购物车中暂无商品，请去<a href="/">首页</a>选购吧</td></tr>',
 
             htmlLoading: '<tr class="noborder"><td colspan="7">正在载入...</td></tr>',
 
-            initialize: function() {
+            initialize: function () {
                 var that=this;
 
                 that.$list=$('.js_cart_list');
@@ -152,13 +111,13 @@
 
                 $.ajax({
                     url: '/json/shop/getshoppingcart',
-                    data: {},
+                    data: {
+                        ids: util.query('?ids')
+                    },
                     dataType: 'json',
-                    success: function(res) {
+                    success: function (res) {
                         if(res.success&&res.data&&res.data.length) {
                             var template=$('#cartItem').html();
-
-                            console.log(res)
 
                             that.$list.html(tmpl(template,res));
 
@@ -167,7 +126,7 @@
                         }
                         that.getTotal();
                     },
-                    error: function() {
+                    error: function () {
                         that.getTotal();
                     }
                 });
