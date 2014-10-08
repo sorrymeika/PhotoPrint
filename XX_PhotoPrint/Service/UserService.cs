@@ -25,7 +25,7 @@ namespace XX_PhotoPrint.Service
 
             if (userId == 0) return null;
 
-            var user = SL.Data.SQL.QuerySingle("select UserID,UserName,Account,LatestLoginDate,Avatars,Gender,Birthday,Mobile,RealName,Address,RegionID from Users where UserID=@p0", userId);
+            var user = SL.Data.SQL.QuerySingle("select UserID,UserName,Account,LatestLoginDate,Avatars,Gender,Birthday,Mobile,RealName,Address,a.RegionID,b.CityID,CityName,RegionName,c.ProvID,c.ProvName from Users a left join Region d on a.RegionID=d.RegionID inner join City b on d.CityID=b.CityID join Province c on b.ProvID=c.ProvID where UserID=@p0", userId);
 
             if (user != null)
             {
@@ -102,6 +102,35 @@ namespace XX_PhotoPrint.Service
                 };
                 CacheService.Set("Auth", data);
             }
+        }
+
+        public static IList<dynamic> GetAddress(int uid)
+        {
+            return SL.Data.SQL.Query("select AddressID,UserID,Receiver,a.CityID,CityName,a.RegionID,RegionName,c.ProvID,c.ProvName,Zip,Address,TelPhone,Mobile,IsCommonUse from UserAddress a inner join City b on a.CityID=b.CityID join Province c on b.ProvID=c.ProvID left join Region d on a.RegionID=d.RegionID where UserID=@p0", uid);
+        }
+
+        public static dynamic GetOrder(int orderid, int uid)
+        {
+            var data = SL.Data.SQL.QuerySingle("select OrderID,OrderCode,Amount,Freight,a.Discount,a.AddTime,a.Status,a.UserID,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName from OrderInfo a join Users b on a.UserID=b.UserID join City c on a.CityID=c.CityID join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID where OrderID=@p0 and a.UserID=@p1", orderid, uid);
+
+            using (SL.Data.Database db = SL.Data.Database.Open())
+            {
+                var detailList = db.Query("select c.OrderID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID where OrderID=@p0", orderid);
+
+                string url = "http://" + HttpContext.Current.Request.Url.Authority + "/Content/";
+                detailList.All(a =>
+                {
+                    a["Picture"] = url + a["Picture"];
+                    a["Styles"] = db.Query("select a.StyleID,StyleName,Rect,b.ColorID,c.ColorName,b.SizeID,SizeName from Style a left join UserCustomization b on a.StyleID=b.StyleID left join Color c on b.ColorID=c.ColorID left join ProductSize d on b.SizeID=d.SizeID where UserWorkID=@p0 order by a.StyleID", a["UserWorkID"]);
+                    return true;
+                });
+                data["Details"] = detailList;
+            }
+
+            data["PaymentName"] = PaymentService.Payments.First(a => (int)a["PaymentID"] == (int)data["PaymentID"])["PaymentName"];
+            data["Total"] = (decimal)data["Freight"] + (decimal)data["Amount"];
+
+            return data;
         }
 
         /// <summary>

@@ -343,3 +343,11 @@ a.btn_dlg_r:hover, a.btn_dlg_l:hover { color: #fff; }
 .order_cart { width: 1000px; margin: 0px auto; }
 .order_cart .leave_msg { float: left; margin-left: 40px; margin-top:24px; width: 500px; }
 .order_cart .txt_leave_msg { width: 570px; display: inline-block; height:70px; border: 1px solid #a4a2a3; background:#fbfaf8; margin-top: 10px; }
+
+.addr_form .uc_form { width: 450px; overflow: hidden; }
+.addr_form .uc_form dd {  height: 30px;}
+.addr_form .uc_form dt {  float: left; margin-top: 8px; height: 30px; line-height: 22px; padding-right: 10px; width: 60px; }
+.addr_form .form_item dt { float: left;margin-top:0px;line-height: 22px;}
+.addr_form .form_item dd { margin-top:0px;float: left;}
+.addr_form .uc_form .text { height: 18px; }
+.addr_form .error_tip { font-size: 12px; margin-left: 5px; }

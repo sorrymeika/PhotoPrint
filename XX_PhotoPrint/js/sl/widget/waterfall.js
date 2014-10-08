@@ -1,4 +1,4 @@
-﻿define(['$','./../view'],function (require,exports,module) {
+﻿define(['$','./../view'],function(require,exports,module) {
     var $=require('$'),
         view=require('./../view');
 
@@ -10,17 +10,17 @@
         columns: [],
         columnsLength: 0,
 
-        initialize: function () {
+        initialize: function() {
             var that=this;
 
             that.adjust();
         },
 
-        append: function (html) {
+        append: function(html) {
             this.adjust($(html).appendTo(this.$el));
         },
 
-        adjust: function (selector) {
+        adjust: function(selector) {
 
             var that=this,
                 options=that.options,
@@ -28,7 +28,7 @@
 
             items.css({ display: 'block' });
 
-            that.imageLoaded(function () {
+            that.imageLoaded(function() {
 
                 var containerWidth=that.$el.width(),
                     columns=that.columns,
@@ -58,11 +58,11 @@
                         });
                     }
 
-                    arr.sort(function (a,b) {
+                    arr.sort(function(a,b) {
                         return a.height<b.height
                     });
 
-                    columns.sort(function (a,b) {
+                    columns.sort(function(a,b) {
                         return a.top>b.top
                     });
 
@@ -93,16 +93,16 @@
 
         },
 
-        imageLoaded: function (callback) {
+        imageLoaded: function(callback) {
 
             var imgdefereds=[];
-            this.$('img').each(function () {
+            this.$('img').each(function() {
 
                 if(!this.complete) {
                     var dfd=$.Deferred();
-                    $(this).on('load',function () {
+                    $(this).on('load',function() {
                         dfd.resolve();
-                    }).on('error',function () {
+                    }).on('error',function() {
                         dfd.resolve();
                     });
                     imgdefereds.push(dfd);

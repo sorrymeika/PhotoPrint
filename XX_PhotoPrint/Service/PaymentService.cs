@@ -13,6 +13,10 @@ namespace XX_PhotoPrint.Service
             new Dictionary<string,object> {
                 { "PaymentID", AlipayWap },
                 { "PaymentName", "支付宝手机网页支付" },
+            },
+            new Dictionary<string,object> {
+                { "PaymentID", 2 },
+                { "PaymentName", "支付宝" },
             }
         };
     }

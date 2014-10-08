@@ -92,6 +92,7 @@
     <Content Include="js\colorpicker\marker.png" />
     <Content Include="js\colorpicker\mask.png" />
     <Content Include="js\colorpicker\wheel.png" />
+    <Content Include="js\extentions\area.js" />
     <Content Include="js\extentions\qty.js" />
     <Content Include="js\sl\widget\loading.js" />
     <Content Include="js\sl\widget\waterfall.js" />
@@ -357,9 +358,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Home\Index.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Views\Json\User\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Code\AuthHelper.cshtml" />

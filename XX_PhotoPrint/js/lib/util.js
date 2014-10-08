@@ -253,6 +253,9 @@
                 document.cookie=a+"="+escape(b)+(c||"")+";path="+(p||'/')
             }
         },
+        encodeHTML: function(text) {
+            return (""+text).split("<").join("&lt;").split(">").join("&gt;").split('"').join("&#34;").split("'").join("&#39;");
+        },
         isIE6: /MSIE 6/.test(navigator.userAgent)
     };
 

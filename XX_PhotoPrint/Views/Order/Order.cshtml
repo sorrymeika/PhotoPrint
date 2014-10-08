@@ -2,94 +2,267 @@
 @using SL.Util
 @using System.Web.Script.Serialization
 @{
+    var route = System.Text.RegularExpressions.Regex.Match(Request.Path, @"/order/(\d+)/*", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    RequestUtil req = new RequestUtil();
+
     if (Request.HttpMethod == "POST")
     {
         return;
     }
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    if (!UserService.IsLogin())
+    {
+        Response.Redirect("/login.html?r=" + Request.Url.OriginalString);
+        return;
+    }
+    
 }
-<div class="main orderwrap clearfix js_cart_bd">
-    <div class="order_steps">
-        <ul class="clearfix">
-            <li><a href="/cart"><i>1</i><span>查看购物车</span></a><em></em></li>
-            <li><i>2</i><span>确认订单</span><em></em></li>
-            <li class="next last"><i>3</i><span>支付相关费用</span></li>
-        </ul>
-    </div>
-    <div class="order_address">
-        <div class="edit">编辑</div>
-        <ul>
-            <li><span>姓名</span> xxx</li>
-            <li><span>电话</span> xxx</li>
-            <li><span>收货地址</span> xxx</li>
-        </ul>
-    </div>
-    <div class="order_cart">
-        <table class="cartlist tablelist">
-            <tr>
-                <th width="150">图 片</th>
-                <th class="desc" width="300">说 明</th>
-                <th>单 价</th>
-                <th>数 量</th>
-                <th>价 格</th>
-            </tr>
-            <tbody class="js_cart_list">
-                <tr class="noborder">
-                    <td colspan="7">正在载入...</td>
-                </tr>
-            </tbody>
-        </table>
-        <div class="cartinfo clearfix mainlast">
-            <div class="leave_msg">
-                <div class="hd">给速纺留言</div>
-                <div class="bd"><textarea class="txt_leave_msg"></textarea></div>
-            </div>
-            <ul class="cartprice">
-                <li><span class="js_amount"></span>金额</li>
-                <li class="solid"><span>￥10</span>运费</li>
-                <li class="solid"><span class="js_total_amount">￥120</span>合计</li>
-                <li class="action">
-                    <div class="btn_dlg_r js_create_order" style="width: 120px;"><i class="ico"></i>确认并付款</div>
+<script id="cartItem" type="template">
+    {%each(i,item) data%}
+    <tr{%if i==data.length-1%} class="noborder"{%/if%} data-rowid="${item.CartID}">
+        <td class="imgwrap"><img class="img" src="${item.Picture}" /></td>
+        <td class="desc"><p class="name"><a href="">${item.ProductName}</a></p>
+            <p class="color">${item.Styles[0].ColorName},${item.Styles[0].SizeName}</p>
+        </td>
+        <td>￥${item.Price}</td>
+        <td>${item.Qty}</td>
+        <td class="js_total" data-price="${item.Price}">￥${item.Price*item.Qty}</td>
+    </tr>
+    {%/each%}
+</script>
+@if (route.Success)
+{
+    var orderId = int.Parse(route.Groups[1].Value);
+    var uid = UserService.GetUserID();
+    var orderinfo = UserService.GetOrder(orderId, uid);
+
+    <div class="main orderwrap clearfix js_order_bd">
+        <div class="order_steps">
+            <ul class="clearfix">
+                <li><a href="/cart"><i>1</i><span>查看购物车</span></a><em></em></li>
+                <li><i>2</i><span>确认订单</span><em></em></li>
+                <li class="last"><i>3</i><span>支付相关费用</span></li>
+            </ul>
+        </div>
+        <div class="order_address js_address_cont">
+            <ul class="js_addr_info">
+                <li><span>姓名</span> <i class="js_name">@orderinfo.Receiver</i></li>
+                <li><span>电话</span> <i class="js_mobile">@orderinfo.Mobile</i></li>
+                <li><span>收货地址</span> <i class="js_address">@orderinfo.ProvName@orderinfo.CityName@orderinfo.RegionName@orderinfo.Address</i></li>
+                <li><span>金额</span>￥@orderinfo.Amount</li>
+                <li><span>运费</span>￥@orderinfo.Freight</li>
+                <li><span>合计</span>￥@orderinfo.Total</li>
+                <li class="action"><span></span>
+                    <div class="btn_dlg_r js_pay" style="width: 120px;"><i class="ico"></i>立即支付</div>
                 </li>
             </ul>
         </div>
+        <div class="order_cart">
+            <table class="cartlist tablelist">
+                <tr>
+                    <th width="150">图 片</th>
+                    <th class="desc" width="300">说 明</th>
+                    <th>单 价</th>
+                    <th>数 量</th>
+                    <th>价 格</th>
+                </tr>
+                <tbody class="js_cart_list">
+                    @for (var i = 0; i < orderinfo.Details.Count; i++)
+                    {
+                        var item = orderinfo.Details[i];
+                    
+                        <tr@(i == orderinfo.Details.Count - 1 ? new MvcHtmlString(" class=\"noborder\"") : null) data-rowid="@item.OrderDetailID">
+                            <td class="imgwrap"><img class="img" src="@item.Picture" /></td>
+                            <td class="desc">
+                                <p class="name"><a href="">@item.ProductName</a></p>
+                                <p class="color">@item.Styles[0].ColorName,@item.Styles[0].SizeName</p>
+                            </td>
+                            <td>￥@item.Price</td>
+                            <td>@item.Qty</td>
+                            <td class="js_total" data-price="@item.Price">￥@(item.Price * item.Qty)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
-<script id="cartItem" type="template">
-{%each(i,item) data%}
-<tr{%if i==data.length-1%} class="noborder"{%/if%} data-rowid="${item.CartID}">
-    <td class="imgwrap"><img class="img" src="${item.Picture}" /></td>
-    <td class="desc"><p class="name"><a href="">${item.ProductName}</a></p>
-        <p class="color">${item.Styles[0].ColorName},${item.Styles[0].SizeName}</p>
-    </td>
-    <td>￥${item.Price}</td>
-    <td>${item.Qty}</td>
-    <td class="js_total" data-price="${item.Price}">￥${item.Price*item.Qty}</td>
-</tr>
-{%/each%}
-</script>
-<script type="text/javascript">
-    seajs.use(['$','lib/util','sl/view','sl/validation','extentions/qty','sl/tmpl'],function ($,util,View,Validation,qtyEvents,tmpl) {
+}
+else
+{
+    var provinces = SL.Data.SQL.Query("select ProvID,ProvName from Province order by ProvName");
+    var userInfo = UserService.GetUserFullInfo();
+    var address = UserService.GetAddress(UserService.GetUserID());
+    
+    <div class="main orderwrap clearfix js_cart_bd">
+        <div class="order_steps">
+            <ul class="clearfix">
+                <li><a href="/cart"><i>1</i><span>查看购物车</span></a><em></em></li>
+                <li><i>2</i><span>确认订单</span><em></em></li>
+                <li class="next last"><i>3</i><span>支付相关费用</span></li>
+            </ul>
+        </div>
+        <div class="order_address js_address_cont">
+            <div class="edit js_edit">编辑</div>
+            <ul class="js_addr_info" style="display:@((address == null || address.Count == 0) ? "none" : "block")">
+                @if (address == null || address.Count == 0)
+                {
+                    <script>
+                        var currentAddress=null;
+                    </script>
+                    <li><span>姓名</span> <i class="js_name"></i></li>
+                    <li><span>电话</span> <i class="js_mobile"></i></li>
+                    <li><span>收货地址</span> <i class="js_address"></i></li>
+                }
+                else
+                {
+                    <script>
+                    var currentAddress=@(new MvcHtmlString(Json.Encode(address[0])));
+                    </script>
+                    <li><span>姓名</span> <i class="js_name">@address[0].Receiver</i></li>
+                    <li><span>电话</span> <i class="js_mobile">@address[0].Mobile</i></li>
+                    <li><span>收货地址</span> <i class="js_address">@address[0].ProvName@address[0].CityName@address[0].RegionName@address[0].Address</i></li>
+                }
+            </ul>
+            <div class="addr_form js_edit_cont" style="display:@((address == null || address.Count == 0) ? "block" : "none")">
+                <dl class="uc_form">
+                    <dt>姓名</dt>
+                    <dd><input class="text" name="realName" value="@(userInfo == null ? "" : userInfo.RealName)" type="text" /></dd>
+                    <dt>手机</dt>
+                    <dd><input class="text" name="mobile" type="text" value="@(userInfo == null ? "" : userInfo.Mobile)" /></dd>
+                </dl>
+                <div class="clearfix">
+                    <dl class="form_item l">
+                        <dt>省</dt>
+                        <dd><select name="province">
+                            <option value="">请选择</option>
+                            @for (int i = 0; i < provinces.Count; i++)
+                            {
+                                var item = provinces[i];
+                                <option value="@item.ProvID">@item.ProvName</option>
+                            }
+                        </select></dd>
+                    </dl>
+                    <dl class="form_item l">
+                        <dt>城市</dt>
+                        <dd><select name="city">
+                            <option value="">请选择</option>
+                        </select></dd>
+                    </dl>
+                    <dl class="form_item l">
+                        <dt>区</dt>
+                        <dd><select name="region">
+                            <option value="">请选择</option>
+                        </select></dd>
+                    </dl>
+                </div>
+                <dl class="uc_form">
+                    <dt>收货地址</dt>
+                    <dd><input class="text" name="address" type="text" value="@(userInfo == null ? "" : userInfo.Address)" /></dd>
+                </dl>
+                <div class="action"><input class="btn js_add" type="button" value="新增地址" />
+                    <input class="btn js_save" type="button" value="保存" />
+                </div>
+            </div>
+        </div>
+        <div class="order_cart">
+            <table class="cartlist tablelist">
+                <tr>
+                    <th width="150">图 片</th>
+                    <th class="desc" width="300">说 明</th>
+                    <th>单 价</th>
+                    <th>数 量</th>
+                    <th>价 格</th>
+                </tr>
+                <tbody class="js_cart_list">
+                    <tr class="noborder">
+                        <td colspan="7">正在载入...</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="cartinfo clearfix mainlast">
+                <div class="leave_msg">
+                    <div class="hd">给速纺留言</div>
+                    <div class="bd"><textarea class="txt_leave_msg js_txt_message"></textarea></div>
+                </div>
+                <ul class="cartprice">
+                    <li><span class="js_amount"></span>金额</li>
+                    <li class="solid"><span>￥10</span>运费</li>
+                    <li class="solid"><span class="js_total_amount">￥120</span>合计</li>
+                    <li class="action">
+                        <div class="btn_dlg_r js_create_order" style="width: 120px;"><i class="ico"></i>确认并付款</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script type="text/javascript">
+    seajs.use(['$','lib/util','sl/view','sl/validation','extentions/area','sl/tmpl'],function($,util,View,Validation,areaEvents,tmpl) {
         var CartView=View.extend({
-            events: $.extend({
-                'click .js_del': 'deleteSingle',
-                'click .js_create_order': 'createOrder'
-            },qtyEvents),
-
-            createOrder: function (e) {
-                var that=this,
-                    ids=[];
-
-                that.$('.js_select:checked').closest('tr').each(function () {
-                    ids.push($(this).data('rowid'));
-                });
-
-                location.href="/order?ids="+ids.join(',');
+            events: {
+                'click .js_create_order': 'createOrder',
+                'click .js_edit': 'editAddress'
             },
 
-            getTotal: function () {
+            editAddress: function(e) {
+                var target=$(e.currentTarget);
+
+                if (target.html()=="编辑") {
+                    $('.js_edit_cont').show();
+                    $('.js_addr_info').hide();
+                    target.html("取消");
+
+                    if (currentAddress) {
+                        addressView.set(currentAddress);
+                    }
+
+                } else {
+                    $('.js_edit_cont').hide();
+                    $('.js_addr_info').show();
+                    target.html("编辑");
+                }
+            },
+
+            createOrder: function(e) {
+                var that=this,
+                    $target=$(e.currentTarget);
+
+                if (!currentAddress||!currentAddress.AddressID){
+                    alert("请填写收货地址");
+                    return;
+                }
+
+                $target.addClass('disabled').val('请稍候');
+
+                $.ajax({
+                    url: '/json/shop/createorder',
+                    data: {
+                        AddressID: currentAddress.AddressID,
+                        PaymentID: 2,
+                        Message: util.encodeHTML(that.$('.js_txt_message').val()),
+                        Carts: util.query('?ids')
+                    },
+                    dataType: 'json',
+                    success: function(res){
+                        if (res.success) {
+                            location.href="/order/"+res.orderid+'/'
+                        } else {
+                            alert(res.msg);
+                        }
+                    },
+                    error: function(){
+                            alert("网络错误");
+                    },
+                    complete: function(){
+                        $target.removeClass('disabled').val('确认并付款');
+                    }
+                });
+            },
+
+            getTotal: function() {
                 var total=0;
-                this.$('tr').find('.js_total').each(function () {
+                this.$('tr').find('.js_total').each(function() {
                     total+=parseFloat($(this).html().replace('￥',''));
                 });
                 this.$('.js_amount').html('￥'+total);
@@ -102,7 +275,7 @@
 
             htmlLoading: '<tr class="noborder"><td colspan="7">正在载入...</td></tr>',
 
-            initialize: function () {
+            initialize: function() {
                 var that=this;
 
                 that.$list=$('.js_cart_list');
@@ -115,7 +288,7 @@
                         ids: util.query('?ids')
                     },
                     dataType: 'json',
-                    success: function (res) {
+                    success: function(res) {
                         if(res.success&&res.data&&res.data.length) {
                             var template=$('#cartItem').html();
 
@@ -126,14 +299,188 @@
                         }
                         that.getTotal();
                     },
-                    error: function () {
+                    error: function() {
                         that.getTotal();
                     }
                 });
             }
         });
 
-        new CartView('.js_cart_bd');
+        var AddressView=View.extend({
+            events: $.extend({
+                'click .js_save': 'save',
+                'click .js_add': 'add'
+            },areaEvents),
 
+            add: function(e){
+                var that=this,
+                    $target=$(e.currentTarget);
+
+                if(that.validator.validate()) {
+                    $target.addClass('disabled').val('请稍候');
+
+                    $.ajax({
+                        url: '/json/user/addaddress',
+                        data: {
+                            CityID: that.$('[name="city"]').val(),
+                            RegionID: that.$('[name="region"]').val(),
+                            Address: that.$('[name="address"]').val(),
+                            Receiver: that.$('[name="realName"]').val(),
+                            Mobile: that.$('[name="mobile"]').val()
+                        },
+                        dataType: 'json',
+                        success: function(res){
+                            if (res.success) {
+                                currentAddress=res.data;
+                                that.setHtml(currentAddress);
+
+                                $('.js_edit').trigger('click');
+                            } else {
+                                alert(res.msg);
+                            }
+                        },
+                        error: function(){
+                        },
+                        complete: function(){
+                            $target.removeClass('disabled').val('新增地址');
+                        }
+                    });
+
+                }
+            },
+
+            setHtml: function(data){
+                var that=this;
+                that.$('.js_name').html(data.Receiver);
+                that.$('.js_mobile').html(data.Mobile);
+                that.$('.js_address').html(data.ProvName+data.CityName+data.RegionName+data.Address);
+            },
+
+            save: function(e) {
+                var that=this,
+                    $target=$(e.currentTarget);
+
+                if (!currentAddress) {
+                    that.add(e);
+                } else {
+                    if(that.validator.validate()) {
+                        $target.addClass('disabled').val('请稍候');
+
+
+                        var data={
+                            AddressID: currentAddress.AddressID,
+                            CityID: that.$('[name="city"]').val(),
+                            RegionID: that.$('[name="region"]').val(),
+                            Address: that.$('[name="address"]').val(),
+                            Receiver: that.$('[name="realName"]').val(),
+                            Mobile: that.$('[name="mobile"]').val()
+                        };
+
+                        $.ajax({
+                            url: '/json/user/modifyaddress',
+                            data: data,
+                            dataType: 'json',
+                            success: function(res){
+                                if (res.success) {
+                                    $.extend(currentAddress,data);
+                                    that.setHtml(currentAddress);
+                                    $('.js_edit').trigger('click');
+                                } else {
+                                    alert(res.msg);
+                                }
+                            },
+                            error: function(){
+                            },
+                            complete: function(){
+                                $target.removeClass('disabled').val('保存');
+                            }
+                        });
+                    }
+                }
+
+            },
+
+            set: function(data){
+                var that=this;
+
+                if (typeof data.ProvID!=='undefined'&&typeof data.CityID!=='undefined'&&typeof data.RegionID!=='undefined') {
+                    var $prov=this.$('[name="province"]'),
+                        $city=this.$('[name="city"]'),
+                        $region=this.$('[name="region"]');
+
+                    $prov[0].value=data.ProvID;
+                    $prov.trigger('change');
+
+                    $city.one('reload',function(){
+                        $city[0].value=data.CityID;
+                        $city.trigger('change');
+
+                         $region.one('reload',function(){
+                            $region[0].value=data.RegionID;
+                        });
+                    });
+                }
+
+                if (typeof data.Address!=='undefined') {
+                    this.$('[name="address"]').val(data.Address);
+                }
+
+                if (typeof data.Receiver!=='undefined') {
+                    this.$('[name="realName"]').val(data.Receiver);
+                }
+
+                if (typeof data.Mobile!=='undefined') {
+                    this.$('[name="mobile"]').val(data.Mobile);
+                }
+            },
+
+            initialize: function() {
+                var that=this;
+
+                that.validator=new Validation({
+                    '[name="region"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入区',
+                        successText: '',
+                        position: 'dock-after:this.closest("dd")'
+                    },
+                    '[name="address"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入地址',
+                        successText: '',
+                        position: 'dock-after:this.closest("dd")'
+                    },
+                    '[name="realName"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入收货人',
+                        successText: '',
+                        position: 'dock-after:this.closest("dd")'
+                    },
+                    '[name="mobile"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入手机',
+                        regex: /1\d{10}/,
+                        regexText: '<i></i>请输入正确的手机',
+                        successText: '',
+                        position: 'dock-after:this.closest("dd")'
+                    }
+                });
+            }
+        });
+
+        new CartView('.js_cart_bd');
+        var addressView=new AddressView('.js_address_cont');
+
+        @if ((address == null || address.Count == 0) && userInfo != null)
+        {
+            <text>
+            addressView.set({
+                ProvID: @userInfo.ProvID,
+                CityID: @userInfo.CityID,
+                RegionID: @userInfo.RegionID
+            });
+            </text>
+        }
     });
-</script>
+    </script>
+}

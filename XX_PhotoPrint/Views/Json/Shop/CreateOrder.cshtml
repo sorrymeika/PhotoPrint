@@ -19,10 +19,17 @@
     int addressId = req.Int("AddressID", false, "缺少地址编号");
     int paymentId = req.Int("PaymentID", false, "缺少支付方式编号");
     int couponId = req.Int("CouponID");
+    string message = req.String("Message");
 
     if (req.HasError)
     {
         Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
+
+    if (message.Length > 500)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = "备注不可超过500字" }));
         return;
     }
 
@@ -60,6 +67,8 @@
         userWorkIDs[i] = (int)item["UserWorkID"];
     }
 
+    freight = amount >= 600 ? 0 : 10;
+
     int orderid;
     DateTime now = DateTime.Now;
     decimal discount = 0;
@@ -90,7 +99,7 @@
     using (DbService db = new DbService())
     {
         db.BeginTrans();
-        db.Execute("insert into OrderInfo (OrderCode,UserID,[Status],Receiver,CityID,RegionID,[Address],Mobile,Zip,Amount,Freight,AddTime,Phone,PaymentID,CouponID,Discount) values ('',@p0,0,@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,@p9,@p10,@p11,@p12,@p13)", out orderid, uid, address["Receiver"], address["CityID"], address["RegionID"], address["Address"], address["Mobile"], address["Zip"], amount, freight, now, address["TelPhone"], paymentId, couponId, discount);
+        db.Execute("insert into OrderInfo (OrderCode,UserID,[Status],Receiver,CityID,RegionID,[Address],Mobile,Zip,Amount,Freight,AddTime,Phone,PaymentID,CouponID,Discount,[Message]) values ('',@p0,0,@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,@p9,@p10,@p11,@p12,@p13,@p14)", out orderid, uid, address["Receiver"], address["CityID"], address["RegionID"], address["Address"], address["Mobile"], address["Zip"], amount, freight, now, address["TelPhone"], paymentId, couponId, discount, message);
         string id = "0000000000" + orderid;
         string code = DateTime.Now.ToString("yyMMdd") + id.Substring(id.Length - 10, 10);
 
