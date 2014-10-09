@@ -213,13 +213,27 @@ namespace SL.Data
             { false, "desc" }
         };
 
+        public IList<dynamic> QueryPage(string pks,
+            string select,
+            string from,
+            string where,
+            int page,
+            int pageSize,
+            IEnumerable<object> parameters,
+            out int total,
+            IDictionary<string, bool> sorts = null)
+        {
+            return this.QueryPage(pks.Split(','), select, from, where, page, pageSize, parameters, out total, sorts);
+        }
+
+
         public IList<dynamic> QueryPage(string[] pks,
             string columns,
             string table,
             string where,
             int page,
             int pageSize,
-            object[] parameters,
+            IEnumerable<object> iparameters,
             out int total,
             IDictionary<string, bool> sorts = null)
         {
@@ -230,6 +244,8 @@ namespace SL.Data
                 {"table", table},
                 {"where", where}
             };
+
+            object[] parameters = iparameters.ToArray();
 
             total = this.QueryValue<int>(formatString("select count(1) from {table} where {where}", conditions), parameters);
 

@@ -104,17 +104,87 @@ namespace XX_PhotoPrint.Service
             }
         }
 
+        public static IList<dynamic> GetCoupons(int uid)
+        {
+            return SL.Data.SQL.Query("select a.CouponID,c.Code,a.CategoryID,Title,Memo,CouponDateFrom,CouponDate as CouponDateTo,Price,CategoryName,c.UseTimes from Coupon a join CouponCate b on a.CategoryID=b.CategoryID join CouponCode c on a.CouponID=c.CouponID where CouponDate>=@p0 and c.UserID=@p1", DateTime.Now, uid);
+        }
+
         public static IList<dynamic> GetAddress(int uid)
         {
             return SL.Data.SQL.Query("select AddressID,UserID,Receiver,a.CityID,CityName,a.RegionID,RegionName,c.ProvID,c.ProvName,Zip,Address,TelPhone,Mobile,IsCommonUse from UserAddress a inner join City b on a.CityID=b.CityID join Province c on b.ProvID=c.ProvID left join Region d on a.RegionID=d.RegionID where UserID=@p0", uid);
         }
 
-        public static dynamic GetOrder(int orderid, int uid)
+        public static IList<dynamic> GetOrders(int uid, int? status, int page, int pageSize, out int total)
         {
-            var data = SL.Data.SQL.QuerySingle("select OrderID,OrderCode,Amount,Freight,a.Discount,a.AddTime,a.Status,a.UserID,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName from OrderInfo a join Users b on a.UserID=b.UserID join City c on a.CityID=c.CityID join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID where OrderID=@p0 and a.UserID=@p1", orderid, uid);
+            List<object> parameters = new List<object>();
+            string where = "a.UserID=@p0";
+            parameters.Add(uid);
 
+            if (status != null)
+            {
+                where += " and a.Status=@p1";
+                parameters.Add(status);
+            }
+
+            return GetOrders(page, pageSize, out total, where, parameters);
+        }
+
+        public static IList<dynamic> GetOrders(int page, int pageSize, out int total, string sqlWhere, IEnumerable<object> sqlParams)
+        {
             using (SL.Data.Database db = SL.Data.Database.Open())
             {
+                string where = "1=1";
+                List<object> parameters = new List<object>();
+
+                if (!string.IsNullOrEmpty(sqlWhere))
+                {
+                    where += " and " + sqlWhere;
+                    parameters.AddRange(sqlParams);
+                }
+
+                var list = db.QueryPage("OrderID", "OrderID,OrderCode,Amount,Freight,a.Discount,a.AddTime,a.Status,a.UserID,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName",
+                    "OrderInfo a join Users b on a.UserID=b.UserID join City c on a.CityID=c.CityID join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID",
+                    where,
+                    page,
+                    pageSize,
+                    parameters.ToArray(),
+                    out total);
+
+                if (list != null)
+                {
+
+                    foreach (var data in list)
+                    {
+                        var detailList = db.Query("select c.OrderID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID where OrderID=@p0", (int)data.OrderID);
+
+                        string url = "http://" + HttpContext.Current.Request.Url.Authority + "/Content/";
+                        detailList.All(a =>
+                        {
+                            a["Picture"] = url + a["Picture"];
+                            a["Styles"] = db.Query("select a.StyleID,StyleName,Rect,b.ColorID,c.ColorName,b.SizeID,SizeName from Style a left join UserCustomization b on a.StyleID=b.StyleID left join Color c on b.ColorID=c.ColorID left join ProductSize d on b.SizeID=d.SizeID where UserWorkID=@p0 order by a.StyleID", a["UserWorkID"]);
+                            return true;
+                        });
+                        data["Details"] = detailList;
+
+                        data["PaymentName"] = PaymentService.Payments.First(a => (int)a["PaymentID"] == (int)data["PaymentID"])["PaymentName"];
+                        data["Total"] = (decimal)data["Freight"] + (decimal)data["Amount"];
+                    }
+                }
+                return list;
+            }
+        }
+
+        public static dynamic GetOrder(string ordercode, int uid)
+        {
+            return GetOrder(SL.Data.SQL.QueryValue<int>("select OrderID from OrderInfo where OrderCode=@p0", ordercode), uid);
+        }
+
+        public static dynamic GetOrder(int orderid, int uid)
+        {
+            using (SL.Data.Database db = SL.Data.Database.Open())
+            {
+                var data = db.QuerySingle("select OrderID,OrderCode,Amount,Freight,a.Discount,a.AddTime,a.Status,a.UserID,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName from OrderInfo a join Users b on a.UserID=b.UserID join City c on a.CityID=c.CityID join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID where OrderID=@p0 and a.UserID=@p1", orderid, uid);
+
                 var detailList = db.Query("select c.OrderID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID where OrderID=@p0", orderid);
 
                 string url = "http://" + HttpContext.Current.Request.Url.Authority + "/Content/";
@@ -125,12 +195,12 @@ namespace XX_PhotoPrint.Service
                     return true;
                 });
                 data["Details"] = detailList;
+
+                data["PaymentName"] = PaymentService.Payments.First(a => (int)a["PaymentID"] == (int)data["PaymentID"])["PaymentName"];
+                data["Total"] = (decimal)data["Freight"] + (decimal)data["Amount"];
+
+                return data;
             }
-
-            data["PaymentName"] = PaymentService.Payments.First(a => (int)a["PaymentID"] == (int)data["PaymentID"])["PaymentName"];
-            data["Total"] = (decimal)data["Freight"] + (decimal)data["Amount"];
-
-            return data;
         }
 
         /// <summary>

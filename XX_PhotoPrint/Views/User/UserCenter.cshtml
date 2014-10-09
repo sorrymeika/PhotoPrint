@@ -3,6 +3,12 @@
     ViewBag.Title = "UserCenter";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
+    if (!UserService.IsLogin())
+    {
+        Response.Redirect("/login.html?r=" + Request.Url.OriginalString);
+        return;
+    }
+
     var user = UserService.GetUser();
 
     var avatars = (string)user["Avatars"];

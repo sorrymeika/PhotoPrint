@@ -53,7 +53,7 @@ namespace SL.Data
             string where,
             int page,
             int pageSize,
-            object[] parameters,
+            IEnumerable<object> parameters,
             out int total,
             IDictionary<string, bool> sorts = null)
         {
@@ -69,7 +69,7 @@ namespace SL.Data
             string where,
             int page,
             int pageSize,
-            object[] parameters,
+            IEnumerable<object> parameters,
             out int total,
             IDictionary<string, bool> sorts = null)
         {

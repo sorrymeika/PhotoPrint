@@ -64,21 +64,43 @@ namespace XX_PhotoPrint
             );
 
             routes.MapRoute(
+                "alipayto",
+                "alipayto/{orderid}",
+                new { controller = "Home", action = "alipayto" },
+                new { orderid = "^\\d+$" }
+            );
+
+            routes.MapRoute(
+                "AlipayReturnUrl",
+                "AlipayReturnUrl",
+                new { controller = "Home", action = "AlipayReturnUrl" }
+            );
+
+            routes.MapRoute(
+                "AlipayNotifyUrl",
+                "AlipayNotifyUrl",
+                new { controller = "Home", action = "AlipayNotifyUrl" }
+            );
+
+            routes.MapRoute(
                 "AlipayPayCallback",
-                "pay/alipaycallback",
-                new { controller = "Home", action = "AlipayPayCallback" }
+                "pay/alipaycallback/{orderid}",
+                new { controller = "Home", action = "AlipayPayCallback" },
+                new { orderid = "^\\d+$" }
             );
 
             routes.MapRoute(
                 "AlipayPayNotify",
-                "pay/alipaynotify",
-                new { controller = "Home", action = "AlipayPayNotify" }
+                "pay/alipaynotify/{orderid}",
+                new { controller = "Home", action = "AlipayPayNotify" },
+                new { orderid = "^\\d+$" }
             );
 
             routes.MapRoute(
               "AlipayPaySuccess",
-              "pay/success",
-              new { controller = "Home", action = "AlipayPaySuccess" }
+              "pay/success/{orderid}",
+              new { controller = "Home", action = "AlipayPaySuccess" },
+              new { orderid = "^\\d+$" }
             );
 
             routes.MapRoute(
