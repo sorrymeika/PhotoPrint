@@ -312,7 +312,6 @@ alter table Product add OrigPrice decimal(28,2)
 
 
 --2014-09-29
---服务端未执行
 create table Designer (
 DesignerID int identity primary key,
 DesignerName varchar(50),
@@ -329,3 +328,12 @@ Votes int
 )
 
 alter table OrderInfo add [Message] varchar(1000) 
+
+
+--2014-10-09
+--服务器未执行
+set IDENTITY_INSERT ActivityCate ON
+if not exists(select 1 from ActivityCate where CategoryID=5) insert into ActivityCate (CategoryID,CategoryName) values (5,'招聘信息')
+if not exists(select 1 from ActivityCate where CategoryID=3) insert into ActivityCate (CategoryID,CategoryName) values (3,'帮助中心')
+if not exists(select 1 from ActivityCate where CategoryID=2) insert into ActivityCate (CategoryID,CategoryName) values (2,'活动资讯')
+set IDENTITY_INSERT ActivityCate OFF
