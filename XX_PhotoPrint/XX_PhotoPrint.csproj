@@ -92,6 +92,7 @@
     <Content Include="js\colorpicker\marker.png" />
     <Content Include="js\colorpicker\mask.png" />
     <Content Include="js\colorpicker\wheel.png" />
+    <Content Include="js\extentions\area.js" />
     <Content Include="js\extentions\qty.js" />
     <Content Include="js\sl\widget\loading.js" />
     <Content Include="js\sl\widget\waterfall.js" />
@@ -359,9 +360,6 @@
     <Content Include="Views\Home\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Views\Json\User\Index.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="App_Code\AuthHelper.cshtml" />
   </ItemGroup>
   <ItemGroup>
@@ -506,6 +504,15 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Manage\Gallery\ModifyGallery.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\User\Manage.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\User\History.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\User\Profile.cshtml" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" />

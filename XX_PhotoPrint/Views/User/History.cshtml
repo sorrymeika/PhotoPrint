@@ -1,0 +1,81 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    ViewBag.Title = "UserCenter";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    if (!UserService.IsLogin())
+    {
+        Response.Redirect("/login.html?r=" + Request.Url.OriginalString);
+        return;
+    }
+
+    SL.Util.RequestUtil req = new SL.Util.RequestUtil();
+
+    var uid = UserService.GetUserID();
+    int total;
+    int page = req.Int("page", defaultValue: 1);
+    int pageSize = req.Int("pageSize", defaultValue: 10);
+
+    var data = UserService.GetOrders(uid, null, page, pageSize, out total);
+
+    int totalPages = total % pageSize == 0 ? total / pageSize : (total / pageSize + 1);
+}
+<div class="main ucenterwrap clearfix">
+    <div class="ucsidebar">
+        <div class="hd"><i class="ico ico_manage"></i><span>管理</span></div>
+        <ul>
+            <li><a href="/user/manage"><i class="ico"></i><span>已付款订单</span></a></li>
+            <li class="curr"><i class="ico"></i><span>历史订单</span></li>
+        </ul>
+    </div>
+    <div class="uccontent"><h1 class="hd">历史订单 ORDER HISTORY</h1>
+        <div class="bd creations">
+            <table class="tablelist">
+                <tr>
+                    <th width="130">订单日期</th>
+                    <th width="200">订单编号</th>
+                    <th align="left">详述</th>
+                    <th width="100">订单金额</th>
+                    <th width="100">操作</th>
+                </tr>
+                @if (data != null)
+                {
+                    for (int i = 0; i < data.Count; i++)
+                    {
+                        var item = data[i];
+                    <tr>
+                        <td>@item.AddTime.ToString("yyyy-MM-dd")</td>
+                        <td>@item.OrderCode</td>
+                        <td class="al">@item.Message</td>
+                        <td class="al">@item.Total</td>
+                        <td><a class="btn_dlg_r" href="/order/@item.OrderID"><i class="ico"></i>订单详情</a></td>
+                    </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5">暂无订单</td>
+                    </tr>
+                }
+            </table>
+            <div class="page_list">
+                <ul class="num_list">
+                    <li>-</li>
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        if (i == page)
+                        {
+                        <li class="curr">@i</li>
+                        }
+                        else
+                        {
+                        <li><a href="?page=@i">@i</a></li>
+                        }
+                    }
+                    <li>-</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

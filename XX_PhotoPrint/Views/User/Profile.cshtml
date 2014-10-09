@@ -1,0 +1,39 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    ViewBag.Title = "UserCenter";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    if (!UserService.IsLogin())
+    {
+        Response.Redirect("/login.html?r=" + Request.Url.OriginalString);
+        return;
+    }
+
+    int uid = UserService.GetUserID();
+    var vouchers = UserService.GetCoupons(uid);
+}
+<div class="main ucenterwrap clearfix">
+    <div class="ucsidebar">
+        <div class="hd"><i class="ico"></i><span>资料</span></div>
+        <ul>
+            <li><a href="/userinfo.html"><i class="ico"></i><span>数据</span></a></li>
+            <li class="curr"><i class="ico"></i><span>账户</span></li>
+        </ul>
+    </div>
+    <div class="uccontent">
+        <div class="bd js_form"><h1 class="profile_hd">优惠券 VOUCHERS</h1>
+            <div class="profile_bd">
+                @if (vouchers != null)
+                {
+                }
+                else
+                {
+                }
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    seajs.use(['$','lib/util','sl/view','sl/validation'],function($,util,View,Validation) {
+    });
+</script>

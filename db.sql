@@ -179,7 +179,7 @@ AddTime datetime,
 EditTime datetime
 )
 
-alter table OrderInfo add Phone varchar(30)
+--alter table OrderInfo add Phone varchar(30)
 alter table OrderInfo add PaymentID int
 alter table OrderInfo add CouponID int
 
@@ -327,3 +327,5 @@ DesignerID int,
 Picture varchar(255),
 Votes int
 )
+
+alter table OrderInfo add [Message] varchar(1000) 
