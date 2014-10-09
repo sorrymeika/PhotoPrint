@@ -22,12 +22,19 @@ namespace XX_PhotoPrint
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
             routes.MapRoute(
-                "User",
+                "UserHtml",
                 "{handle}.html",
                 new { controller = "Home", action = "Index", catalog = "User" },
                 new { handle = "^Login|Register|Register1|Register2|UserCenter|UserInfo$" }
-
             );
+
+            routes.MapRoute(
+                "User",
+                "{handle}",
+                new { controller = "Home", action = "Index", catalog = "User" },
+                new { handle = "^signout$" }
+            );
+
 
             routes.MapRoute(
                 "Shop",
@@ -56,6 +63,21 @@ namespace XX_PhotoPrint
                 new { controller = "Home", action = "Index", catalog = "Product" },
                 new { handle = "^Gallery|Item$", id = "^\\d+$" }
             );
+
+            routes.MapRoute(
+                "News",
+                "{handle}.html",
+                new { controller = "Home", action = "Index", catalog = "News" },
+                new { handle = "^Recruit|Download|AboutUs|Contact|Help$" }
+            );
+
+            routes.MapRoute(
+                "NewsItem",
+                "{handle}/{id}.html",
+                new { controller = "Home", action = "Index", catalog = "News" },
+                new { handle = "^Recruit$", id = "^\\d+$" }
+            );
+
 
             routes.MapRoute(
                 "JsonDefault",

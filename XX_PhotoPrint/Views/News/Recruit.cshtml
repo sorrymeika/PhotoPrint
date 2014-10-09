@@ -1,0 +1,62 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    ViewBag.Title = "招聘";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var route = System.Text.RegularExpressions.Regex.Match(Request.Path, @"/recruit/(\d+)\.html", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+    SL.Util.RequestUtil req = new SL.Util.RequestUtil();
+
+    var list = SL.Data.SQL.Query("select ActivityID,Title from Activity where CategoryID=5");
+}
+@if (route.Success)
+{
+    var newsId = int.Parse(route.Groups[1].Value);
+    var data = SL.Data.SQL.QuerySingle("select ActivityID,Title,Content from Activity where ActivityID=@p0", newsId);
+    
+    <div class="main clearfix"><img class="recruit_img" src="/content/recruit2.jpg" />
+        <div class="recruit_item">
+            <table>
+                <tr>
+                    <th><a class="btn_dlg_r" href="mailto://Cven@rincy.net">发送简历到邮箱</a>
+                        <a class="btn_dlg_l" href="/recruit.html">回到招聘首页</a>
+                    </th>
+                    <td>@(new MvcHtmlString(data.Content))</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+                    return;
+}
+<div class="main clearfix"><img class="recruit_img" src="/content/recruit.jpg" /> <img class="recruit_img" src="/content/recruit1.jpg" />
+    <div class="recruit">
+        <table>
+            <tr>
+                <th>
+                    <div class="hd">应聘提示</div>
+                    <div class="subhd">面试者应先将简历投递到Cven@rincy.net邮箱内</div>
+                </th>
+                @if (list != null)
+                {
+                    string html = "";
+                    string html1 = "";
+                    for (int i = 0; i < list.Count; i++)
+                    {
+                        var item = list[i];
+
+                        if (i % 2 == 0)
+                        {
+                            html += "<a class=\"btn_dlg_l\" href=\"/recruit/" + item.ActivityID + ".html\"><i class=\"ico\"></i>" + Json.Decode<IDictionary<string, string>>(item.Title)["t"] + "</a>";
+                        }
+                        else
+                        {
+                            html1 += "<a class=\"btn_dlg_l\" href=\"/recruit/" + item.ActivityID + ".html\"><i class=\"ico\"></i>" + Json.Decode<IDictionary<string, string>>(item.Title)["t"] + "</a>";
+                        }
+                    }
+                    <td>@(new MvcHtmlString(html))</td>
+                    <td>@(new MvcHtmlString(html1))</td>
+                }
+            </tr>
+        </table>
+    </div>
+</div>

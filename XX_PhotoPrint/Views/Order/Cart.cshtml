@@ -124,8 +124,7 @@
                     total+=parseFloat($(this).html().replace('￥',''));
                 });
                 this.$('.js_amount').html('￥'+total);
-                this.$('.js_total_amount').html('￥'+(total+(total<600?10:0));
-
+                this.$('.js_total_amount').html('￥'+(total+(total<600?10:0)));
                 return total;
             },
 

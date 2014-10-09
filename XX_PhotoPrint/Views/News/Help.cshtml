@@ -1,0 +1,20 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    ViewBag.Title = "关于我们";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    SL.Util.RequestUtil req = new SL.Util.RequestUtil();
+
+    var list = SL.Data.SQL.Query("select Title,Content from Activity where CategoryID=3");
+}
+<div class="main newswrap"><h1>欢迎来到速纺帮助中心</h1>
+    <div class="news_notice">有一个技术问题？请访问我们的故障排除指南</div>
+    @if (list != null)
+    {
+        foreach (var item in list)
+        { 
+        <h2>@(Json.Decode<IDictionary<string, string>>(item.Title)["t"])</h2>
+        <div class="newscont">@(new MvcHtmlString(item.Content))</div>
+        }
+    }
+</div>

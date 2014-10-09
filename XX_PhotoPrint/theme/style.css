@@ -47,9 +47,9 @@ a:hover { color: #999; }
 .m_learn .item { margin: 58px 0 100px 114px; float: left; }
 .m_learn .item.last { margin: 58px 114px 100px 0; float: right; }
 
-.aboutwrap { text-align: center; margin: 160px auto 92px auto; }
+.aboutwrap { text-align: center; margin: 60px auto 92px auto; }
 .aboutwrap .about_hd { font-weight: bold; color: #0e0e0e; font-size: 19px; margin-top: 40px; }
-.aboutwrap h1.about_hd { font-size: 40px; margin-top: 0; }
+.aboutwrap h1.about_hd { font-size: 40px; margin-top: 100px; }
 .aboutwrap .about_bd { line-height: 23px; margin-top: 10px; }
 
 .dialog { position: absolute; top: 0; left: 0; overflow: hidden; background: #f9f9f9; margin: 0 auto; z-index: 100; }
@@ -149,7 +149,7 @@ a.btn_dlg_r:hover, a.btn_dlg_l:hover { color: #fff; }
 .ucsidebar li.curr { color: #fe3d04; }
 
 .uccontent { width: 830px; float: left; }
-.uccontent .hd,.uccontent .profile_hd  { overflow: hidden; font-weight: bold; font-size: 19px; line-height: 31px; }
+.uccontent .hd, .uccontent .profile_hd { overflow: hidden; font-weight: bold; font-size: 19px; line-height: 31px; }
 .uccontent .profile_hd { border-bottom: 1px solid #ddd; }
 .uccontent .creations { margin-top: 35px; }
 
@@ -356,3 +356,23 @@ a.btn_dlg_r:hover, a.btn_dlg_l:hover { color: #fff; }
 .addr_form .form_item dd { margin-top: 0px; float: left; }
 .addr_form .uc_form .text { height: 18px; }
 .addr_form .error_tip { font-size: 12px; margin-left: 5px; }
+
+.newswrap { margin: 60px auto 92px auto; }
+.newswrap h1 { font-size: 30px; color: #000; }
+.newswrap .news_notice { font-size: 14px; color: #666; margin: 10px 0 40px 0; }
+.newswrap h2 { font-size: 22px; color: #000; margin: 10px 0 10px 0; }
+.newswrap .newscont { font-size: 14px; color: #666; margin: 10px 0 40px 0; }
+
+.recruit_img { width: 100%; font-size: 0px; line-height: 0; display: block; }
+
+.recruit { padding: 50px 0; background:#faf8f9;}
+.recruit .btn_dlg_l { display: block; width: 150px; }
+.recruit table { width: 80%; }
+.recruit table th {  padding-left: 100px; text-align: left; }
+.recruit table .hd { font-size: 22px; color:#000; margin-bottom: 6px; }
+.recruit table .subhd { font-weight: normal; font-size: 12px; }
+
+.recruit_item { padding: 50px 0 50px 50px; background:#faf8f9;}
+.recruit_item .btn_dlg_r { display: block; width: 200px; margin: 10px; }
+.recruit_item .btn_dlg_l { display: block; width: 200px; margin: 50px 10px 10px 10px; }
+.recruit_item td { padding: 10px 10px 10px 50px; vertical-align: top; }

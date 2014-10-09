@@ -74,8 +74,7 @@
                     
                         <tr@(i == orderinfo.Details.Count - 1 ? new MvcHtmlString(" class=\"noborder\"") : null) data-rowid="@item.OrderDetailID">
                             <td class="imgwrap"><img class="img" src="@item.Picture" /></td>
-                            <td class="desc">
-                                <p class="name"><a href="">@item.ProductName</a></p>
+                            <td class="desc"><p class="name"><a href="">@item.ProductName</a></p>
                                 <p class="color">@item.Styles[0].ColorName,@item.Styles[0].SizeName</p>
                             </td>
                             <td>￥@item.Price</td>
@@ -103,7 +102,7 @@ else
             </ul>
         </div>
         <div class="order_address js_address_cont">
-            <div class="edit js_edit">编辑</div>
+            <div class="edit js_edit">@((address == null || address.Count == 0) ? "取消" : "编辑")</div>
             <ul class="js_addr_info" style="display:@((address == null || address.Count == 0) ? "none" : "block")">
                 @if (address == null || address.Count == 0)
                 {
@@ -217,7 +216,7 @@ else
                         addressView.set(currentAddress);
                     }
 
-                } else {
+                } else if (currentAddress){
                     $('.js_edit_cont').hide();
                     $('.js_addr_info').show();
                     target.html("编辑");
@@ -243,6 +242,7 @@ else
                         Message: util.encodeHTML(that.$('.js_txt_message').val()),
                         Carts: util.query('?ids')
                     },
+                    type: 'POST',
                     dataType: 'json',
                     success: function(res){
                         if (res.success) {
