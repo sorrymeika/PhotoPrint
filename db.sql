@@ -332,6 +332,7 @@ alter table OrderInfo add [Message] varchar(1000)
 
 --2014-10-09
 --服务器未执行
+select * from Activity
 set IDENTITY_INSERT ActivityCate ON
 if not exists(select 1 from ActivityCate where CategoryID=5) insert into ActivityCate (CategoryID,CategoryName) values (5,'招聘信息')
 if not exists(select 1 from ActivityCate where CategoryID=3) insert into ActivityCate (CategoryID,CategoryName) values (3,'帮助中心')
