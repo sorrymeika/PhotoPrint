@@ -78,6 +78,13 @@ namespace XX_PhotoPrint
                 new { handle = "^Recruit$", id = "^\\d+$" }
             );
 
+            routes.MapRoute(
+                "Home",
+                "{handle}.html",
+                new { controller = "Home", action = "Index", catalog = "Home" },
+                new { handle = "^eco$" }
+            );
+
 
             routes.MapRoute(
                 "JsonDefault",

@@ -363,16 +363,20 @@ a.btn_dlg_r:hover, a.btn_dlg_l:hover { color: #fff; }
 .newswrap h2 { font-size: 22px; color: #000; margin: 10px 0 10px 0; }
 .newswrap .newscont { font-size: 14px; color: #666; margin: 10px 0 40px 0; }
 
+.recruitwrap { width: 1348px; }
 .recruit_img { width: 100%; font-size: 0px; line-height: 0; display: block; }
 
 .recruit { padding: 50px 0; background:#faf8f9;}
-.recruit .btn_dlg_l { display: block; width: 150px; }
+.recruit .btn_dlg_l { display: block; width: 150px; margin-top: 20px; margin-bottom: 20px; }
 .recruit table { width: 80%; }
 .recruit table th {  padding-left: 100px; text-align: left; }
 .recruit table .hd { font-size: 22px; color:#000; margin-bottom: 6px; }
 .recruit table .subhd { font-weight: normal; font-size: 12px; }
 
 .recruit_item { padding: 50px 0 50px 50px; background:#faf8f9;}
-.recruit_item .btn_dlg_r { display: block; width: 200px; margin: 10px; }
-.recruit_item .btn_dlg_l { display: block; width: 200px; margin: 50px 10px 10px 10px; }
+.recruit_item .btn_dlg_r { display: block; width: 200px; margin: 10px; font-size: 12px; }
+.recruit_item .btn_dlg_l { display: block; width: 200px; margin: 50px 10px 10px 10px; font-size: 12px; }
 .recruit_item td { padding: 10px 10px 10px 50px; vertical-align: top; }
+
+.downloadwrap { width: 100%; }
+.download_banner { width: 100%; background:#eee url(/content/download.jpg) center 0px; height:629px; }

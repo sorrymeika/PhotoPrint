@@ -14,7 +14,7 @@
     var newsId = int.Parse(route.Groups[1].Value);
     var data = SL.Data.SQL.QuerySingle("select ActivityID,Title,Content from Activity where ActivityID=@p0", newsId);
     
-    <div class="main clearfix"><img class="recruit_img" src="/content/recruit2.jpg" />
+    <div class="main clearfix recruitwrap"><img class="recruit_img" src="/content/recruit2.jpg" />
         <div class="recruit_item">
             <table>
                 <tr>
@@ -28,7 +28,7 @@
     </div>
                     return;
 }
-<div class="main clearfix"><img class="recruit_img" src="/content/recruit.jpg" /> <img class="recruit_img" src="/content/recruit1.jpg" />
+<div class="main clearfix recruitwrap"><img class="recruit_img" src="/content/recruit.jpg" /> <img class="recruit_img" src="/content/recruit1.jpg" />
     <div class="recruit">
         <table>
             <tr>

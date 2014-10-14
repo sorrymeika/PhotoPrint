@@ -341,7 +341,9 @@
     <Content Include="theme\images\site.png" />
     <Content Include="theme\images\text_bg.png" />
     <Content Include="theme\style.css" />
-    <Content Include="Web.config" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>
@@ -353,7 +355,9 @@
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_ManageLayout.cshtml" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Views\Home\eco.cshtml" />
+  </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Tests\User_Register.cshtml" />
   </ItemGroup>
