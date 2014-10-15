@@ -86,6 +86,11 @@
     <Compile Include="Service\UserService.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\download.jpg" />
+    <Content Include="Content\download1.jpg" />
+    <Content Include="Content\download2.jpg" />
+    <Content Include="Content\download3.jpg" />
+    <Content Include="Content\eco.jpg" />
     <Content Include="Content\recruit.jpg" />
     <Content Include="Content\recruit1.jpg" />
     <Content Include="Content\recruit2.jpg" />
@@ -334,7 +339,10 @@
     <Content Include="js\lib\validation.js" />
     <Content Include="js\seajs\sea.js" />
     <Content Include="theme\ie.css" />
+    <Content Include="theme\images\alipay.png" />
     <Content Include="theme\images\appdl.jpg" />
+    <Content Include="theme\images\fav.png" />
+    <Content Include="theme\images\ico_loading.gif" />
     <Content Include="theme\images\learn_l.jpg" />
     <Content Include="theme\images\learn_r.jpg" />
     <Content Include="theme\images\logo.png" />

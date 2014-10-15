@@ -363,8 +363,10 @@ a.btn_dlg_r:hover, a.btn_dlg_l:hover { color: #fff; }
 .newswrap h2 { font-size: 22px; color: #000; margin: 10px 0 10px 0; }
 .newswrap .newscont { font-size: 14px; color: #666; margin: 10px 0 40px 0; }
 
-.recruitwrap { width: 1348px; }
-.recruit_img { width: 100%; font-size: 0px; line-height: 0; display: block; }
+.recruitwrap { width: 100%;  }
+.recruit_img { width: 100%; background:#eee url(/content/recruit.jpg) no-repeat center 0px; height:864px; }
+.recruit_img1 { width: 100%; background:#eee url(/content/recruit1.jpg) no-repeat center 0px; height:560px; }
+.recruit_img2 { width: 100%; background:#eee url(/content/recruit2.jpg) no-repeat center 0px; height:606px; }
 
 .recruit { padding: 50px 0; background:#faf8f9;}
 .recruit .btn_dlg_l { display: block; width: 150px; margin-top: 20px; margin-bottom: 20px; }
@@ -379,4 +381,7 @@ a.btn_dlg_r:hover, a.btn_dlg_l:hover { color: #fff; }
 .recruit_item td { padding: 10px 10px 10px 50px; vertical-align: top; }
 
 .downloadwrap { width: 100%; }
-.download_banner { width: 100%; background:#eee url(/content/download.jpg) center 0px; height:629px; }
+.download_banner { width: 100%; background:#eee url(/content/download.jpg) no-repeat center 0px; height:629px; }
+.download1 { width: 100%; background:#f8f8f8 url(/content/download1.jpg) no-repeat center 0px; height:324px; }
+.download2 { width: 100%; background:#fff url(/content/download2.jpg) no-repeat center 0px; height:1176px; }
+.download3 { width: 100%; background:#eee url(/content/download3.jpg) no-repeat center 0px; height:1194px; }
