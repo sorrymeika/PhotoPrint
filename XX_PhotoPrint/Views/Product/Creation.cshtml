@@ -1,0 +1,54 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    ViewBag.Title = "创作";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    SL.Util.RequestUtil req = new SL.Util.RequestUtil();
+
+    int total;
+    var products = ProductService.Search(null, 1, 10, out total);
+}
+<div class="main creationwrap">
+    <div class="steps_banner">
+        <div class="ico"></div>
+        <div class="note">定制属于自己的T恤，点击下面的第一个选项工具栏。<br>
+            你会看到选择一件T恤款式，之后将带您了解速纺定制产品的流程。<br>
+            通过各种定制T恤的窗口， 定制喜欢的衣服或配件。</div>
+    </div>
+    <div class="creation_steps">
+        <div class="creationhd"><h2></h2>
+        </div>
+        <div class="creationbd">
+            <div class="hd">选择你喜欢的 TEE</div>
+            <ul class="list clearfix">
+                @for (var i = 0; i < products.Count; i++)
+                {
+                    var item = products[i];
+                    <li data-id="@item.WorkID">
+                        <p class="img"><img src="@item.Picture" /></p>
+                        <p class="con">@item.WorkName@item.ProductName</p>
+                    </li>
+                }
+            </ul>
+        </div>
+        <div class="creationhd"><h2 class="s2"></h2>
+        </div>
+        <div class="creationbd"><br>
+            <br>
+            <br>
+            &nbsp;&nbsp;&nbsp;&nbsp;FLASH <br>
+            <br>
+            <br>
+        </div>
+        <div class="creationhd"><h2 class="s3"></h2>
+        </div>
+        <div class="creationbd">
+            <div class="hd">确认和生成订单</div>
+            <div class="creation_result"><img />
+            </div>
+            <div class="action">
+                <div class="btn_dlg_r"><i class="ico"></i>生成订单</div>
+            </div>
+        </div>
+    </div>
+</div>

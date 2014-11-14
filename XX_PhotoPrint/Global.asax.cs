@@ -54,7 +54,7 @@ namespace XX_PhotoPrint
                 "Gallery",
                 "{handle}.html",
                 new { controller = "Home", action = "Index", catalog = "Product" },
-                new { handle = "^Gallery$" }
+                new { handle = "^Gallery|Creation$" }
             );
 
             routes.MapRoute(
@@ -76,6 +76,13 @@ namespace XX_PhotoPrint
                 "{handle}/{id}.html",
                 new { controller = "Home", action = "Index", catalog = "News" },
                 new { handle = "^Recruit$", id = "^\\d+$" }
+            );
+
+            routes.MapRoute(
+                "Home",
+                "{handle}.html",
+                new { controller = "Home", action = "Index", catalog = "Home" },
+                new { handle = "^eco$" }
             );
 
 

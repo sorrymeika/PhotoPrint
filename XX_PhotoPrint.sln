@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XX_PhotoPrint", "XX_PhotoPrint\XX_PhotoPrint.csproj", "{3EE7A3A3-847A-4266-8B22-D693F7D659E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SL", "SL\SL.csproj", "{D8E09BBC-5A9D-441B-B403-988286537F2B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SL", "..\SL\SL.csproj", "{D8E09BBC-5A9D-441B-B403-988286537F2B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

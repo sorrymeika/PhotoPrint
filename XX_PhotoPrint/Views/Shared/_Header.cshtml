@@ -5,20 +5,18 @@
         <div class="navtop">
             @if (UserService.IsLogin())
             { 
-                <text><a href="/usercenter.html" class="">HI @UserService.GetUserName()</a>
-                / <a class="ico_cart" href="/cart"><i class="ico"></i>购物车</a></text>
+                <text><a href="/usercenter.html" class="">HI @UserService.GetUserName()</a> / <a class="ico_cart" href="/cart"><i class="ico"></i>购物车</a></text>
             }
             else
             {
-                <text><a href="/login.html">登录</a>
-                / <a href="/register.html">注册</a></text>
+                <text><a href="/login.html">登录</a> / <a href="/register.html">注册</a></text>
             }
         </div>
         <div class="nav">
             <ul>
                 <li><a href="/">首页</a></li>
-                <li><a href="">创作</a></li>
-                <li><a href="/recruit.html">生态环境</a></li>
+                <li><a href="/creation.html">创作</a></li>
+                <li><a href="/eco.html">生态环境</a></li>
                 <li><a href="/gallery.html">画廊</a></li>
                 <li class="last"><a href="/download.html">下载应用</a></li>
             </ul>
