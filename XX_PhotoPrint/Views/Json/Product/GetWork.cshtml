@@ -34,7 +34,7 @@
 	{
 		data["Content"] = System.Text.RegularExpressions.Regex.Replace(data["Content"].ToString(), @"src=""/", "src=\"http://" + Request.Url.Authority + "/", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 	}
-
+    
 	using (DbService db = new DbService())
 	{
 		data["Colors"] = db.Query("select ColorID,ColorName,ColorCode from Color where ProductID=@p0", productId);
