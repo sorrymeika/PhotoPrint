@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XX_PhotoPrint", "XX_PhotoPrint\XX_PhotoPrint.csproj", "{3EE7A3A3-847A-4266-8B22-D693F7D659E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SL", "SL\SL.csproj", "{D8E09BBC-5A9D-441B-B403-988286537F2B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SL", "..\SL\SL.csproj", "{D8E09BBC-5A9D-441B-B403-988286537F2B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Functions", "Functions\Functions.csproj", "{2CF59EFB-7E5A-4A10-830A-3F812E3CE6A3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,6 +21,10 @@ Global
 		{D8E09BBC-5A9D-441B-B403-988286537F2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D8E09BBC-5A9D-441B-B403-988286537F2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D8E09BBC-5A9D-441B-B403-988286537F2B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CF59EFB-7E5A-4A10-830A-3F812E3CE6A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CF59EFB-7E5A-4A10-830A-3F812E3CE6A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CF59EFB-7E5A-4A10-830A-3F812E3CE6A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CF59EFB-7E5A-4A10-830A-3F812E3CE6A3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

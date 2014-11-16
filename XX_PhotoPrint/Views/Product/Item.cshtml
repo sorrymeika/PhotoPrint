@@ -31,6 +31,9 @@
         Output.Write("商品信息不完整");
         return;
     }
+
+    int total;
+    var products = ProductService.Search(null, 1, 3, out total);
 }
 <div class="main prodwrap clearfix js_form">
     <div class="prod_preview"><img src="@StyleColorPic.First().Picture" /></div>
@@ -109,23 +112,19 @@
     </div>
     <div class="other_list">
         <ul class="clearfix">
-            <li><a href=""><p class="img"><img src="" /></p>
-                <p class="name">名称</p>
-            </a>
-            </li>
-            <li><a href=""><p class="img"><img src="" /></p>
-                <p class="name">名称</p>
-            </a>
-            </li>
-            <li><a href=""><p class="img"><img src="" /></p>
-                <p class="name">名称</p>
-            </a>
-            </li>
+            @for (var i = 0; i < products.Count; i++)
+            {
+                var item = products[i];
+                <li data-id="@item.WorkID"><a href="/item/@(item.WorkID).html">
+                    <p class="img"><img src="@item.Picture" /></p>
+                    <p class="name">@item.WorkName@item.ProductName</p>
+                </a></li>
+            }
         </ul>
     </div>
 </div>
 <script>
-    seajs.use(['$','lib/util','sl/view','sl/validation','extentions/qty'],function ($,util,View,Validation,qtyEvents) {
+    seajs.use(['$','lib/util','sl/view','sl/validation','extentions/qty'],function($,util,View,Validation,qtyEvents) {
         var product_id=$('.js_product_id').val(),
             work_id=$('.js_work_id').val();
 
@@ -136,7 +135,7 @@
 
             isLogining: false,
 
-            addToCart: function () {
+            addToCart: function() {
                 var that=this;
                 if(that.isLogining) return;
                 that.isLogining=true;
@@ -155,9 +154,9 @@
                         UseDefault: true
                     },
                     dataType: 'json',
-                    success: function (res) {
+                    success: function(res) {
                         if(res.success) {
-                            if (window.confirm('加入购物车成功！是否去购物车结算？')){
+                            if(window.confirm('加入购物车成功！是否去购物车结算？')) {
                                 location.href="/cart"
                             }
 
@@ -167,17 +166,17 @@
                             alert(res.msg);
                         }
                     },
-                    error: function () {
+                    error: function() {
                         alert('网络错误');
                     },
-                    complete: function () {
+                    complete: function() {
                         that.isLogining=false;
                         that.$('.js_addtocart').removeClass('disabled').html('<i class="ico"></i>加入购物车');
                     }
                 });
 
             },
-            initialize: function () {
+            initialize: function() {
                 var that=this;
 
             }

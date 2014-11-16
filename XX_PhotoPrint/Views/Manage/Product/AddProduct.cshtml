@@ -80,7 +80,7 @@
                 db.Execute("insert into Color (ColorName,ColorCode,ProductID) values (@p0,@p1,@p2)", color["colorName"], color["colorCode"], productId);
             }
 
-            db.Execute("insert into Customization (WorkID,ProductID,StyleID,ColorID,SizeID,[Print]) values (@p0,@p1)", workId, productId, styleId, 0, 0, printSrc);
+            db.Execute("insert into Customization (WorkID,ProductID,StyleID,ColorID,SizeID,[Print]) values (@p0,@p1,@p2,@p3,@p4,@p5)", workId, productId, styleId, 0, 0, printSrc);
 
             db.Commit();
         }

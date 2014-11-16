@@ -443,12 +443,6 @@
     <Content Include="Views\Json\Shop\ModifyQty.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SL\SL.csproj">
-      <Project>{D8E09BBC-5A9D-441B-B403-988286537F2B}</Project>
-      <Name>SL</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="Views\User\Login.cshtml" />
   </ItemGroup>
   <ItemGroup>
@@ -550,6 +544,25 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Json\User\IsLogin.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Product\Creation.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Json\About\Designer.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\SL\SL.csproj">
+      <Project>{D8E09BBC-5A9D-441B-B403-988286537F2B}</Project>
+      <Name>SL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Functions\Functions.csproj">
+      <Project>{2CF59EFB-7E5A-4A10-830A-3F812E3CE6A3}</Project>
+      <Name>Functions</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Json\User\SendSms.cshtml" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" />

@@ -23,7 +23,7 @@
 		return;
 	}
 
-	var user = SQL.QueryOne("select UserID,UserName,Account,LatestLoginDate,Avatars,Gender,Birthday,Mobile from Users where Account=@p0", account);
+	var user = SQL.QueryOne("select UserID,UserName,Account,LatestLoginDate,Avatars,Gender,Birthday,Mobile,RealName from Users where Account=@p0", account);
 	if (user == null)
 	{
 		Output.Write(js.Serialize(new { success = false, msg = "该账号不存在" }));

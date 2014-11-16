@@ -1,0 +1,6 @@
+G:\Documents and Settings\Administrator\桌面\CSharpDemo\CSharpDemo\Functions\obj\Debug\ResolveAssemblyReference.cache
+G:\Documents and Settings\Administrator\桌面\CSharpDemo\CSharpDemo\Functions\bin\Debug\Functions.dll.config
+G:\Documents and Settings\Administrator\桌面\CSharpDemo\CSharpDemo\Functions\bin\Debug\Functions.dll
+G:\Documents and Settings\Administrator\桌面\CSharpDemo\CSharpDemo\Functions\bin\Debug\Functions.pdb
+G:\Documents and Settings\Administrator\桌面\CSharpDemo\CSharpDemo\Functions\obj\Debug\Functions.dll
+G:\Documents and Settings\Administrator\桌面\CSharpDemo\CSharpDemo\Functions\obj\Debug\Functions.pdb

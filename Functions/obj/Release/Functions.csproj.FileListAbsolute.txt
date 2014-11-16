@@ -1,0 +1,8 @@
+G:\Projects\AspNet\Rain\CSharpDemo\Functions\bin\Release\Functions.dll.config
+G:\Projects\AspNet\Rain\CSharpDemo\Functions\bin\Release\Functions.dll
+G:\Projects\AspNet\Rain\CSharpDemo\Functions\bin\Release\Functions.XmlSerializers.dll
+G:\Projects\AspNet\Rain\CSharpDemo\Functions\bin\Release\Functions.pdb
+G:\Projects\AspNet\Rain\CSharpDemo\Functions\obj\Release\ResolveAssemblyReference.cache
+G:\Projects\AspNet\Rain\CSharpDemo\Functions\obj\Release\Functions.dll
+G:\Projects\AspNet\Rain\CSharpDemo\Functions\obj\Release\Functions.pdb
+G:\Projects\AspNet\Rain\CSharpDemo\Functions\obj\Release\Functions.XmlSerializers.dll

@@ -36,7 +36,7 @@ a:hover { color: #999; }
 .m_recommend li .view b { display: block; margin: 37px auto 4px auto; font-weight: bold; font-size: 18px; padding: 4px 0; border-bottom: 1px solid #fff; width: 80%; }
 .m_recommend li .view em { display: block; font-size: 12px; }
 .m_recommend li .img { width: 100%; height: 232px; overflow: hidden; }
-.m_recommend li .img img { display: block; }
+.m_recommend li .img img { display: block; width: 100%; }
 .m_recommend li .con { display: block; height: 47px; line-height: 24px; margin: 0 37px; }
 
 .m_appwrap { background: #f3f3f3; }
@@ -50,7 +50,15 @@ a:hover { color: #999; }
 .aboutwrap { text-align: center; margin: 60px auto 92px auto; }
 .aboutwrap .about_hd { font-weight: bold; color: #0e0e0e; font-size: 19px; margin-top: 40px; }
 .aboutwrap h1.about_hd { font-size: 40px; margin-top: 100px; }
-.aboutwrap .about_bd { line-height: 23px; margin-top: 10px; }
+.aboutwrap .about_bd { line-height: 23px; margin-top: 10px; font-size: 13px; color:#000; letter-spacing: 1px; }
+
+.about_list { width: 100%; border-top: 1px solid #ccc; margin-top: 36px; font-size: 13px; color:#000; }
+.about_list li { float: left; width: 145px; margin-left:42px; margin-top:36px; padding-right: 40px; }
+.about_list li .img{ width: 145px; height:145px; }
+.about_list li .img img { width: 145px; height:145px; }
+.about_list li p { line-height: 26px; }
+.about_list li .con { margin-top:15px; }
+.about_list li .desc { border-top: 1px solid #ccc; }
 
 .dialog { position: absolute; top: 0; left: 0; overflow: hidden; background: #f9f9f9; margin: 0 auto; z-index: 100; }
 .dialog_close { background: url(images/site.png) -50px 0px; width: 50px; height: 50px; display: block; cursor: pointer; position: absolute; right: 10px; top: 10px; }
@@ -385,3 +393,23 @@ a.btn_dlg_r:hover, a.btn_dlg_l:hover { color: #fff; }
 .download1 { width: 100%; background:#f8f8f8 url(/content/download1.jpg) no-repeat center 0px; height:324px; }
 .download2 { width: 100%; background:#fff url(/content/download2.jpg) no-repeat center 0px; height:1176px; }
 .download3 { width: 100%; background:#eee url(/content/download3.jpg) no-repeat center 0px; height:1194px; }
+
+.steps_banner { height:484px; overflow: hidden; width: 100%; text-align: center;background:#f3f3f3; }
+.steps_banner .ico { height: 113px;width: 118px;background:#f3f3f3 url(images/site.png) no-repeat -500px -100px; margin: 120px auto 0 auto; }
+.steps_banner .note{ margin-top: 20px; line-height: 26px; }
+
+.creation_steps { width: 100%; margin-top:56px; }
+.creationhd { }
+.creationhd h2 { height:39px; background:#fff url(images/site.png) no-repeat 0px -200px; margin-left:15px; width: 500px; }
+.creationhd h2.s2 { background-position: 0px -250px; width: 600px; }
+.creationhd h2.s3 { background-position: 0px -300px; }
+.creationbd { margin-left:36px; border-left: 1px solid #ddd; }
+.creationbd .list { padding-bottom: 33px;}
+.creationbd .list li { margin-top: 20px; float: left; _display: inline; margin-left: 50px; width: 206px; height: 206px; overflow: hidden; }
+.creationbd .list li img { width: 100%; height: 100%; }
+.creationbd .hd { border-left: 1px solid #eee;border-right: 1px solid #eee; text-align: center; margin: 20px auto; width: 120px; font-size: 12px; padding-left: 6px; color:#000; line-height: 20px; }
+.creation_result { text-align: center; }
+.creation_result img { width:432px; height: 432px; display: block; background:#ddd; margin: 10px auto; }
+.creationbd .action { text-align: center; padding-bottom: 50px; }
+.creationbd .action .btn_dlg_r {  width: 120px; }
+

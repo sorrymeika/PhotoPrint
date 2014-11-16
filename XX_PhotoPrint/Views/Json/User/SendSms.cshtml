@@ -1,0 +1,24 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    Layout = null;
+
+
+    var req = new SL.Util.RequestUtil();
+
+    string mobile = req.String("Mobile", regex: "1\\d{10}", regexText: "手机格式错误");
+
+
+    if (req.HasError)
+    {
+        Json.Write(new { success = false, msg = req.FirstError, errors = req.GetErrors() }, Output);
+        return;
+    }
+
+    string validCode = SL.Util.RandomUtil.CreateNumbers(6);
+    UserService.SendSms(mobile, "您的短信验证码为" + validCode);
+
+    SL.Util.CacheUtil.Set(mobile, validCode);
+
+    Json.Write(new { success = true }, Output);
+    return;
+}

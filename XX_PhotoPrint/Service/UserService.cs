@@ -203,6 +203,18 @@ namespace XX_PhotoPrint.Service
             }
         }
 
+        private static readonly string sn = "SDK-WSS-010-05920";//序列号
+        private static readonly string password = "3Af2342-";//密码
+        private static readonly string subcode = "";//扩展码
+        private static readonly string stime = "";//定时时间
+        public static string SendSms(string mobiles, string msg)
+        {
+            string pwd = Md5.MD5(sn + password);
+            string msgResult = Functions.Function.Mt(sn, pwd, mobiles, msg + "【速纺】", subcode, stime, "");
+
+            return msgResult;
+        }
+
         /// <summary>
         /// 发送邮件,返回true表示发送成功
         /// </summary>
@@ -212,7 +224,7 @@ namespace XX_PhotoPrint.Service
         /// <param name="host">SMTP服务器的主机名</param>
         /// <param name="sub">邮件主题行</param>
         /// <param name="body">邮件主体正文</param>
-        public bool SendMain(string sender, string password, string receiver, string host, string sub, string body)
+        public static bool SendMain(string sender, string password, string receiver, string host, string sub, string body)
         {
             System.Net.Mail.SmtpClient client = new SmtpClient();
             client.Host = host;

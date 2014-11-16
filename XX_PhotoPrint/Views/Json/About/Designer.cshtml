@@ -1,0 +1,18 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    Layout = null;
+
+    var data = SL.Data.SQL.Query("select DesignerID,DesignerName,Description,Avatars from Designer order by DesignerID desc");
+
+    if (data != null)
+    {
+        data.All(a =>
+        {
+            a.Avatars = SL.Util.RequestFile.FullUrl(a.Avatars);
+            return true;
+        });
+    }
+
+    Json.Write(new { success = true, data = data }, Output);
+    return;
+}
