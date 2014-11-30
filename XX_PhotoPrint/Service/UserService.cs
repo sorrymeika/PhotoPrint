@@ -111,7 +111,7 @@ namespace XX_PhotoPrint.Service
 
         public static IList<dynamic> GetAddress(int uid)
         {
-            return SL.Data.SQL.Query("select AddressID,UserID,Receiver,a.CityID,CityName,a.RegionID,RegionName,c.ProvID,c.ProvName,Zip,Address,TelPhone,Mobile,IsCommonUse from UserAddress a inner join City b on a.CityID=b.CityID join Province c on b.ProvID=c.ProvID left join Region d on a.RegionID=d.RegionID where UserID=@p0", uid);
+            return SL.Data.SQL.Query("select AddressID,UserID,Receiver,a.CityID,CityName,a.RegionID,RegionName,c.ProvID,c.ProvName,Zip,Address,TelPhone,Mobile,IsCommonUse from UserAddress a left join City b on a.CityID=b.CityID left join Province c on b.ProvID=c.ProvID left join Region d on a.RegionID=d.RegionID where UserID=@p0", uid);
         }
 
         public static IList<dynamic> GetOrders(int uid, int? status, int page, int pageSize, out int total)

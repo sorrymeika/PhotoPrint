@@ -62,6 +62,11 @@
     <Compile Include="Alipay\AlipayFunction.cs" />
     <Compile Include="Alipay\AlipayService.cs" />
     <Compile Include="Alipay\AlipaySubmit.cs" />
+    <Compile Include="Alipay\alipay_config.cs" />
+    <Compile Include="Alipay\alipay_function.cs" />
+    <Compile Include="Alipay\alipay_notify.cs" />
+    <Compile Include="Alipay\alipay_service.cs" />
+    <Compile Include="Alipay\alipay_service_fh.cs" />
     <Compile Include="Alipay\RSA.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Global.asax.cs">

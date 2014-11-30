@@ -12,7 +12,7 @@
 		return;
 	}
 
-	var data = SQL.QueryOne("select CouponID,c.Code,a.CategoryID,Title,Memo,CouponDateFrom,CouponDate as CouponDateTo,Price,CategoryName,UseTimes,UserID from Coupon a join CouponCate b on a.CategoryID=b.CategoryID join CouponCode c on a.CouponID=c.CouponID where UserID=@p0", uid);
+	var data = SQL.QueryOne("select a.CouponID,c.Code,a.CategoryID,Title,Memo,CouponDateFrom,CouponDate as CouponDateTo,Price,CategoryName,UseTimes,UserID from Coupon a join CouponCate b on a.CategoryID=b.CategoryID join CouponCode c on a.CouponID=c.CouponID where UserID=@p0", uid);
 
 	Output.Write(js.Serialize(new { success = true, data = data }));
 	return;
