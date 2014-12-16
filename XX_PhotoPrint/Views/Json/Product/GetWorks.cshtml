@@ -1,9 +1,6 @@
 ﻿@using XX_PhotoPrint.Service
-@using System.Web.Script.Serialization
 @{
     Layout = null;
-
-    var js = new JavaScriptSerializer();
 
     var req = new Req();
     int categoryId = req.Int("CategoryID");
@@ -16,13 +13,13 @@
 
     if (req.HasError)
     {
-        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        Json.Write(new { success = false, msg = req.FirstError, errors = req.GetErrors() }, Output);
         return;
     }
 
     int total;
     var data = ProductService.Search(categoryId, subId, keywords, page, pageSize, sort, sortType, out total);
 
-    Output.Write(js.Serialize(new { success = true, data = data, total = total }));
+    Json.Write(new { success = true, data = data, total = total }, Output);
     return;
 }
