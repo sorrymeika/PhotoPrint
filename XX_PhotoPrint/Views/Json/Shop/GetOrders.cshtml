@@ -50,7 +50,7 @@
                     { "Amount", item["Amount"] },
                     { "Freight", item["Freight"] },
                     { "Total", (decimal)item["Freight"]+(decimal)item["Amount"] },
-                    { "Address",item["ProvName"].ToString()+ item["CityName"].ToString()+item["RegionName"].ToString()+item["Address"].ToString() },
+                    { "Address",""+(item["ProvName"]??"")+ (item["CityName"]??"")+(item["RegionName"]??"")+item["Address"] },
                     { "Discount", item["Discount"] },
                     { "AddTime", item["AddTime"] },
                     { "PaymentID", item["PaymentID"] },

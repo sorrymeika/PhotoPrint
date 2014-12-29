@@ -3,29 +3,27 @@
 @{
     Layout = null;
 
-    var js = new JavaScriptSerializer();
-
     var req = new Req();
     string account = req.String("Account", false, "未输入账号");
     string password = System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(req.String("Password", false, "未输入密码"), "md5");
 
     if (req.HasError)
     {
-        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        Json.Write(new { success = false, msg = req.FirstError, errors = req.GetErrors() }, Output);
         return;
     }
 
-    var user = SQL.QueryOne("select UserID,UserName,Password,LatestLoginDate,Avatars,RealName,Gender,BirthDay,Mobile from Users where Account=@p0", account);
+    var user = SQL.QueryOne("select UserID,UserName,Password,LatestLoginDate,Avatars,RealName,Gender,BirthDay,Mobile from Users where Account=@p0 or Mobile=@p0", account);
     if (user == null)
     {
-        Output.Write(js.Serialize(new { success = false, msg = "该账号不存在" }));
+        Json.Write(new { success = false, msg = "该账号不存在" }, Output);
         return;
     }
 
     string pwd = (string)user["Password"];
     if (!pwd.Equals(password, StringComparison.OrdinalIgnoreCase))
     {
-        Output.Write(js.Serialize(new { success = false, msg = "密码错误" }));
+        Json.Write(new { success = false, msg = "密码错误" }, Output);
         return;
     }
 
@@ -45,6 +43,6 @@
 
     UserService.SetAuth(account, md5auth);
 
-    Output.Write(js.Serialize(new { success = true, userinfo = user }));
+    Json.Write(new { success = true, userinfo = user }, Output);
     return;
 }

@@ -37,6 +37,10 @@
         birthday == null ? user["Birthday"] : req.DateTime("Birthday"),
         mobile ?? user["Mobile"], uid, realName ?? user["RealName"]);
 
-    Json.Write(new { success = true }, Output);
+    user = SQL.QueryOne("select UserID,UserName,Account,LatestLoginDate,Avatars,Gender,Birthday,Mobile,RealName from Users where UserID=@p0", uid);
+
+    user["Avatars"] = "http://" + Request.Url.Authority + "/Content/" + user["Avatars"];
+
+    Json.Write(new { success = true, userinfo = user }, Output);
     return;
 }
