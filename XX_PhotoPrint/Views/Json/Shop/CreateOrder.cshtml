@@ -27,7 +27,7 @@
         return;
     }
 
-    if (message.Length > 500)
+    if (message != null && message.Length > 500)
     {
         Output.Write(js.Serialize(new { success = false, msg = "备注不可超过500字" }));
         return;

@@ -43,6 +43,6 @@
 		data["StyleColorPic"] = db.Query("select PicID,StyleID,ColorID,Picture from StyleColorPic where ProductID=@p0", productId);
 	}
 
-	Output.Write(js.Serialize(new { success = true, data = data }));
-	return;
+    Json.Write(new { success = true, data = data }, Output);
+    return;
 }

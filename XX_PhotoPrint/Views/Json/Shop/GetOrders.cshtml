@@ -25,7 +25,7 @@
 
     int uid = UserService.GetUserID(account);
 
-    var data = SQL.Query("select o.OrderID,o.OrderCode,o.Amount,o.Freight,o.AddTime,o.Status,o.Address,o.Discount,o.PaymentID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price,city.CityName,d.ProvName,e.RegionName from OrderInfo o join OrderDetail c on o.OrderID=c.OrderID join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID join City city on o.CityID=city.CityID join Province d on city.ProvID=d.ProvID left join Region e on o.RegionID=e.RegionID where o.UserID=@p0", uid);
+    var data = SQL.Query("select o.OrderID,o.OrderCode,o.Amount,o.Freight,o.AddTime,o.Status,o.Address,o.Discount,o.PaymentID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price,city.CityName,d.ProvName,e.RegionName from OrderInfo o join OrderDetail c on o.OrderID=c.OrderID join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID left join City city on o.CityID=city.CityID left join Province d on city.ProvID=d.ProvID left join Region e on o.RegionID=e.RegionID where o.UserID=@p0", uid);
     List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
     if (data != null && data.Count != 0)
     {
