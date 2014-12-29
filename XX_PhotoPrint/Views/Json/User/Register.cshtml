@@ -31,7 +31,11 @@
         var result = SQL.Execute("insert into Users (Account,UserName,Password,Auth,RegisterDate,LatestLoginDate,Mobile) values (@p0,@p1,@p2,@p3,@p4,@p4,@p5)", out uid, account, userName, password, md5auth, date, mobile);
         UserService.SetAuth(account, md5auth);
 
-        Output.Write(js.Serialize(new { success = true, auth = auth }));
+        var user = SQL.QueryOne("select UserID,UserName,Account,LatestLoginDate,Avatars,Gender,Birthday,Mobile,RealName from Users where Account=@p0", account);
+        user["Avatars"] = "http://" + Request.Url.Authority + "/Content/" + user["Avatars"];
+        user["Auth"] = auth;
+
+        Output.Write(js.Serialize(new { success = true, auth = auth, userinfo = user }));
     }
     return;
 }

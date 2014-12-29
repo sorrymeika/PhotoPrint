@@ -1,0 +1,23 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    Layout = null;
+
+    var req = new SL.Util.RequestUtil();
+    string mobile = req.String("mobile", false, "未输入手机号");
+    string validcode = req.String("validcode", false, "未输入验证码");
+
+    if (req.HasError)
+    {
+        Json.Write(new { success = false, msg = req.FirstError, errors = req.GetErrors() }, Output);
+        return;
+    }
+
+    if (!validcode.Equals(SL.Util.CacheUtil.Get<string>(mobile)))
+    {
+        Json.Write(new { success = true, msg = "验证码错误" }, Output);
+        return;
+    }
+
+    Json.Write(new { success = true }, Output);
+    return;
+}
