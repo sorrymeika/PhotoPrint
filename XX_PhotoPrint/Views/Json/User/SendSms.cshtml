@@ -5,7 +5,7 @@
 
     var req = new SL.Util.RequestUtil();
 
-    string mobile = req.String("Mobile", regex: "1\\d{10}", regexText: "手机格式错误");
+    string mobile = req.String("Mobile", regex: "^1\\d{10}$", regexText: "手机格式错误");
 
 
     if (req.HasError)
