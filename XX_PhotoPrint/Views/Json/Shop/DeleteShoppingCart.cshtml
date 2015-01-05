@@ -14,7 +14,7 @@
     var js = new JavaScriptSerializer();
 
     var req = new Req();
-    int cartId = req.Int("CartID", false, "缺少购物车编号 ");
+    String cartId = req.String("CartID", false, "缺少购物车编号 ", @"^\d+(,\d+){0,}$", "参数格式错误");
 
     if (req.HasError)
     {
@@ -31,9 +31,9 @@
 
     using (DbService db = new DbService())
     {
-        db.Execute("delete from Cart where CartID=@p0", cartId);
-        db.Execute("delete from UserWork where UserWorkID=@p0", data["UserWorkID"]);
-        db.Execute("delete from UserCustomization where UserWorkID=@p0", data["UserWorkID"]);
+        db.Execute("delete from Cart where CartID in (" + cartId + ") and UserID=@p0", uid);
+        db.Execute("delete from UserWork where UserWorkID in (select UserWorkID from Cart where CartID in (" + cartId + ") and UserID=@p0)", uid);
+        db.Execute("delete from UserCustomization where UserWorkID in (select UserWorkID from Cart where CartID in (" + cartId + ") and UserID=@p0)", uid);
     }
 
     Output.Write(js.Serialize(new { success = true }));
