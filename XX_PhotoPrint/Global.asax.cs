@@ -135,7 +135,7 @@ namespace XX_PhotoPrint
             routes.MapRoute(
                 "Pay",
                 "pay/{orderid}",
-                new { controller = "Home", action = "Pay", orderid = 0 },
+                new { controller = "AlipayWAP", action = "Pay", orderid = 0 },
                 new { orderid = @"^\d+$" }
             );
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
-using Alipay.Class;
 using XX_PhotoPrint.Service;
 using System.IO;
 using System.Globalization;
@@ -11,6 +10,7 @@ using System.Web.Script.Serialization;
 using System.Drawing;
 using SL.Util;
 using System.Collections.Specialized;
+using Alipay.Class;
 
 namespace XX_PhotoPrint.Controllers
 {
@@ -119,7 +119,7 @@ namespace XX_PhotoPrint.Controllers
         }
         #endregion
 
-        #region 订单支付（支付宝）
+        #region 订单支付（支付宝WAP）
         private Dictionary<string, object> GetOrder(int orderid)
         {
             return SQL.QueryOne("select OrderID,OrderCode,Amount,Freight,a.AddTime,a.Status,a.UserID,a.Receiver,a.Address,a.Mobile,a.Zip,b.Account from OrderInfo a join Users b on a.UserID=b.UserID where OrderID=@p0", orderid);

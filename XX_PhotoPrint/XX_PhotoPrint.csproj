@@ -58,6 +58,12 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Alipay.WAP\AlipayConfig.cs" />
+    <Compile Include="Alipay.WAP\AlipayCore.cs" />
+    <Compile Include="Alipay.WAP\AlipayNotify.cs" />
+    <Compile Include="Alipay.WAP\AlipaySubmit.cs" />
+    <Compile Include="Alipay.WAP\MD5.cs" />
+    <Compile Include="Alipay.WAP\RSA.cs" />
     <Compile Include="Alipay\AlipayConfig.cs" />
     <Compile Include="Alipay\AlipayFunction.cs" />
     <Compile Include="Alipay\AlipayService.cs" />
@@ -68,6 +74,7 @@
     <Compile Include="Alipay\alipay_service.cs" />
     <Compile Include="Alipay\alipay_service_fh.cs" />
     <Compile Include="Alipay\RSA.cs" />
+    <Compile Include="Controllers\AlipayWAPController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -592,7 +599,7 @@
         <WebProjectProperties>
           <UseIIS>False</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
-          <DevelopmentServerPort>11403</DevelopmentServerPort>
+          <DevelopmentServerPort>47407</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
           <IISUrl>
           </IISUrl>

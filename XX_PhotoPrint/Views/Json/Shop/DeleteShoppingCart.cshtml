@@ -22,7 +22,7 @@
         return;
     }
 
-    var data = SQL.QueryOne("select UserWorkID from Cart where CartID=@p0 and UserID=@p1", cartId, uid);
+    var data = SQL.QueryOne("select UserWorkID from Cart where CartID in (" + cartId + ") and UserID=@p0", uid);
     if (data == null)
     {
         Output.Write(js.Serialize(new { success = false, msg = "购物车中无该项" }));
