@@ -40,15 +40,14 @@
     
     <div class="main clearfix ">
         <div class="gallery_img"><img src="/@data.Picture" /></div>
-        <div class="g_designer_info"><div class="g_designer_hd">自由设计师</div>
+        <div class="g_designer_info">
+            <div class="g_designer_hd">自由设计师</div>
             <div class="avatars"><img src="/@data.Avatars" /></div>
             <div class="g_designer_name">@data.DesignerName</div>
             <div class="g_designer_desc">@data.Description</div>
             <div class="g_votes_wrap">
                 <div class="g_votes_hd">大众投票</div>
-                <div class="g_votes_bd">
-                    <i></i><em>@data.Votes</em>
-                </div>
+                <div class="g_votes_bd"><i></i><em>@data.Votes</em> </div>
             </div>
         </div>
     </div>
@@ -78,7 +77,7 @@ else
                 <div class="hd">让你的艺术创作变成现实</div>
                 <div class="hd1">轻触屏幕，速纺将你的艺术创作印制成独一<br>
                     无二的纯棉T恤，随心个性定制</div>
-                <div class="slide_down">SLIDE DOWN</div>
+                <div class="slide_down js_slide_down">SLIDE DOWN</div>
             </div>
             <div class="js_waterfall waterfall gallerylist">
                 @if (data != null)
@@ -89,7 +88,8 @@ else
                     }
                 }
             </div>
-            <div class="refresh"><i class="ico_loading"></i><p></p>
+            <div class="refresh"><i class="ico_loading"></i>
+                <p></p>
             </div>
         </div>
     </div>
@@ -122,6 +122,12 @@ else
 
         loading.checkAutoRefreshing({
             total: @total
+        });
+
+        $('.js_slide_down').click(function(){
+            $('html,body').animate({
+                scrollTop: document.documentElement.scrollHeight-document.documentElement.clientHeight
+            },200);
         });
 
     });

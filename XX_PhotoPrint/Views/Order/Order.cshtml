@@ -74,7 +74,8 @@
                     
                         <tr@(i == orderinfo.Details.Count - 1 ? new MvcHtmlString(" class=\"noborder\"") : null) data-rowid="@item.OrderDetailID">
                             <td class="imgwrap"><img class="img" src="@item.Picture" /></td>
-                            <td class="desc"><p class="name"><a href="">@item.ProductName</a></p>
+                            <td class="desc">
+                                <p class="name"><a href="">@item.ProductName</a></p>
                                 <p class="color">@item.Styles[0].ColorName,@item.Styles[0].SizeName</p>
                             </td>
                             <td>￥@item.Price</td>
@@ -183,11 +184,13 @@ else
                 <div class="leave_msg">
                     <div class="hd">给速纺留言</div>
                     <div class="bd"><textarea class="txt_leave_msg js_txt_message"></textarea></div>
+                    <div class="hd" style="padding-top: 10px;">是否需要发票 <input name="needInv" type="radio" value="1" />是 <input name="needInv" type="radio" value="0" checked />否</div>
+                    <div class="bd" style="padding-top: 10px;">发票抬头 <input class="text js_inv" type="text" disabled /></div>
                 </div>
                 <ul class="cartprice">
                     <li><span class="js_amount"></span>金额</li>
-                    <li class="solid"><span>￥10</span>运费</li>
-                    <li class="solid"><span class="js_total_amount">￥120</span>合计</li>
+                    <li class="solid"><span class="js_freight">￥22</span>运费</li>
+                    <li class="solid"><span class="js_total_amount">￥</span>合计</li>
                     <li class="action">
                         <div class="btn_dlg_r js_create_order" style="width: 120px;"><i class="ico"></i>确认并付款</div>
                     </li>
@@ -201,7 +204,13 @@ else
         var CartView=View.extend({
             events: {
                 'click .js_create_order': 'createOrder',
-                'click .js_edit': 'editAddress'
+                'click .js_edit': 'editAddress',
+                'change [name="needInv"]': function(){
+                    var val=this.$('[name="needInv"]:checked').val();
+                    this.$('.js_inv')[0].disabled=val==1?false:true;
+                    if (val!=1)
+                        this.$('.js_inv')[0].value='';
+                }
             },
 
             editAddress: function(e) {
@@ -240,6 +249,7 @@ else
                         AddressID: currentAddress.AddressID,
                         PaymentID: 2,
                         Message: util.encodeHTML(that.$('.js_txt_message').val()),
+                        Inv: util.encodeHTML(that.$('.js_inv').val()),
                         Carts: util.query('?ids')
                     },
                     type: 'POST',
@@ -266,7 +276,8 @@ else
                     total+=parseFloat($(this).html().replace('￥',''));
                 });
                 this.$('.js_amount').html('￥'+total);
-                this.$('.js_total_amount').html('￥'+(total+(total<600?10:0)));
+                this.$('.js_freight').html('￥'+(total<100?22:0));
+                this.$('.js_total_amount').html('￥'+(total+(total<100?22:0)));
 
                 return total;
             },

@@ -1,0 +1,266 @@
+﻿@using XX_PhotoPrint.Service
+@using SL.Util
+@using System.Web.Script.Serialization
+@{
+    
+
+    if (Request.HttpMethod == "POST")
+    {
+        Layout = null;
+        RequestUtil req = new RequestUtil();
+        int step = req.Int("step");
+        string email;
+        string mobile;
+        string validcode;
+        string password = null;
+
+        email = req.String("email", false, "未输入邮箱");
+
+        if (step == 0)
+        {
+            validcode = req.String("validcode", false, "未输入验证码", compare: Session["CheckCode"].ToString(), compareText: "验证码错误");
+        }
+        else if (step == 1)
+        {
+            mobile = req.String("mobile", false, "未输入手机号");
+            validcode = req.String("validcode", false, "未输入验证码", compare: SL.Util.CacheUtil.Get<String>(mobile), compareText: "验证码错误");
+        }
+        else if (step == 2)
+        {
+            password = req.Password("password", "未输入密码");
+            validcode = req.String("validcode", false, "未输入授权", compare: Session["ValidCode"].ToString(), compareText: "授权错误");
+        }
+
+        if (req.HasError)
+        {
+            Json.Write(new { success = false, msg = req.FirstError, errors = req.GetErrors() }, Output);
+            return;
+        }
+
+        var data = SL.Data.SQL.QuerySingle("select UserID,UserName,Account,Mobile from Users where Account=@p0", email);
+        if (data == null)
+        {
+            Json.Write(new { success = false, msg = "账号不存在" }, Output);
+        }
+
+        if (step == 0)
+        {
+            Json.Write(new { success = true, mobile = data.Mobile }, Output);
+        }
+        else if (step == 1)
+        {
+            Session["ValidCode"] = SL.Util.RandomUtil.Create(10);
+            Json.Write(new { success = true, code = Session["ValidCode"].ToString() }, Output);
+        }
+        else
+        {
+            SQL.Execute("update Users set Password=@p1 where UserID=@p0", data.UserID, password);
+            Json.Write(new { success = true }, Output);
+        }
+        return;
+    }
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="main stepswrap">
+    <div class="steps_hd">
+        <ul class="clearfix">
+            <li class="curr"><i>1</i>个人信息</li>
+            <li><i>2</i>身份验证</li>
+            <li><i>3</i>重置密码</li>
+            <li><i>4</i>修改成功</li>
+        </ul>
+    </div>
+    <div class="steps_bd reg_form js_form">
+        <div class="reg_hd"><b class="hd">忘记密码</b><span class="msg">找回密码的应用程序，并设置一个密码，以保护实际上 已丢失或忘记密码。</span></div>
+        <div class="reg_bd js_step0">
+            <dl class="form_item">
+                <dt>邮箱</dt>
+                <dd><input class="text" name="email" type="text" value="" /></dd>
+            </dl>
+            <dl class="form_item">
+                <dt>验证码</dt>
+                <dd><input class="validcode" name="validcode" type="text" value="" /><img class="validcode_img" src="CheckCode/@(DateTime.Now.Ticks).jpg" /></dd>
+            </dl>
+        </div>
+        <div class="reg_bd js_step1" style="display: none">
+            <dl class="form_item">
+                <dt>手机号</dt>
+                <dd><input class="text" name="mobile" type="text" value="" />
+                    <b class="btn js_sendsms"><i class="ico"></i>发送</b></dd>
+            </dl>
+            <dl class="form_item">
+                <dt>验证码</dt>
+                <dd><input class="validcode" name="validcode" type="text" value="" /></dd>
+            </dl>
+        </div>
+        <div class="reg_bd js_step2" style="display: none">
+            <dl class="form_item">
+                <dt>重置密码</dt>
+                <dd><input class="text" name="password" type="password" value="" /></dd>
+            </dl>
+            <dl class="form_item">
+                <dt>再次输入密码</dt>
+                <dd><input class="text" name="password1" type="password" value="" /></dd>
+            </dl>
+        </div>
+        <div class="reg_bd js_step3" style="display: none">恭喜，重置成功！</div>
+        <div class="reg_ft">
+            <div class="check_accept">
+                <div class="btn_dlg_r js_action"><i class="ico"></i>继 续</div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    seajs.use(['$','lib/util','sl/view','sl/validation'],function($,util,View,Validation) {
+        var RegisterView=View.extend({
+            events: {
+                'click .js_action': 'action',
+                'click .js_sendsms': function(e) {
+                    var that=this;
+                    var $btn=$(e.currentTarget);
+
+                    if($btn.hasClass('disabled')) {
+                        return;
+                    }
+
+                    if(that.mobile!=that.$('[name="mobile"]').val()) {
+                        alert('手机号不属于该账号');
+                        return;
+                    }
+
+                    $btn.addClass('disabled').html('请稍候...');
+
+                    $.ajax({
+                        type: 'POST',
+                        dataType: 'json',
+                        url: '/json/user/sendsms',
+                        data: {
+                            mobile: that.$('[name="mobile"]').val()
+                        },
+                        success: function(res) {
+
+                            if(res.success) {
+                                $btn.html('60秒后重试...');
+
+                                var sec=60;
+                                setTimeout(function() {
+                                    sec--;
+                                    $btn.html(sec+'秒后重试...');
+
+                                    if(sec==0)
+                                        $btn.removeClass('disabled').html('发送');
+                                    else
+                                        setTimeout(arguments.callee,1000)
+
+                                },1000);
+
+                            } else {
+                                alert(res.msg);
+                                $btn.removeClass('disabled').html('发送');
+                            }
+                        }
+                    });
+                }
+            },
+            step: 0,
+            action: function() {
+                var that=this;
+
+                if(that.isLoading) return;
+
+                if(that.validator.validate()) {
+                    that.isLoading=true;
+
+                    that.$('.js_action').addClass('disabled').html('<i class="ico"></i>请稍候...');
+
+                    $.ajax({
+                        type: 'POST',
+                        dataType: 'json',
+                        url: '/forgot.html',
+                        data: {
+                            step: that.step,
+                            email: that.$('[name="email"]').val(),
+                            mobile: that.$('[name="mobile"]').val(),
+                            password: that.$('[name="password"]').val(),
+                            validcode: that.$('.js_step'+that.step+' [name="validcode"]').val()
+                        },
+                        success: function(res) {
+
+                            if(res.success) {
+                                if(that.step==0) {
+                                    that.validator=new Validation({
+                                        '[name="mobile"]': {
+                                            emptyAble: false,
+                                            emptyText: '<i></i>请输入手机',
+                                            regex: /1\d{10}/,
+                                            regexText: '<i></i>请输入正确的手机',
+                                            successText: '',
+                                            position: 'dock-after:this.closest("dd").prev("dt")'
+                                        },
+                                        '.js_step1 [name="validcode"]': {
+                                            emptyAble: false,
+                                            emptyText: '<i></i>请输入验证码',
+                                            successText: '',
+                                            position: 'dock-after:this.closest("dd").prev("dt")'
+                                        }
+                                    });
+                                    that.mobile=res.mobile;
+                                }
+                                else if(that.step==1) {
+                                    that.validator=new Validation({
+                                        '[name="password"]': {
+                                            emptyAble: false,
+                                            emptyText: '<i></i>请输入密码',
+                                            regex: /.{6,}/,
+                                            regexText: '<i></i>请输入密码，并为6个字符的长度',
+                                            successText: '',
+                                            position: 'dock-after:this.closest("dd").prev("dt")'
+                                        },
+                                        '[name="password1"]': {
+                                            emptyAble: false,
+                                            emptyText: '<i></i>请再次输入密码',
+                                            compare: '[name="password"]',
+                                            compareText: '两次密码不一致',
+                                            successText: '',
+                                            position: 'dock-after:this.closest("dd").prev("dt")'
+                                        }
+                                    });
+                                }
+                                that.step++;
+                                that.$('.js_step'+that.step).show().siblings(that.step==3?'':'.reg_bd').hide();
+
+                            } else
+                                alert(res.msg);
+
+                            that.$('.js_action').removeClass('disabled').html('<i class="ico"></i>继 续');
+                            that.isLoading=false;
+                        }
+                    });
+                }
+            },
+            initialize: function() {
+                var that=this;
+
+                that.validator=new Validation({
+                    '[name="email"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入邮箱',
+                        successText: '',
+                        position: 'dock-after:this.closest("dd").prev("dt")'
+                    },
+                    '.js_step0 [name="validcode"]': {
+                        emptyAble: false,
+                        emptyText: '<i></i>请输入验证码',
+                        successText: '',
+                        position: 'dock-after:this.closest("dd").prev("dt")'
+                    }
+                });
+            }
+        });
+
+        new RegisterView('.js_form');
+
+    });
+</script>

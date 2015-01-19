@@ -28,14 +28,15 @@
     <div class="cartinfo clearfix mainlast">
         <ul class="carttips">
             <li><i>·</i>本清单已包含税费</li>
-            <li><i>·</i>如果您购买600元以上，将提供免费送货服务</li>
+            <li><i>·</i>如果您购买100元以上，将提供免费送货服务</li>
             <li><i>·</i>本清单支持下列付款方式</li>
-            <li class="paylist"><img src="/theme/images/alipay.png" /> </li>
+            <li class="paylist"><img src="/theme/images/alipay.png" />
+            </li>
         </ul>
         <ul class="cartprice">
             <li><span class="js_amount"></span>金额</li>
-            <li class="solid"><span>￥10</span>运费</li>
-            <li class="solid"><span class="js_total_amount">￥120</span>合计</li>
+            <li class="solid"><span class="js_freight">￥22</span>运费</li>
+            <li class="solid"><span class="js_total_amount">￥</span>合计</li>
             <li class="action"><a class="btn_dlg_l" href="/"><i class="ico"></i>继续购物</a>
                 <div class="btn_dlg_r js_create_order"><i class="ico"></i>立即付款</div>
             </li>
@@ -124,7 +125,8 @@
                     total+=parseFloat($(this).html().replace('￥',''));
                 });
                 this.$('.js_amount').html('￥'+total);
-                this.$('.js_total_amount').html('￥'+(total+(total<600?10:0)));
+                this.$('.js_freight').html('￥'+(total<100?22:0));
+                this.$('.js_total_amount').html('￥'+(total+(total<100?22:0)));
                 return total;
             },
 
@@ -155,8 +157,6 @@
                     success: function(res) {
                         if(res.success&&res.data&&res.data.length) {
                             var template=$('#cartItem').html();
-
-                            console.log(res)
 
                             that.$list.html(tmpl(template,res));
 

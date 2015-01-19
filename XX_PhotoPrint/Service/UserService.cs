@@ -143,7 +143,7 @@ namespace XX_PhotoPrint.Service
                 }
 
                 var list = db.QueryPage("OrderID", "OrderID,OrderCode,Amount,Freight,a.Discount,a.AddTime,a.Status,a.UserID,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName",
-                    "OrderInfo a join Users b on a.UserID=b.UserID join City c on a.CityID=c.CityID join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID",
+                    "OrderInfo a join Users b on a.UserID=b.UserID left join City c on a.CityID=c.CityID left join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID",
                     where,
                     page,
                     pageSize,
@@ -183,7 +183,7 @@ namespace XX_PhotoPrint.Service
         {
             using (SL.Data.Database db = SL.Data.Database.Open())
             {
-                var data = db.QuerySingle("select OrderID,OrderCode,Amount,Freight,a.Discount,a.AddTime,a.Status,a.UserID,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName from OrderInfo a join Users b on a.UserID=b.UserID join City c on a.CityID=c.CityID join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID where OrderID=@p0 and a.UserID=@p1", orderid, uid);
+                var data = db.QuerySingle("select OrderID,OrderCode,Amount,Freight,a.Discount,a.AddTime,a.Status,a.UserID,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName from OrderInfo a join Users b on a.UserID=b.UserID left join City c on a.CityID=c.CityID left join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID where OrderID=@p0 and a.UserID=@p1", orderid, uid);
 
                 var detailList = db.Query("select c.OrderID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID where OrderID=@p0", orderid);
 

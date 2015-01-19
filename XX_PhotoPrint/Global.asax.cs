@@ -25,7 +25,7 @@ namespace XX_PhotoPrint
                 "UserHtml",
                 "{handle}.html",
                 new { controller = "Home", action = "Index", catalog = "User" },
-                new { handle = "^Login|Register|Register1|Register2|UserCenter|UserInfo$" }
+                new { handle = "^Login|Register|Register1|Register2|UserCenter|UserInfo|Forgot$" }
             );
 
             routes.MapRoute(
@@ -34,7 +34,6 @@ namespace XX_PhotoPrint
                 new { controller = "Home", action = "Index", catalog = "User" },
                 new { handle = "^signout$" }
             );
-
 
             routes.MapRoute(
                 "Shop",

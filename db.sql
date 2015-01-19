@@ -338,3 +338,7 @@ if not exists(select 1 from ActivityCate where CategoryID=5) insert into Activit
 if not exists(select 1 from ActivityCate where CategoryID=3) insert into ActivityCate (CategoryID,CategoryName) values (3,'帮助中心')
 if not exists(select 1 from ActivityCate where CategoryID=2) insert into ActivityCate (CategoryID,CategoryName) values (2,'活动资讯')
 set IDENTITY_INSERT ActivityCate OFF
+
+
+
+alter table OrderInfo add Inv varchar(400)
