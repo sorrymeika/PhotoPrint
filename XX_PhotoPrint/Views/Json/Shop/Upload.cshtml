@@ -1,0 +1,77 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    int uid;
+
+    if (!AuthHelper.CheckAuth(out uid))
+    {
+        Json.Write(new { success = false, returnCode = "0000", msg = "授权错误" }, Output);
+        return;
+    }
+
+    var req = new SL.Util.RequestUtil();
+
+    string order = req.String("order", false, "缺少order");
+    int fileQty = req.Int("fileQty");
+
+    if (req.HasError)
+    {
+        Json.Write(new { success = false, msg = req.FirstError, errors = req.GetErrors() }, Output);
+        return;
+    }
+
+    int workId = int.Parse(order.Split('_')[0]);
+    int productId = int.Parse(order.Split('_')[1]);
+    int qty = 1;
+
+    if (qty <= 0)
+    {
+        Json.Write(new { success = false, msg = "购买数量不能小于等于0" }, Output);
+        return;
+    }
+
+    var styles = SQL.Query("select StyleID from Style where ProductID=@p0", productId);
+    bool useDefault = req.Bool("UseDefault");
+
+    if (styles == null || styles.Count == 0)
+    {
+        Json.Write(new { success = false, msg = "商品信息不完整" }, Output);
+        return;
+    }
+
+    IDictionary<string, object> item = styles.First();
+    string picture = null;
+    string src = null;
+    List<string> pictures = new List<string>();
+    int styleId = (int)item["StyleID"];
+    item["ColorID"] = 0;
+    item["SizeID"] = 0;
+    item["Content"] = "";
+
+    for (var i = 0; i < fileQty; i++)
+    {
+        var print = req.File("file0");
+        src = print.Save();
+        if (i == 0)
+        {
+            picture = src;
+        }
+        pictures.Add(src);
+    }
+
+    int status = 1;
+    DateTime now = DateTime.Now;
+    int userWorkId;
+
+    SQL.Execute("insert into UserWork (WorkID,UserID,ProductID,[Status],CreationTime,Picture,Pictures) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6)", out userWorkId, workId, uid, productId, status, now, picture, Json.Encode(pictures));
+
+    int cartId;
+    SQL.Execute("insert into Cart (UserID,UserWorkID,Qty,AddTime) values (@p0,@p1,@p2,@p3)", out cartId, uid, userWorkId, qty, now);
+
+    SQL.Execute("insert into UserCustomization (UserWorkID,ProductID,ColorID,StyleID,[Print],Content,SizeID,Pictures) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6,@p7)", userWorkId, productId, item["ColorID"], styleId, picture, item["Content"], item["SizeID"], Json.Encode(pictures));
+
+    Json.Write(new { success = true, cartId = cartId }, Output);
+    return;
+}

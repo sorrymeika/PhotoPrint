@@ -34,9 +34,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="System.Web.Helpers, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Web.Mvc, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Web.WebPages" />
-    <Reference Include="System.Web.Helpers" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -58,6 +58,11 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Alipay.Double\AlipayConfig.cs" />
+    <Compile Include="Alipay.Double\AlipayCore.cs" />
+    <Compile Include="Alipay.Double\AlipayNotify.cs" />
+    <Compile Include="Alipay.Double\AlipaySubmit.cs" />
+    <Compile Include="Alipay.Double\MD5.cs" />
     <Compile Include="Alipay.WAP\AlipayConfig.cs" />
     <Compile Include="Alipay.WAP\AlipayCore.cs" />
     <Compile Include="Alipay.WAP\AlipayNotify.cs" />
@@ -65,16 +70,14 @@
     <Compile Include="Alipay.WAP\MD5.cs" />
     <Compile Include="Alipay.WAP\RSA.cs" />
     <Compile Include="Alipay\AlipayConfig.cs" />
-    <Compile Include="Alipay\AlipayFunction.cs" />
-    <Compile Include="Alipay\AlipayService.cs" />
+    <Compile Include="Alipay\AlipayCore.cs" />
+    <Compile Include="Alipay\AlipayNotify.cs" />
     <Compile Include="Alipay\AlipaySubmit.cs" />
     <Compile Include="Alipay\alipay_config.cs" />
-    <Compile Include="Alipay\alipay_function.cs" />
-    <Compile Include="Alipay\alipay_notify.cs" />
-    <Compile Include="Alipay\alipay_service.cs" />
-    <Compile Include="Alipay\alipay_service_fh.cs" />
-    <Compile Include="Alipay\RSA.cs" />
+    <Compile Include="Alipay\MD5.cs" />
     <Compile Include="Controllers\AlipayWAPController.cs" />
+    <Compile Include="Controllers\AlipayDirectController.cs" />
+    <Compile Include="Controllers\AlipayDoubleController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -584,6 +587,15 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\User\Forgot.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Json\Shop\Upload.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Json\Shop\TestUpload.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\AlipayDouble\alipayto.cshtml" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" />

@@ -5,7 +5,7 @@ using System.Net;
 using System;
 using System.Collections.Generic;
 
-namespace Alipay.Direct
+namespace Alipay.Double
 {
     /// <summary>
     /// 类名：Config

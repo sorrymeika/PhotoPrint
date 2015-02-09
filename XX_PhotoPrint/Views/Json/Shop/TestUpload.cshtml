@@ -1,0 +1,29 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    var req = new SL.Util.RequestUtil();
+
+    string order = req.String("order", false, "缺少order");
+    int fileQty = req.Int("fileQty");
+
+    if (req.HasError)
+    {
+        Json.Write(new { success = false, msg = req.FirstError, errors = req.GetErrors() }, Output);
+        return;
+    }
+
+    string src;
+    List<string> pictures = new List<string>();
+    for (var i = 0; i < fileQty; i++)
+    {
+        var print = req.File("file" + i);
+        src = print.Save();
+
+        pictures.Add(src);
+    }
+
+    Json.Write(new { success = true, pictures = pictures }, Output);
+    return;
+}

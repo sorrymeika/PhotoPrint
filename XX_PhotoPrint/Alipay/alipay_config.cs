@@ -34,7 +34,7 @@ namespace AlipayClass
         private string return_url = "";
         private string notify_url = "";
         private string input_charset = "";
-        private string sign_type = "";
+        private string sign_type = "MD5";
         private string transport = "";
         private string show_url = "";
         private string mainname = "";

@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Xml;
 
-namespace Alipay.Direct
+namespace Alipay.Double
 {
     /// <summary>
     /// 类名：Submit

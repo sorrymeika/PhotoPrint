@@ -3,121 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
-using XX_PhotoPrint.Service;
 using System.IO;
 using System.Globalization;
 using System.Web.Script.Serialization;
 using System.Drawing;
 using SL.Util;
 using System.Collections.Specialized;
+using System.Xml;
+using XX_PhotoPrint.Service;
 
 namespace XX_PhotoPrint.Controllers
 {
-    public class HomeController : Controller
+    public class AlipayDoubleController : Controller
     {
-        public ActionResult Index(string catalog, string handle)
-        {
-            this.ViewBag.RouteData = this.RouteData.Values;
-
-            return View("~/Views/" + catalog + "/" + handle + ".cshtml");
-        }
-
-        public ActionResult JsonAction(string catalog, string handle)
-        {
-            return View("~/Views/Json/" + catalog + "/" + handle + ".cshtml");
-        }
-
-        public ActionResult Manage(string catalog, string handle = null)
-        {
-            string admin = SessionService.Get<string>("Admin");
-            if (string.IsNullOrEmpty(admin) && !"login".Equals(catalog, StringComparison.OrdinalIgnoreCase))
-            {
-                if (Request.AcceptTypes.Contains("application/json"))
-                {
-                    return Json(new { success = false, msg = "请先登录" });
-                }
-                else
-                {
-                    return Redirect(Url.Content("~/Manage/Login"));
-                }
-            }
-            return View("~/Views/Manage/" + catalog + (string.IsNullOrEmpty(handle) ? "" : ("/" + handle)) + ".cshtml");
-        }
-
-        #region 图片上传
-        public ActionResult Upload(string dir = null)
-        {
-            HttpPostedFileBase imgFile = Request.Files["imgFile"];
-            if (imgFile == null)
-            {
-                return showError("请选择文件。");
-            }
-
-            int maxSize = 5000000;
-
-            if (imgFile.InputStream == null || imgFile.InputStream.Length > maxSize)
-            {
-                return showError("上传文件大小超过限制。");
-            }
-
-            //定义允许上传的文件扩展名
-            Dictionary<string, string> extTable = new Dictionary<string, string>();
-            extTable.Add("image", "gif,jpg,jpeg,png,bmp");
-            extTable.Add("flash", "swf,flv");
-            extTable.Add("media", "swf,flv,mp3,wav,wma,wmv,mid,avi,mpg,asf,rm,rmvb");
-            extTable.Add("file", "doc,docx,xls,xlsx,ppt,htm,html,txt,zip,rar,gz,bz2");
-            String dirName = dir;
-            if (String.IsNullOrEmpty(dirName))
-            {
-                dirName = "image";
-            }
-            if (!extTable.ContainsKey(dirName))
-            {
-                return showError("目录名不正确。");
-            }
-
-            string dirDay = DateTime.Today.ToString("yy-MM-dd");
-            String dirPath = Server.MapPath("~/upload") + "\\" + dirName + "\\" + dirDay;
-            if (!Directory.Exists(dirPath))
-            {
-                Directory.CreateDirectory(dirPath);
-            }
-
-            String fileName = imgFile.FileName;
-            String fileExt = Path.GetExtension(fileName).ToLower();
-
-            if (String.IsNullOrEmpty(fileExt) || Array.IndexOf(((String)extTable[dirName]).Split(','), fileExt.Substring(1).ToLower()) == -1)
-            {
-                return showError("上传文件扩展名是不允许的扩展名。\n只允许" + ((String)extTable[dirName]) + "格式。");
-            }
-
-            String newFileName = DateTime.Now.ToString("yyyyMMddHHmmss_ffff", DateTimeFormatInfo.InvariantInfo) + fileExt;
-            String filePath = Path.Combine(dirPath, newFileName);
-
-            imgFile.SaveAs(filePath);
-
-            String fileUrl = "http://" + Request.Url.Authority + "/upload/" + dirName + "/" + dirDay + "/" + newFileName;
-
-            return Content(new JavaScriptSerializer().Serialize(new { error = 0, url = fileUrl }));
-        }
-
-        private ActionResult showError(string msg)
-        {
-            return Content(new JavaScriptSerializer().Serialize(new { error = 1, message = msg }));
-        }
-        #endregion
-
-        #region 验证码
-        public ActionResult CheckCode()
-        {
-            string checkCode;
-            byte[] imageBuffer = ImageService.CreateImage(out checkCode);
-            Session["CheckCode"] = checkCode;
-
-            return File(imageBuffer, "image/Jpeg");
-        }
-        #endregion
-
         private Dictionary<string, object> GetOrder(int orderid)
         {
             return SQL.QueryOne("select OrderID,OrderCode,Amount,Freight,a.AddTime,a.Status,a.UserID,a.Receiver,a.Address,a.Mobile,a.Zip,b.Account from OrderInfo a join Users b on a.UserID=b.UserID where OrderID=@p0", orderid);
@@ -196,46 +94,77 @@ namespace XX_PhotoPrint.Controllers
             //必填
 
             //付款金额
-            string total_fee = orderamount.ToString("0.00");
+            string price = orderamount.ToString("0.00");
             //必填
 
+            //商品数量
+            string quantity = "1";
+            //必填，建议默认为1，不改变值，把一次交易看成是一次下订单而非购买一件商品
+            //物流费用
+            string logistics_fee = orderfreight.ToString("0.00");
+            //必填，即运费
+            //物流类型
+            string logistics_type = "EXPRESS";
+            //必填，三个值可选：EXPRESS（快递）、POST（平邮）、EMS（EMS）
+            //物流支付方式
+            string logistics_payment = "BUYER_PAY";
+            //必填，两个值可选：SELLER_PAY（卖家承担运费）、BUYER_PAY（买家承担运费）
             //订单描述
 
             string body = "";
             //商品展示地址
             string show_url = "http://" + Request.Url.Authority;
-            //需以http://开头的完整路径，例如：http://www.商户网址.com/myorder.html
+            //需以http://开头的完整路径，如：http://www.商户网站.com/myorder.html
 
-            //防钓鱼时间戳
-            string anti_phishing_key = "";
-            //若要使用请调用类文件submit中的query_timestamp函数
+            //收货人姓名
+            string receive_name = (string)orderinfo["Receiver"];
+            //如：张三
 
-            //客户端的IP地址
-            string exter_invoke_ip = "";
-            //非局域网的外网IP地址，如：221.0.0.1
+            //收货人地址
+            string receive_address = (string)orderinfo["Address"];
+            //如：XX省XXX市XXX区XXX路XXX小区XXX栋XXX单元XXX号
+
+            //收货人邮编
+            string receive_zip = (string)orderinfo["Zip"];
+            //如：123456
+
+            //收货人电话号码
+            string receive_phone = (string)orderinfo["Phone"];
+            //如：0571-88158090
+
+            //收货人手机号码
+            string receive_mobile = (string)orderinfo["Mobile"];
+            //如：13312341234
 
 
             ////////////////////////////////////////////////////////////////////////////////////////////////
 
             //把请求参数打包成数组
             SortedDictionary<string, string> sParaTemp = new SortedDictionary<string, string>();
-            sParaTemp.Add("partner", Alipay.Direct.Config.Partner);
-            sParaTemp.Add("_input_charset", Alipay.Direct.Config.Input_charset.ToLower());
-            sParaTemp.Add("service", "create_direct_pay_by_user");
+            sParaTemp.Add("partner", Alipay.Double.Config.Partner);
+            sParaTemp.Add("_input_charset", Alipay.Double.Config.Input_charset.ToLower());
+            sParaTemp.Add("service", "trade_create_by_buyer");
             sParaTemp.Add("payment_type", payment_type);
             sParaTemp.Add("notify_url", notify_url);
             sParaTemp.Add("return_url", return_url);
             sParaTemp.Add("seller_email", seller_email);
             sParaTemp.Add("out_trade_no", out_trade_no);
             sParaTemp.Add("subject", subject);
-            sParaTemp.Add("total_fee", total_fee);
+            sParaTemp.Add("price", price);
+            sParaTemp.Add("quantity", quantity);
+            sParaTemp.Add("logistics_fee", logistics_fee);
+            sParaTemp.Add("logistics_type", logistics_type);
+            sParaTemp.Add("logistics_payment", logistics_payment);
             sParaTemp.Add("body", body);
             sParaTemp.Add("show_url", show_url);
-            sParaTemp.Add("anti_phishing_key", anti_phishing_key);
-            sParaTemp.Add("exter_invoke_ip", exter_invoke_ip);
+            sParaTemp.Add("receive_name", receive_name);
+            sParaTemp.Add("receive_address", receive_address);
+            sParaTemp.Add("receive_zip", receive_zip);
+            sParaTemp.Add("receive_phone", receive_phone);
+            sParaTemp.Add("receive_mobile", receive_mobile);
 
             //建立请求
-            string sHtmlText = Alipay.Direct.Submit.BuildRequest(sParaTemp, "get", "确认");
+            string sHtmlText = Alipay.Double.Submit.BuildRequest(sParaTemp, "get", "确认");
 
             ViewBag.form = new MvcHtmlString(sHtmlText);
 
@@ -412,50 +341,6 @@ namespace XX_PhotoPrint.Controllers
             }
 
             return sArray;
-        }
-        #endregion
-
-
-        #region 图片预览
-
-        [HttpPost]
-        public ActionResult ImagePreview()
-        {
-            RequestUtil req = new RequestUtil();
-
-            string callback = req.String("callback");
-            int width = req.Int("width", defaultValue: 640);
-            int height = req.Int("height", defaultValue: 1024);
-
-            HttpPostedFileBase pic = Request.Files.Count == 0 ? null : Request.Files[0];
-            if (pic != null && pic.ContentLength != 0)
-            {
-                byte[] imageBuffer = ImageUtil.Compress(pic.InputStream, 40, width, height);
-
-                string guid = System.Guid.NewGuid().ToString("N");
-
-                CacheUtil.CreateCache("preview-" + guid, 0.1, imageBuffer);
-
-                return Content(HtmlUtil.Result(callback, new { success = true, guid = guid, name = Request.Files.Keys[0] }));
-            }
-            else
-            {
-                return Content(HtmlUtil.Result(callback, new { success = false, msg = "您还未选择图片" }));
-            }
-        }
-
-        public ActionResult ImagePreview(string guid)
-        {
-            guid = "preview-" + guid;
-
-            if (CacheUtil.ExistCache(guid))
-            {
-                byte[] imageBuffer = CacheUtil.Get<byte[]>(guid);
-                return File(imageBuffer, "image/Jpeg");
-            }
-            else
-                return Content("图片不存在！" + guid);
-
         }
         #endregion
 
