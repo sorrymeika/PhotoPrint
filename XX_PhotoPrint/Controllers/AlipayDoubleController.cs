@@ -179,7 +179,7 @@ namespace XX_PhotoPrint.Controllers
 
             if (sPara.Count > 0)//判断是否有带返回参数
             {
-                Alipay.Direct.Notify aliNotify = new Alipay.Direct.Notify();
+                Alipay.Double.Notify aliNotify = new Alipay.Double.Notify();
                 bool verifyResult = aliNotify.Verify(sPara, Request.QueryString["notify_id"], Request.QueryString["sign"]);
 
                 if (verifyResult)//验证成功
@@ -247,7 +247,7 @@ namespace XX_PhotoPrint.Controllers
 
             if (sPara.Count > 0)//判断是否有带返回参数
             {
-                Alipay.Direct.Notify aliNotify = new Alipay.Direct.Notify();
+                Alipay.Double.Notify aliNotify = new Alipay.Double.Notify();
                 bool verifyResult = aliNotify.Verify(sPara, Request.Form["notify_id"], Request.Form["sign"]);
 
                 if (verifyResult)//验证成功
