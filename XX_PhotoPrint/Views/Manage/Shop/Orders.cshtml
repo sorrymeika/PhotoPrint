@@ -120,7 +120,7 @@
 </div>
 <div id="grid"></div>
 <script>
-    seajs.use(['jquery','lib/buttons','lib/grid','lib/jquery.datepicker','lib/global.css','lib/jquery.datepicker.css'],function ($,B) {
+    seajs.use(['jquery','lib/buttons','lib/grid','lib/jquery.datepicker','lib/global.css','lib/jquery.datepicker.css'],function($,B) {
 
         var uid=/(\?|&)uid=(\d+)/.test(location.search)?location.search.match(/(\?|&)uid=(\d+)/)[2]:'';
 
@@ -129,7 +129,7 @@
             text: "订单详情",
             ico: "modify",
             disabled: true,
-            handle: function () {
+            handle: function() {
                 var data=grid.selectedRow().data;
                 location.href="order?orderid="+data.OrderID;
             }
@@ -156,7 +156,7 @@
 
         var grid=$('#grid').grid({
             pageEnabled: true,
-            onRowSelect: function (row,data) {
+            onRowSelect: function(row,data) {
                 buttons.enable(0);
             },
             columns: [{
@@ -182,13 +182,20 @@
             },{
                 text: "订单状态",
                 bind: "Status",
-                render: function (cell,data) {
+                render: function(cell,data) {
                     cell.html(orderStatus[data.Status]);
+                },
+                width: 5
+            },{
+                text: "流程单",
+                bind: "OrderID",
+                render: function(cell,data) {
+                    cell.html('<a target="_blank" href="creation?id='+data.OrderID+'" style="color:#c00;">[流程单]</a>');
                 },
                 width: 5
             }]
         }),
-        search=function (page) {
+        search=function(page) {
             grid.load("orders?action=get",{
                 page: page||1,
                 pageSize: 10,
@@ -197,13 +204,13 @@
                 dateFrom: $('#dateFrom').val(),
                 dateTo: $('#dateTo').val(),
                 uid: uid
-            },function () {
+            },function() {
                 buttons.disable(0);
             });
             //uid="";
         };
 
-        $('#search').click(function () {
+        $('#search').click(function() {
             search();
         });
 

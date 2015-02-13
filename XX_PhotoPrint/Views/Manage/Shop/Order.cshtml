@@ -1,50 +1,50 @@
 ﻿@using XX_PhotoPrint.Service
 @using System.Web.Script.Serialization
 @{
-	var js = new JavaScriptSerializer();
-	var req = new Req();
-	int orderid = req.Int("OrderID", defaultValue: 0);
+    var js = new JavaScriptSerializer();
+    var req = new Req();
+    int orderid = req.Int("OrderID", defaultValue: 0);
 
-	if (Request["action"] == "status")
-	{
-		Layout = null;
+    if (Request["action"] == "status")
+    {
+        Layout = null;
 
-		SQL.Execute("update OrderInfo set Status=@p0 where OrderID=@p1", req.Int("Status"), orderid);
+        SQL.Execute("update OrderInfo set Status=@p0 where OrderID=@p1", req.Int("Status"), orderid);
 
-		Output.Write(js.Serialize(new { success = true }));
-		return;
-	}
+        Output.Write(js.Serialize(new { success = true }));
+        return;
+    }
 
-	Layout = "~/Views/Shared/_ManageLayout.cshtml";
+    Layout = "~/Views/Shared/_ManageLayout.cshtml";
 
-	if (req.HasError)
-	{
-		Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
-		return;
-	}
+    if (req.HasError)
+    {
+        Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+        return;
+    }
 
-	var data = SQL.QueryOne("select OrderID,OrderCode,Amount,Freight,a.AddTime,a.Status,a.UserID,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName,a.CouponID,f.Title as CouponTitle,f.Price as CouponPrice from OrderInfo a join Users b on a.UserID=b.UserID join City c on a.CityID=c.CityID join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID left join Coupon f on a.CouponID=f.CouponID where OrderID=@p0", orderid);
+    var data = SQL.QueryOne("select OrderID,OrderCode,Amount,Freight,a.AddTime,a.Status,a.UserID,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName,a.CouponID,f.Title as CouponTitle,f.Price as CouponPrice from OrderInfo a join Users b on a.UserID=b.UserID left join City c on a.CityID=c.CityID left join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID left join Coupon f on a.CouponID=f.CouponID where OrderID=@p0", orderid);
 
-	if (data == null)
-	{
-		Output.Write("订单不存在");
-		return;
-	}
+    if (data == null)
+    {
+        Output.Write("订单不存在");
+        return;
+    }
 
-	var detailList = SQL.Query("select c.OrderID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price,d.[Print],e.StyleName,f.ColorName,f.ColorCode,g.SizeName from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID join UserCustomization d on a.UserWorkID=d.UserWorkID left join Style e on d.StyleID=e.StyleID left join Color f on d.ColorID=f.ColorID left join ProductSize g on d.SizeID=g.SizeID where OrderID=@p0", orderid);
+    var detailList = SQL.Query("select c.OrderID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price,d.[Print],e.StyleName,f.ColorName,f.ColorCode,g.SizeName from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID join UserCustomization d on a.UserWorkID=d.UserWorkID left join Style e on d.StyleID=e.StyleID left join Color f on d.ColorID=f.ColorID left join ProductSize g on d.SizeID=g.SizeID where OrderID=@p0", orderid);
 
-	List<Dictionary<string, object>> details;
-	string url = "http://" + Request.Url.Authority + "/";
-	details = new List<Dictionary<string, object>>();
-	detailList.All(a =>
-	{
-		a["Picture"] = url + a["Picture"];
-		a["Print"] = url + a["Print"];
-		return true;
-	});
-	data["children"] = detailList;
+    List<Dictionary<string, object>> details;
+    string url = "http://" + Request.Url.Authority + "/";
+    details = new List<Dictionary<string, object>>();
+    detailList.All(a =>
+    {
+        a["Picture"] = url + a["Picture"];
+        a["Print"] = url + a["Print"];
+        return true;
+    });
+    data["children"] = detailList;
 
-	var orderStatus = new Dictionary<int, string>
+    var orderStatus = new Dictionary<int, string>
     {
         {-3,"已退款"},
         {-2,"退款中"},
@@ -55,57 +55,56 @@
         {3,"已发货"},
         {4,"交易完成"}
     };
-	int status = (int)data["Status"];
+    int status = (int)data["Status"];
 }
 <h1>订单管理</h1>
 <div id="toolbar" class="toolbar"></div>
 <div class="form">
-	<table>
-		<tr>
-			<th>订单编码：</th>
-			<td>@data["OrderCode"]</td>
-		</tr>
-		<tr>
-			<th>订单金额：</th>
-			<td>@data["Amount"]</td>
-		</tr>
-		<tr>
-			<th>下单时间：</th>
-			<td>@data["AddTime"]</td>
-		</tr>
-		<tr>
-			<th>订单状态：</th>
-			<td>@(orderStatus[(int)data["Status"]])</td>
-		</tr>
-		<tr>
-			<th>收货人：</th>
-			<td>@data["Receiver"]</td>
-		</tr>
-		<tr>
-			<th>收货省市区：</th>
-			<td>@data["ProvName"] @data["CityName"] @data["RegionName"]</td>
-		</tr>
-		<tr>
-			<th>收货地址：</th>
-			<td>@data["Address"]</td>
-		</tr>
-		<tr>
-			<th>邮编：</th>
-			<td>@data["Zip"]</td>
-		</tr>
-		<tr>
-			<th>联系方式：</th>
-			<td>@data["Mobile"] @data["Phone"]</td>
-		</tr>
-		<tr>
-			<th>优惠券：</th>
-			<td>@data["CouponTitle"] @data["CouponPrice"]</td>
-		</tr>
-	</table>
+    <table>
+        <tr>
+            <th>订单编码：</th>
+            <td>@data["OrderCode"]</td>
+        </tr>
+        <tr>
+            <th>订单金额：</th>
+            <td>@data["Amount"]</td>
+        </tr>
+        <tr>
+            <th>下单时间：</th>
+            <td>@data["AddTime"]</td>
+        </tr>
+        <tr>
+            <th>订单状态：</th>
+            <td>@(orderStatus[(int)data["Status"]])</td>
+        </tr>
+        <tr>
+            <th>收货人：</th>
+            <td>@data["Receiver"]</td>
+        </tr>
+        <tr>
+            <th>收货省市区：</th>
+            <td>@data["ProvName"] @data["CityName"] @data["RegionName"]</td>
+        </tr>
+        <tr>
+            <th>收货地址：</th>
+            <td>@data["Address"]</td>
+        </tr>
+        <tr>
+            <th>邮编：</th>
+            <td>@data["Zip"]</td>
+        </tr>
+        <tr>
+            <th>联系方式：</th>
+            <td>@data["Mobile"] @data["Phone"]</td>
+        </tr>
+        <tr>
+            <th>优惠券：</th>
+            <td>@data["CouponTitle"] @data["CouponPrice"]</td>
+        </tr>
+    </table>
 </div>
 <div id="grid"></div>
-<div class="action"><a class="button" href="orders">返回</a>
-</div>
+<div class="action"><a class="button" href="orders">返回</a> </div>
 <script>
     var products=@(new MvcHtmlString(js.Serialize(data["children"])));
 </script>

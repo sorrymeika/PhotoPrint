@@ -352,3 +352,14 @@ alter table UserCustomization add Pictures varchar(2000)
 alter table Work add Swf varchar(255)
 update Work set Swf='swf/yi1.swf'
 
+
+create table CreationBill(
+BillID int identity primary key,
+OrderID int,
+Code varchar(200),
+DailyCode varchar(200),
+Content text
+)
+alter table CreationBill add Express varchar(200)
+
+

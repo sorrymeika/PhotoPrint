@@ -1,11 +1,25 @@
 ﻿@using XX_PhotoPrint.Service
 @using System.Web.Script.Serialization
 @{
+    Layout = null;
+    if ("save" == Request["action"])
+    {
+        var r = new SL.Util.RequestUtil();
+        var list = new Dictionary<string, string>();
+        foreach (var key in Request.Form.AllKeys)
+        {
+            list.Add(key, Request.Form[key]);
+        }
+        string content = Json.Encode(list);
+
+        SQL.Execute("if not exists (select 1 from CreationBill where OrderID=@p0) insert into CreationBill (OrderID,Code,DailyCode,Express,Content,EditDate,CreateDate) values (@p0,@p1,@p2,@p3,@p4,@p5,@p5) else update CreationBill set Code=@p1,DailyCode=@p2,Express=@p3,Content=@p4,EditDate=@p5", r.Int("OrderID"), r.String("Code"), r.String("DailyCode"), r.String("Express"), content, DateTime.Now);
+        Json.Write(new { success = true }, Output);
+        return;
+    }
+
     var js = new JavaScriptSerializer();
     var req = new Req();
-    int orderid = req.Int("OrderID", defaultValue: 0);
-
-    Layout = "~/Views/Shared/_ManageLayout.cshtml";
+    int orderid = req.Int("id", defaultValue: 0);
 
     if (req.HasError)
     {
@@ -13,7 +27,7 @@
         return;
     }
 
-    var data = SQL.QueryOne("select OrderID,OrderCode,Amount,Freight,a.AddTime,a.Status,a.UserID,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName,a.CouponID,f.Title as CouponTitle,f.Price as CouponPrice from OrderInfo a join Users b on a.UserID=b.UserID left join City c on a.CityID=c.CityID left join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID left join Coupon f on a.CouponID=f.CouponID where OrderID=@p0", orderid);
+    var data = SQL.QueryOne("select OrderID,OrderCode,Amount,Freight,a.AddTime,a.Status,a.UserID,b.UserName,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName,a.CouponID,f.Title as CouponTitle,f.Price as CouponPrice from OrderInfo a join Users b on a.UserID=b.UserID left join City c on a.CityID=c.CityID left join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID left join Coupon f on a.CouponID=f.CouponID where OrderID=@p0", orderid);
 
     if (data == null)
     {
@@ -21,15 +35,12 @@
         return;
     }
 
-    var detailList = SQL.Query("select c.OrderID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price,d.[Print],e.StyleName,f.ColorName,f.ColorCode,g.SizeName from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID join UserCustomization d on a.UserWorkID=d.UserWorkID left join Style e on d.StyleID=e.StyleID left join Color f on d.ColorID=f.ColorID left join ProductSize g on d.SizeID=g.SizeID where OrderID=@p0", orderid);
+    var detailList = SQL.Query("select c.OrderID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,d.Pictures,b.Price,d.[Print],e.StyleName,f.ColorName,f.ColorCode,g.SizeName from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID join UserCustomization d on a.UserWorkID=d.UserWorkID left join Style e on d.StyleID=e.StyleID left join Color f on d.ColorID=f.ColorID left join ProductSize g on d.SizeID=g.SizeID where OrderID=@p0", orderid);
 
     List<Dictionary<string, object>> details;
-    string url = "http://" + Request.Url.Authority + "/Content/";
     details = new List<Dictionary<string, object>>();
     detailList.All(a =>
     {
-        a["Picture"] = url + a["Picture"];
-        a["Print"] = url + a["Print"];
         return true;
     });
     data["children"] = detailList;
@@ -46,140 +57,392 @@
         {4,"交易完成"}
     };
     int status = (int)data["Status"];
+
+    var info = SL.Data.SQL.QuerySingle("select * from CreationBill");
+    if (info == null)
+    {
+        info = new SL.Data.DynamicRecord(new Dictionary<string, object>());
+    }
+    else
+    {
+    }
 }
-<h1>订单管理</h1>
-<div id="toolbar" class="toolbar"></div>
-<div class="form">
-    <table>
-        <tr>
-            <th>订单编码：</th>
-            <td>@data["OrderCode"]</td>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewBag.Title</title>
+    <script src="/js/seajs/sea.js"></script>
+    <script>
+        var info=@(new MvcHtmlString(info.Content == null ? "null" : info.Content));
+        seajs.config({
+            alias: {
+                "jquery": "lib/jquery-1.7.2.min"
+            }
+        });
+    </script>
+    <style>
+        body, html { background: #f1f1f1; }
+        .billform { padding: 20px; background: #fff; }
+        .billform table { border: 1px solid #000; }
+        .billform table td { border: 1px solid #000; font-family: 宋体; padding: 1px; padding-bottom: 3px; }
+        .billform table td img { width: 100%; }
+        .billform table td input, .billform table td textarea { border: 0px; height: 100%; width: 100%; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <style>
+        .style1 { height: 40.5pt; width: 768pt; color: black; font-size: 24.0pt; font-weight: 700; font-style: normal; }
+        .style2 { width: 128pt; color: red; font-size: 16.0pt; }
+        .style3 { width: 128pt; color: black; font-size: 16.0pt; }
+        .style4 { height: 20.25pt; color: red; font-size: 16.0pt; }
+        .style5 { color: black; font-size: 16.0pt; }
+        .style6 { height: 30.75pt; color: red; font-size: 24.0pt; text-align: left; vertical-align: middle; background: #D9D9D9; }
+        .style7 { height: 20.25pt; color: black; font-size: 16.0pt; }
+        .style8 { height: 40.5pt; color: black; font-size: 16.0pt; }
+        .style9 { height: 27.0pt; color: windowtext; font-size: 16.0pt; background: white; }
+        .style10 { color: windowtext; font-size: 16.0pt; background: white; }
+        .style11 { height: 476.25pt; color: black; font-size: 16.0pt; }
+        .style12 { color: red; font-size: 24.0pt; }
+        .style13 { height: 20.25pt; color: black; font-size: 16.0pt; text-align: left; vertical-align: middle; }
+        .style14 { height: 324.0pt; color: black; font-size: 16.0pt; }
+        .style15 { height: 445.5pt; color: black; font-size: 16.0pt; }
+        .style16 { color: red; font-size: 16.0pt; }
+        .style17 { height: 42.0pt; color: red; font-size: 24.0pt; }
+        .style18 { height: 30.75pt; color: red; font-size: 24.0pt; text-align: left; border-right-style: none; border-right-color: inherit; border-right-width: medium; border-top: .5pt solid windowtext; border-bottom: .5pt solid windowtext; }
+        .style19 { color: black; font-size: 16.0pt; text-align: center; border-right-style: none; border-right-color: inherit; border-right-width: medium; border-top: .5pt solid windowtext; border-bottom: .5pt solid windowtext; }
+        .style20 { height: 30.75pt; color: red; font-size: 24.0pt; text-align: center; border-right-style: none; border-right-color: inherit; border-right-width: medium; border-top: .5pt solid windowtext; border-bottom: .5pt solid windowtext; }
+        .style21 { height: 20.25pt; color: black; font-size: 16.0pt; text-align: center; border-right-style: none; border-right-color: inherit; border-right-width: medium; border-top: .5pt solid windowtext; border-bottom: .5pt solid windowtext; }
+        .btn_save { position: fixed; top: 5px; right: 5px; width: 100px; height: 40px; }
+    </style>
+    <input class="btn_save" type="button" value="保存" />
+    <h1>流程单管理</h1>
+    <form action="" method="POST" class="billform js_form">
+    <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse; width: 100%">
+        <colgroup><col span="8" style="width: 128pt" width="171" />
+        </colgroup>
+        <tr height="27" style="height: 20.25pt">
+            <td class="style1" colspan="6" height="54" rowspan="2" width="1026">后台流程单</td>
+            <td class="style2" width="171">总编号：</td>
+            <td class="style3" width="171"><input name="Code" type="text" value="@info.Code" /></td>
+        </tr>
+        <tr height="27" style="height: 20.25pt">
+            <td class="style4" height="27">日编号：</td>
+            <td class="style5"><input name="DailyCode" type="text" value="@info.DailyCode" /></td>
+        </tr>
+        <tr height="41" style="height: 30.75pt">
+            <td class="style6" colspan="8" height="41">客户资料</td>
+        </tr>
+        <tr height="27" style="height: 20.25pt">
+            <td class="style7" height="27">客户姓名：</td>
+            <td class="style5" colspan="2"><input name="UserName" type="text" value="@data["Receiver"]" /></td>
+            <td class="style5">客户ID：</td>
+            <td class="style5" colspan="2"><input name="UserID" type="text" value="@data["UserID"]" /></td>
+            <td class="style5">所选快递：</td>
+            <td class="style5"><input name="Express" type="text" value="@info.Express" /></td>
+        </tr>
+        <tr height="27" style="height: 20.25pt">
+            <td class="style8" height="54">地址：</td>
+            <td class="style5" colspan="7"><input name="Address" type="text" value="@data["Address"]" /></td>
+        </tr>
+        @foreach (var detail in detailList)
+        {
+            var strPictures = detail["Pictures"] == null ? null : detail["Pictures"].ToString();
+            var pictures = !string.IsNullOrEmpty(strPictures) ? Json.Decode<List<string>>(strPictures) : new List<string>() { detail["Print"] == null ? "" : detail["Print"].ToString() };
+                
+            <tr height="41" style="height: 30.75pt">
+                <td class="style6" colspan="8" height="41">图形栏</td>
+            </tr>
+            <tr height="36" style="mso-height-source: userset; height: 27.0pt">
+                <td class="style9" height="36">印花面料编号：</td>
+                <td class="style10" colspan="2"><input name="Material@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style10" colspan="2">工艺</td>
+                <td class="style10" colspan="3"><input name="Craft@(detail["OrderDetailID"])" type="text" /></td>
+            </tr>
+            <tr height="41" style="height: 30.75pt">
+                <td class="style11" colspan="5" height="1270" rowspan="10" valign="top">
+                    @foreach (var src in pictures)
+                    {
+                        <img src="/@(src)" />
+                    }
+                </td>
+                <td class="style12" colspan="3">图片质量检测</td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">通过</td>
+                <td class="style5"><input name="PrintPass@(detail["OrderDetailID"])" style="width: 100%; height: auto" type="radio" value="1" /></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">不通过</td>
+                <td class="style5"><input name="PrintPass@(detail["OrderDetailID"])" style="width: 100%; height: auto" type="radio" value="0" /></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style13" colspan="3" height="27">未通过原因：</td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style14" colspan="3" height="432"><textarea name="UnpassResult@(detail["OrderDetailID"])"></textarea></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style13" colspan="3" height="27">是否已反馈客户</td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">是</td>
+                <td class="style5"><input name="IsFeedback@(detail["OrderDetailID"])" style="width: 100%; height: auto" type="radio" value="0" /></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">否</td>
+                <td class="style5"><input name="IsFeedback@(detail["OrderDetailID"])" style="width: 100%; height: auto" type="radio" value="0" /></td>
+            </tr>
+            <tr height="41" style="height: 30.75pt">
+                <td class="style12" colspan="3">备注</td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style15" colspan="3" height="594"><textarea name="Memo@(detail["OrderDetailID"])"></textarea></td>
+            </tr>
+            <tr height="41" style="height: 30.75pt">
+                <td class="style6" colspan="8" height="41">配料栏</td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">部位：</td>
+                <td class="style5" colspan="2">面料编号：</td>
+                <td class="style5"><input name="Info0_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style4" colspan="2" height="27">左前片：</td>
+                <td class="style16" colspan="2"><input name="Info1_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style16"></td>
+                <td class="style16"></td>
+                <td class="style16"></td>
+                <td class="style16"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">右前片：</td>
+                <td class="style16" colspan="2"><input name="Info2_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">左袖：</td>
+                <td class="style16" colspan="2"><input name="Info3_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">右袖：</td>
+                <td class="style16" colspan="2"><input name="Info4_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">后片：</td>
+                <td class="style16" colspan="2"><input name="Info5_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">口袋面布：</td>
+                <td class="style5" colspan="2"><input name="Info6_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">帽檐：</td>
+                <td class="style5" colspan="2"><input name="Info7_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">领口螺纹：</td>
+                <td class="style16" colspan="2"><input name="Info8_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">左袖口螺纹：</td>
+                <td class="style16" colspan="2"><input name="Info9_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">右袖口螺纹：</td>
+                <td class="style16" colspan="2"><input name="Info10_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">下摆螺纹：</td>
+                <td class="style16" colspan="2"><input name="Info11_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">拉链：</td>
+                <td class="style16" colspan="2"><input name="Info12_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">扣子：</td>
+                <td class="style16" colspan="2"><input name="Info13_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">线：</td>
+                <td class="style16" colspan="2"><input name="Info14_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">领标：</td>
+                <td class="style16" colspan="2"><input name="Info15_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">衬子：</td>
+                <td class="style16" colspan="2"><input name="Info16_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">填充物：</td>
+                <td class="style16" colspan="2"><input name="Info17_@(detail["OrderDetailID"])" type="text" /></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+                <td class="style5"></td>
+            </tr>
+            <tr height="41" style="height: 30.75pt">
+                <td class="style6" colspan="8" height="41">缝纫组</td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">板型编号：</td>
+                <td class="style5" colspan="6"><input name="Model@(detail["OrderDetailID"])" type="text" /></td>
+            </tr>
+            <tr height="41" style="height: 30.75pt">
+                <td class="style6" colspan="8" height="41">QC</td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">合格</td>
+                <td class="style5" colspan="2"><input name="QC@(detail["OrderDetailID"])" style="width: 100%; height: auto" type="radio" value="1" /></td>
+                <td class="style5" colspan="2">不合格</td>
+                <td class="style5" colspan="2"><input name="QC@(detail["OrderDetailID"])" style="width: 100%; height: auto" type="radio" value="0" /></td>
+            </tr>
+            <tr height="27" style="height: 20.25pt">
+                <td class="style7" colspan="2" height="27">返工</td>
+                <td class="style5" colspan="2"><input name="QC@(detail["OrderDetailID"])" style="width: 100%; height: auto" type="radio" value="2" /></td>
+                <td class="style5" colspan="2">重新生产</td>
+                <td class="style5" colspan="2"><input name="QC@(detail["OrderDetailID"])" style="width: 100%; height: auto" type="radio" value="3" /></td>
+            </tr>
+            <tr height="56" style="mso-height-source: userset; height: 42.0pt">
+                <td class="style17" colspan="4" height="56">签字：</td>
+                <td class="style5" colspan="4"></td>
+            </tr>
+        }
+        <tr height="41" style="height: 30.75pt">
+            <td class="style6" colspan="8" height="41">包装组</td>
+        </tr>
+        <tr height="41" style="height: 30.75pt">
+            <td class="style18" colspan="2" height="41">核对快递单：</td>
+            <td class="style5">正确</td>
+            <td class="style19" colspan="2"><input name="IsExpressRight" style="width: 100%; height: auto" type="radio" value="1" /></td>
+            <td class="style5">错误</td>
+            <td class="style19" colspan="2"><input name="IsExpressRight" style="width: 100%; height: auto" type="radio" value="0" /></td>
+        </tr>
+        <tr height="41" style="height: 30.75pt">
+            <td class="style20" colspan="4" height="41">确认签字：</td>
+            <td class="style19" colspan="4"></td>
+        </tr>
+        <tr height="41" style="height: 30.75pt">
+            <td class="style6" colspan="8" height="41">发货</td>
+        </tr>
+        <tr height="27" style="height: 20.25pt">
+            <td class="style21" colspan="2" height="27">核对信息</td>
+            <td class="style5"><input name="CheckInfo" style="width: 100%; height: auto" type="checkbox" value="0" /></td>
+            <td class="style19" colspan="2">核对发货地址</td>
+            <td class="style5"><input name="CheckAddress" style="width: 100%; height: auto" type="checkbox" value="0" /></td>
+            <td class="style5">联系快递</td>
+            <td class="style5"><input name="ExpressContact" type="text" /></td>
+        </tr>
+        <tr height="27" style="height: 20.25pt">
+            <td class="style21" colspan="2" height="27">快递公司</td>
+            <td class="style19" colspan="2"><input name="ExpressCompany" type="text" /></td>
+            <td class="style19" colspan="2">快递单号</td>
+            <td class="style19" colspan="2"><input name="ExpressCode" type="text" /></td>
+        </tr>
+        <tr height="41" style="height: 30.75pt">
+            <td class="style20" colspan="8" height="41">备注：</td>
         </tr>
         <tr>
-            <th>订单金额：</th>
-            <td>@data["Amount"]</td>
-        </tr>
-        <tr>
-            <th>下单时间：</th>
-            <td>@data["AddTime"]</td>
-        </tr>
-        <tr>
-            <th>订单状态：</th>
-            <td>@(orderStatus[(int)data["Status"]])</td>
-        </tr>
-        <tr>
-            <th>收货人：</th>
-            <td>@data["Receiver"]</td>
-        </tr>
-        <tr>
-            <th>收货省市区：</th>
-            <td>@data["ProvName"] @data["CityName"] @data["RegionName"]</td>
-        </tr>
-        <tr>
-            <th>收货地址：</th>
-            <td>@data["Address"]</td>
-        </tr>
-        <tr>
-            <th>邮编：</th>
-            <td>@data["Zip"]</td>
-        </tr>
-        <tr>
-            <th>联系方式：</th>
-            <td>@data["Mobile"] @data["Phone"]</td>
-        </tr>
-        <tr>
-            <th>优惠券：</th>
-            <td>@data["CouponTitle"] @data["CouponPrice"]</td>
+            <td colspan="8" height="351"><textarea name="MainMemo"></textarea>
+            </td>
         </tr>
     </table>
-</div>
-<div id="grid"></div>
-<div class="action"><a class="button" href="orders">返回</a> </div>
-<script>
-    var products=@(new MvcHtmlString(js.Serialize(data["children"])));
-</script>
-<script>
-    seajs.use(['jquery','lib/buttons','lib/grid','lib/jquery.datepicker','lib/global.css','lib/jquery.datepicker.css'],function ($,B) {
-        //工具栏
-        var buttons=new B('#toolbar',[{
-            text: "取消订单",
-            ico: "delete",
-            disabled: @(status == -1 || status == 4 ? "true" : "false"),
-            handle: function () {
-                if (!confirm('确定取消订单？'))return;
+    <input name="OrderID" type="hidden" value="@data["OrderID"]" />
+    <input name="BillID" type="hidden" value="@info.BillID" />
+    </form>
+    <script>
+        seajs.use(['jquery',"lib/util",'lib/buttons','lib/grid','lib/jquery.datepicker','lib/global.css','lib/jquery.datepicker.css'],function($,util,B) {
+            $('.btn_save').click(function() {
                 $.ajax({
-                    url: 'order?action=status',
-                    data: {
-                        status: -1,
-                        orderid: @orderid
-                    },
-                    dataType: 'json',
+                    url: "?action=save",
                     type: 'POST',
-                    success: function(res){
-                        if (res.success) {
-                            alert('取消成功');
-                            location.reload();
-                        }
+                    dataType: 'json',
+                    data: $(".js_form").serialize(),
+                    success: function(data) {
+                        alert("保存成功");
                     },
-                    error: function(){
+                    error: function(xhr) {
                     }
                 });
-            }
-        },{
-            text: "设订单状态为已完成",
-            ico: "modify",
-            disabled: @(status == -1 || status == 4 ? "true" : "false"),
-            handle: function () {
-                if (!confirm('确定将订单状态设为已完成？'))return;
-                $.ajax({
-                    url: 'order?action=status',
-                    data: {
-                        status: 4,
-                        orderid: @orderid
-                    },
-                    dataType: 'json',
-                    type: 'POST',
-                    success: function(res){
-                        if (res.success) {
-                            alert('取消成功');
-                            location.reload();
-                        }
-                    },
-                    error: function(){
-                    }
-                });
-            }
-        }]);
+            });
 
-        $('#grid').grid({
-            data: products,
-            rowHeight: 100,
-            columns: [{
-                text: "商品名",
-                bind: 'ProductName',
-                width: 10,
-                render: function(cell,data){
-                    cell.append('<p class="gridCellItem" style="margin: 10px 0 0 15px"><a href="/manage/product/uploadpic?id='+data.ProductID+'" target="_blank"><b>'+data.ProductName+'</b><br>尺寸：'+data.SizeName
-                    +'<br>颜色：'+data.ColorName+'</a></p>');
-                
-                }
-            },{
-                text: "商品价格",
-                bind: 'Price',
-                width: 10
-            },{
-                text: "购买数量",
-                bind: 'Qty',
-                width: 10
-            },{
-                text: "打印图案",
-                bind: 'Picture',
-                width: 10,
-                align: 'center',
-                render: function(cell,data){
-                    cell.append('<a href="'+data.Print+'" target="_blank"><img src="'+data.Print+'" height="100%" /></a>');
-                }
-            }]
+            if(info) {
+                $.each(info,function(k,v) {
+                    $('[name="'+k+'"]').each(function() {
+                        if(this.type=="radio"||this.type=="checkbox") {
+                            if(v==this.value) {
+                                this.checked=true;
+                            }
+                        } else {
+                            this.value=v;
+                        }
+                    });
+                })
+            }
         });
-    });
-</script>
+    </script>
+</body>
