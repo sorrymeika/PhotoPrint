@@ -1,0 +1,91 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+	<head>
+		<title>Tshirt</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<style type="text/css" media="screen">
+		html, body { height:100%; background-color: #ffffff;}
+		body { margin:0; padding:0; overflow:hidden; }
+		#flashContent { width:100%; height:100%; }
+		</style>
+		
+		<script language="JavaScript">
+   
+     function callJS() 
+	 {
+	   //flash加载成功 调用函数
+	   
+	  thisMovie("myFlash").toflashfun({"Edit": "1","Order": "02585464654586514","swf":"swf/yi1.swf","Upurl": "http://www.workoi.com"});
+	
+	  //Edit 编辑单面  =0
+	  //     编辑多面  >0
+	  
+	  //Order 订单号 唯一值 
+	  //      上传编辑好的图片时会一起上传
+	  
+	  //swf  要加载的衣服模型地址
+	  
+	  
+	  //Upurl 上传地址
+	  
+	  
+	  //js给flash 传入 编辑信息
+     }
+    
+     function thisMovie(movieName) {
+         if (navigator.appName.indexOf("Microsoft") != -1) {
+             return window[movieName];
+         } else {
+             return document[movieName];
+         }
+     }
+
+ </script>
+	</head>
+	
+	
+	<body>
+	<table width="100%" height="100%" border="0" align="left" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center" valign="top">
+		<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"  id="myFlash" width="100%" height="100%" align="middle">
+				<param name="movie" value="Tshirt.swf" />
+				<param name="quality" value="high" />
+				<param name="bgcolor" value="#ffffff" />
+				<param name="play" value="true" />
+				<param name="loop" value="true" />
+				<param name="wmode" value="direct" />
+				<param name="scale" value="showall" />
+				<param name="menu" value="true" />
+				<param name="devicefont" value="false" />
+				<param name="salign" value="" />
+				<param name="allowScriptAccess" value="sameDomain" />
+				
+				<!--[if !IE]>-->
+		<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" type="application/x-shockwave-flash" id="myFlash" data="Tshirt.swf"  width="100%" height="100%"  align="middle">
+			<param name="allowScriptAccess" value="sameDomain" />
+			<param name="movie" value="Tshirt.swf" />
+			<param name="quality" value="high" />
+			<embed
+			 src="Tshirt.swf"
+			 width="100%"
+			 height="100%"
+			 quality="high"
+			 swLiveConnect=true
+			 name="myFlash"
+			 align="middle"
+			 wmode = "direct"
+			 allowScriptAccess="sameDomain"
+			 type="application/x-shockwave-flash"
+			 pluginspage="http://www.macromedia.com/go/getflashplayer" />
+		</object>
+		
+		<!--<![endif]-->
+		<!--[if !IE]>-->
+</object>
+	</td>
+      </tr>
+    </table>
+		
+	</body>
+</html>

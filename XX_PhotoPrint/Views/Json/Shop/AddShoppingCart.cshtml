@@ -95,13 +95,13 @@
         if (!useDefault)
         {
             print = (HttpPostedFile)item["Print"];
-            src = "styles/" + now.ToString("yyyy-MM") + "/" + uid + "_" + styleId + "_" + now.Ticks + print.FileName.Substring(print.FileName.LastIndexOf('.'));
+            src = "content/styles/" + now.ToString("yyyy-MM") + "/" + uid + "_" + styleId + "_" + now.Ticks + print.FileName.Substring(print.FileName.LastIndexOf('.'));
             if (i == 0)
             {
                 picture = src;
             }
 
-            string savePath = Server.MapPath("~/Content/" + src);
+            string savePath = Server.MapPath("~/" + src);
             string dir = System.IO.Path.GetDirectoryName(savePath);
             if (!System.IO.Directory.Exists(dir))
             {
@@ -111,7 +111,7 @@
         }
         else
         {
-            src = (string)item["Print"];
+            src = "content/" + (string)item["Print"];
         }
 
         SQL.Execute("insert into UserCustomization (UserWorkID,ProductID,ColorID,StyleID,[Print],Content,SizeID) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6)", userWorkId, productId, item["ColorID"], styleId, src, item["Content"], item["SizeID"]);

@@ -109,7 +109,7 @@ namespace XX_PhotoPrint.Service
                 }
             }
             object result = cmd.ExecuteScalar();
-            if (result == null)
+            if (result == null || result == DBNull.Value)
                 return default(T);
             if (typeof(T) == typeof(bool))
                 result = Convert.ToBoolean(result);

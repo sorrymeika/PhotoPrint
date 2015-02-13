@@ -22,8 +22,9 @@
         return;
     }
 
-    int workId = int.Parse(order.Split('_')[0]);
-    int productId = int.Parse(order.Split('_')[1]);
+    var arr = order.Split('_');
+    int workId = int.Parse(arr[0]);
+    int productId = int.Parse(arr[1]);
     int qty = 1;
 
     if (qty <= 0)
@@ -46,13 +47,13 @@
     string src = null;
     List<string> pictures = new List<string>();
     int styleId = (int)item["StyleID"];
-    item["ColorID"] = 0;
-    item["SizeID"] = 0;
+    item["ColorID"] = int.Parse(arr[2]);
+    item["SizeID"] = int.Parse(arr[3]);
     item["Content"] = "";
 
     for (var i = 0; i < fileQty; i++)
     {
-        var print = req.File("file0");
+        var print = req.File("file" + i);
         src = print.Save();
         if (i == 0)
         {

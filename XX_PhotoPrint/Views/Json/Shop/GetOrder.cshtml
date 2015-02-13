@@ -31,7 +31,7 @@
     var detailList = SQL.Query("select c.OrderID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID where OrderID=@p0", orderid);
 
     List<Dictionary<string, object>> details;
-    string url = "http://" + Request.Url.Authority + "/Content/";
+    string url = "http://" + Request.Url.Authority + "/";
     details = new List<Dictionary<string, object>>();
     detailList.All(a =>
     {

@@ -19,6 +19,7 @@
         string workDesc = req.String("workDesc");
         var picture = req.File("picture", false, "缺少商品图片");
         var print = req.File("print", false, "缺少打印图片");
+        var swf = req.File("swf", false, "缺少3D swf文件", "swf", "请上传swf文件");
         string colors = req.String("colors", false, "缺少商品颜色");
         string sizes = req.String("sizes", false, "缺少商品尺寸");
 
@@ -40,13 +41,16 @@
         string leftPath = "product/" + now.ToString("yyyy") + "/";
         string printSrc = leftPath + (now.Ticks - DateTime.MinValue.Ticks) + print.FileName.Substring(print.FileName.LastIndexOf('.'));
         string src = leftPath + (now.Ticks + 1 - DateTime.MinValue.Ticks) + picture.FileName.Substring(picture.FileName.LastIndexOf('.'));
+        string swfSrc = "swf/" + leftPath + (now.Ticks - DateTime.MinValue.Ticks) + ".swf";
         string savePath = Server.MapPath("~/Content/" + src);
         string printSavePath = Server.MapPath("~/Content/" + printSrc);
+        string swfSavePath = Server.MapPath("~/" + swfSrc);
         string dir = System.IO.Path.GetDirectoryName(savePath);
         if (!System.IO.Directory.Exists(dir))
         {
             System.IO.Directory.CreateDirectory(dir);
         }
+
 
         using (DbService db = new DbService())
         {
@@ -58,8 +62,8 @@
             string code = now.ToString("yyMM") + id.Substring(id.Length - 8, 8);
             db.Execute("update Product set ProductCode=@p0 where ProductID=@p1", code, productId);
 
-            db.Execute("insert into Work (WorkCode,WorkName,WorkDesc,ProductID,SoldNum,Picture,CreationTime,Deleted) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6,0)",
-                out workId, "", workName, workDesc, productId, 0, src, now);
+            db.Execute("insert into Work (WorkCode,WorkName,WorkDesc,ProductID,SoldNum,Picture,CreationTime,Deleted,Swf) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6,0,@p7)",
+                out workId, "", workName, workDesc, productId, 0, src, now, swfSrc);
 
             id = "00000000" + workId;
             code = now.ToString("yyMM") + id.Substring(id.Length - 8, 8);
@@ -86,6 +90,7 @@
         }
         picture.SaveAs(savePath);
         print.SaveAs(printSavePath);
+        swf.SaveAs(swfSavePath);
 
         Output.Write(HtmlService.SubmitResult(callback, new { success = true, productId = productId }));
         return;
@@ -161,6 +166,10 @@
     <tr>
         <th>打印图片<i>*</i></th>
         <td><input name="print" type="file" /></td>
+    </tr>
+    <tr>
+        <th>3D swf<i>*</i></th>
+        <td><input name="swf" type="file" /></td>
     </tr>
     <tr>
         <th>商品颜色<i>*</i></th>

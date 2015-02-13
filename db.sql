@@ -346,3 +346,9 @@ alter table OrderInfo add Inv varchar(400)
 --2015-02-04
 alter table UserWork add Pictures varchar(2000)
 alter table UserCustomization add Pictures varchar(2000)
+
+
+--2015-02-13
+alter table Work add Swf varchar(255)
+update Work set Swf='swf/yi1.swf'
+

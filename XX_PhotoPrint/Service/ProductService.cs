@@ -14,7 +14,7 @@ namespace XX_PhotoPrint.Service
 
             using (SL.Data.Database db = SL.Data.Database.Open())
             {
-                var data = db.QuerySingle("select w.WorkID,w.WorkName,w.WorkDesc,w.ProductID,a.ProductName,a.Price,w.SoldNum,a.BaseInfo,a.Content,a.SubID,b.SubName,c.CategoryID,c.CategoryName from Work w join Product a on w.ProductID=a.ProductID join SubCate b on a.SubID=b.SubID join Category c on b.CategoryID=c.CategoryID where w.WorkID=@p0 and w.Deleted=0 and a.Deleted=0", workId);
+                var data = db.QuerySingle("select w.WorkID,w.WorkName,w.WorkDesc,w.ProductID,w.Swf,a.ProductName,a.Price,w.SoldNum,a.BaseInfo,a.Content,a.SubID,b.SubName,c.CategoryID,c.CategoryName from Work w join Product a on w.ProductID=a.ProductID join SubCate b on a.SubID=b.SubID join Category c on b.CategoryID=c.CategoryID where w.WorkID=@p0 and w.Deleted=0 and a.Deleted=0", workId);
                 if (data == null)
                 {
                     return null;

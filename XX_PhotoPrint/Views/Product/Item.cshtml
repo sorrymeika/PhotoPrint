@@ -36,7 +36,7 @@
     var products = ProductService.Search(null, 1, 3, out total);
 }
 <div class="main prodwrap clearfix js_form">
-    <div class="prod_preview"><img src="@StyleColorPic.First().Picture" /></div>
+    <div class="prod_preview"><img class="js_preview" src="@StyleColorPic.First().Picture" /></div>
     <div class="prod_main_info">
         <div class="priceinfo"><span class="saleprice">￥@Item.Price.ToString("0.##")</span></div>
         <h1>@Item.WorkName@Item.ProductName</h1>
@@ -46,7 +46,7 @@
         </div>
         <ul class="prod_selector">
             <li><span>数量</span> <input class="num js_qty" data-qty='1' value="1" /></li>
-            <li><span>颜色</span> <span class="color">
+            <li><span>颜色</span> <span class="color js_color_con">
                 @for (int i = 0; i < Colors.Count; i++)
                 {
                     var color = Colors[i];
@@ -60,7 +60,7 @@
                     }
                 }
             </span></li>
-            <li><span>尺码</span><span class="size">
+            <li><span>尺码</span><span class="size js_size_con">
                 @for (int i = 0; i < Size.Count; i++)
                 {
                     var item = Size[i];
@@ -75,17 +75,17 @@
                 }
             </span></li>
         </ul>
-        <ul class="img_smallist clearfix">
+        <ul class="img_smallist clearfix  js_img_con">
             @for (var i = 0; i < StyleColorPic.Count; i++)
             {
                 var item = StyleColorPic[i];
                 if (i == 0)
                 {
-                <li class="curr"><img src="@item.Picture" /></li>
+                <li class="curr" data-src="@item.Picture"><img src="@item.Picture" /></li>
                 }
                 else
                 { 
-                <li><img src="@item.Picture" /></li>
+                <li data-src="@item.Picture"><img src="@item.Picture" /></li>
                 }
             }
         </ul>
@@ -130,7 +130,34 @@
 
         var ProductView=View.extend({
             events: $.extend({
-                'click .js_addtocart': 'addToCart'
+                'click .js_addtocart': 'addToCart',
+                'click .js_img_con li': function(e) {
+                    var $el=$(e.currentTarget);
+                    if(!$el.hasClass('curr')) {
+                        $el.addClass('curr').siblings('.curr').removeClass('curr')
+                        var src=$el.data('src');
+
+                        $('.js_preview').attr({ src: src });
+                    }
+                },
+                'click .js_size_con i': function(e) {
+                    var $el=$(e.currentTarget);
+                    if(!$el.hasClass('curr')) {
+                        $el.addClass('curr').siblings('.curr').removeClass('curr')
+                        var id=$el.data('id');
+
+                        $('.js_size_id').val(id);
+                    }
+                },
+                'click .js_color_con i': function(e) {
+                    var $el=$(e.currentTarget);
+                    if(!$el.hasClass('curr')) {
+                        $el.addClass('curr').siblings('.curr').removeClass('curr')
+                        var id=$el.data('id');
+
+                        $('.js_color_id').val(id);
+                    }
+                }
             },qtyEvents),
 
             isLogining: false,

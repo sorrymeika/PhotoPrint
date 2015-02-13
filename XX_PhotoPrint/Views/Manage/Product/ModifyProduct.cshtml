@@ -25,6 +25,7 @@
         string workDesc = req.String("workDesc");
         var print = req.File("print");
         var picture = req.File("picture");
+        var swf = req.File("swf", true, "缺少3D swf文件", "swf", "请上传swf文件");
         string colors = req.String("colors");
         string sizes = req.String("sizes");
 
@@ -53,6 +54,25 @@
                 System.IO.Directory.CreateDirectory(dir);
             }
             picture.SaveAs(savePath);
+        }
+
+        string swfSrc = SQL.QueryScalar<string>("select Swf from Work where WorkID=@p0", workId);
+        if (swf != null && swf.ContentLength != 0)
+        {
+            if (!string.IsNullOrEmpty(swfSrc))
+            {
+                System.IO.File.Delete(Server.MapPath("~/" + swfSrc));
+            }
+
+            swfSrc = "swf/" + (now.Ticks - DateTime.MinValue.Ticks) + ".swf";
+
+            string savePath = Server.MapPath("~/" + swfSrc);
+            string dir = System.IO.Path.GetDirectoryName(savePath);
+            if (!System.IO.Directory.Exists(dir))
+            {
+                System.IO.Directory.CreateDirectory(dir);
+            }
+            swf.SaveAs(savePath);
         }
 
 
@@ -86,7 +106,7 @@
 
             db.Execute("update Product set ProductName=@p0,Price=@p1,BaseInfo=@p2,Content=@p3,Tag=@p4,Sort=@p5,SubID=@p6,EditDate=@p7 where ProductID=@p8", productName, price, baseInfo, content, tag, sort, subId, now, productId);
 
-            db.Execute("update Work set WorkName=@p0,WorkDesc=@p1,EditTime=@p2 where WorkID=@p3", workName, workDesc, now, workId);
+            db.Execute("update Work set WorkName=@p0,WorkDesc=@p1,EditTime=@p2,Swf=@p4 where WorkID=@p3", workName, workDesc, now, workId, swfSrc);
 
             int styleId = db.QueryScalar<int>("select StyleID from Style where ProductID=@p0", productId);
 
@@ -196,6 +216,7 @@
 <div id="toolbar" class="toolbar"></div>
 <form id="form1" action="modifyproduct?action=modify" method="post" enctype="multipart/form-data" class="form">
 <input type="hidden" value="@productId" name="productId" />
+<input type="hidden" value="@workId" name="id" />
 <table>
     <tr>
         <th>商品类别<i>*</i></th>
@@ -238,8 +259,12 @@
         <td><input name="price" class="text_price" value="@data["Price"]" /></td>
     </tr>
     <tr>
-        <th>图案图片<i>*</i></th>
+        <th>图案图片</th>
         <td><input name="print" type="file" /></td>
+    </tr>
+    <tr>
+        <th>3D swf</th>
+        <td><input name="swf" type="file" /></td>
     </tr>
     <tr>
         <th>商品颜色<i>*</i></th>

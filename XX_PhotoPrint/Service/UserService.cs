@@ -157,7 +157,7 @@ namespace XX_PhotoPrint.Service
                     {
                         var detailList = db.Query("select c.OrderID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID where OrderID=@p0", (int)data.OrderID);
 
-                        string url = "http://" + HttpContext.Current.Request.Url.Authority + "/Content/";
+                        string url = "http://" + HttpContext.Current.Request.Url.Authority + "/";
                         detailList.All(a =>
                         {
                             a["Picture"] = url + a["Picture"];
@@ -187,7 +187,7 @@ namespace XX_PhotoPrint.Service
 
                 var detailList = db.Query("select c.OrderID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID where OrderID=@p0", orderid);
 
-                string url = "http://" + HttpContext.Current.Request.Url.Authority + "/Content/";
+                string url = "http://" + HttpContext.Current.Request.Url.Authority + "/";
                 detailList.All(a =>
                 {
                     a["Picture"] = url + a["Picture"];
