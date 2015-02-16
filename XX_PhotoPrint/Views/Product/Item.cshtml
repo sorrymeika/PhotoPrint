@@ -130,6 +130,9 @@
 
         var ProductView=View.extend({
             events: $.extend({
+                'click .js_create': function() {
+                    location.href="/create.html?id="+work_id;
+                },
                 'click .js_addtocart': 'addToCart',
                 'click .js_img_con li': function(e) {
                     var $el=$(e.currentTarget);

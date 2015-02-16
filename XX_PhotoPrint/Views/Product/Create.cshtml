@@ -1,0 +1,100 @@
+﻿@using XX_PhotoPrint.Service
+@{
+    ViewBag.Title = "创作";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    SL.Util.RequestUtil req = new SL.Util.RequestUtil();
+
+  
+    int workId = req.Int("id");
+
+    var Item = ProductService.GetByID(workId);
+
+    IList<dynamic> Colors = Item.Colors;
+    IList<dynamic> Styles = Item.Styles;
+    IList<dynamic> Size = Item.Size;
+    IList<dynamic> StyleColorPic = Item.StyleColorPic;
+}
+<script>
+    function callJS() {
+        //flash加载成功 调用函数
+
+        seajs.use(['$'],function($) {
+            thisMovie("myFlash").toflashfun({ "Edit": "1","Order": $('.js_work_id').val()+'_'+$('.js_product_id').val()+'_'+$('.js_color_id').val()+'_'+$('.js_size_id').val(),"swf": $('.js_swf').val(),"Upurl": "/json/shop/upload" });
+        })
+
+
+        //Edit 编辑单面  =0
+        //     编辑多面  >0
+
+        //Order 订单号 唯一值 
+        //      上传编辑好的图片时会一起上传
+
+        //swf  要加载的衣服模型地址
+
+
+        //Upurl 上传地址
+
+
+        //js给flash 传入 编辑信息
+    }
+    function thisMovie(movieName) {
+        if(navigator.appName.indexOf("Microsoft")!= -1) {
+            return window[movieName];
+        } else {
+            return document[movieName];
+        }
+    }
+</script>
+<input class="js_color_id" value="@Colors.First().ColorID" type="hidden" />
+<input class="js_size_id" value="@Size.First().SizeID" type="hidden" />
+<input class="js_product_id" value="@Item.ProductID" type="hidden" />
+<input class="js_work_id" value="@Item.WorkID" type="hidden" />
+<input class="js_swf" value="@Item.Swf" type="hidden" />
+<div class="main creationwrap">
+        <div style="height: 700px; width: 1094px;"><a name="create"></a><object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" id="myFlash" width="100%" height="100%" align="middle"><param name="movie" value="Tshirt.swf" />
+            <param name="quality" value="high" />
+            <param name="bgcolor" value="#ffffff" />
+            <param name="play" value="true" />
+            <param name="loop" value="true" />
+            <param name="wmode" value="direct" />
+            <param name="scale" value="showall" />
+            <param name="menu" value="true" />
+            <param name="devicefont" value="false" />
+            <param name="salign" value="" />
+            <param name="allowScriptAccess" value="sameDomain" />
+            <!--[if !IE]>-->
+            <object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" type="application/x-shockwave-flash" id="myFlash" data="Tshirt.swf" width="100%" height="100%" align="middle"><param name="allowScriptAccess" value="sameDomain" />
+                <param name="movie" value="Tshirt.swf" />
+                <param name="quality" value="high" />
+                <embed src="Tshirt.swf" width="100%" height="100%" quality="high" swliveconnect="true" name="myFlash" align="middle" wmode="direct" allowscriptaccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" />
+            </object>
+            <!--<![endif]-->
+            <!--[if !IE]>-->
+        </object>
+        </div>
+        @*
+        <div class="creationhd"><h2 class="s3"></h2>
+        </div>
+        <div class="creationbd">
+            <div class="hd">确认和生成订单</div>
+            <div class="creation_result"><img />
+            </div>
+            <div class="action">
+                <div class="btn_dlg_r"><i class="ico"></i>生成订单</div>
+            </div>
+        </div>*@ </div>
+</div>
+<script>
+    seajs.use(['$','lib/util','sl/view','sl/validation','extentions/qty'],function($,util,View,Validation,qtyEvents) {
+        var product_id=$('.js_product_id').val(),
+            work_id=$('.js_work_id').val();
+
+        $('.js_list').on("click",'[data-id]',function(e) {
+            if(work_id==$(e.currentTarget).data('id'))
+                location.hash="#create";
+            else
+                location.href="?id="+$(e.currentTarget).data('id')+"#create";
+        });
+    });
+</script>

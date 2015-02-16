@@ -53,7 +53,7 @@ namespace XX_PhotoPrint
                 "Gallery",
                 "{handle}.html",
                 new { controller = "Home", action = "Index", catalog = "Product" },
-                new { handle = "^Gallery|Creation$" }
+                new { handle = "^Gallery|Creation|Create$" }
             );
 
             routes.MapRoute(
