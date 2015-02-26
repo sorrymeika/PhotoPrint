@@ -19,7 +19,7 @@
         string workDesc = req.String("workDesc");
         var picture = req.File("picture", false, "缺少商品图片");
         var print = req.File("print", false, "缺少打印图片");
-        var swf = req.File("swf", false, "缺少3D swf文件", "swf", "请上传swf文件");
+        var swf = req.File("swf", true, "缺少3D swf文件", "swf", "请上传swf文件");
         string colors = req.String("colors", false, "缺少商品颜色");
         string sizes = req.String("sizes", false, "缺少商品尺寸");
 
@@ -43,12 +43,16 @@
         string src = leftPath + (now.Ticks + 1 - DateTime.MinValue.Ticks) + picture.FileName.Substring(picture.FileName.LastIndexOf('.'));
         string swfSrc = "swf/" + leftPath + (now.Ticks - DateTime.MinValue.Ticks) + ".swf";
         string savePath = Server.MapPath("~/Content/" + src);
-        string printSavePath = Server.MapPath("~/Content/" + printSrc);
+        string printSavePath = Server.MapPath("~/" + printSrc);
         string swfSavePath = Server.MapPath("~/" + swfSrc);
         string dir = System.IO.Path.GetDirectoryName(savePath);
         if (!System.IO.Directory.Exists(dir))
         {
             System.IO.Directory.CreateDirectory(dir);
+        }
+        if (!System.IO.Directory.Exists(System.IO.Path.GetDirectoryName(swfSavePath)))
+        {
+            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(swfSavePath));
         }
 
 
