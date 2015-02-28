@@ -1,0 +1,106 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@functions {
+    private static void CreateZipFile(string filesPath, string zipFilePath)
+    {
+
+        if (!Directory.Exists(filesPath))
+        {
+            Console.WriteLine("Cannot find directory '{0}'", filesPath);
+            return;
+        }
+
+        try
+        {
+            string[] filenames = Directory.GetFiles(filesPath);
+            using (ICSharpCode.SharpZipLib.Zip.ZipOutputStream s = new ICSharpCode.SharpZipLib.Zip.ZipOutputStream(File.Create(zipFilePath)))
+            {
+
+                s.SetLevel(9); // 压缩级别 0-9
+                //s.Password = "123"; //Zip压缩文件密码
+                byte[] buffer = new byte[4096]; //缓冲区大小
+                foreach (string file in filenames)
+                {
+                    ICSharpCode.SharpZipLib.Zip.ZipEntry entry = new ICSharpCode.SharpZipLib.Zip.ZipEntry(Path.GetFileName(file));
+                    entry.DateTime = DateTime.Now;
+                    s.PutNextEntry(entry);
+                    using (FileStream fs = File.OpenRead(file))
+                    {
+                        int sourceBytes;
+                        do
+                        {
+                            sourceBytes = fs.Read(buffer, 0, buffer.Length);
+                            s.Write(buffer, 0, sourceBytes);
+                        } while (sourceBytes > 0);
+                    }
+                }
+                s.Finish();
+                s.Close();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception during processing {0}", ex);
+        }
+    }
+}
+@{
+    Layout = null;
+
+    var req = new Req();
+    int id = req.Int("id");
+
+    if (req.HasError)
+    {
+        Json.Write(new { success = false, msg = req.FirstError, errors = req.GetErrors() }, Output);
+        return;
+    }
+
+
+    var detail = SQL.QueryOne("select a.Picture,d.Pictures,b.Price,d.[Print] from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID join UserCustomization d on a.UserWorkID=d.UserWorkID left join Style e on d.StyleID=e.StyleID left join Color f on d.ColorID=f.ColorID left join ProductSize g on d.SizeID=g.SizeID where OrderDetailID=@p0", id);
+
+    var strPictures = detail["Pictures"] == null ? null : detail["Pictures"].ToString();
+    var pictures = !string.IsNullOrEmpty(strPictures) ? Json.Decode<List<string>>(strPictures) : new List<string>() { detail["Print"] == null ? "" : detail["Print"].ToString() };
+
+    var name = (DateTime.Now.Ticks - DateTime.MinValue.Ticks);
+
+    try
+    {
+        var files = Directory.GetFiles(Server.MapPath("~/content/zip"));
+        files.All(a =>
+        {
+            File.Delete(a);
+            return true;
+        });
+    }
+    catch
+    {
+    }
+
+    var savePath = Server.MapPath("~/content") + "\\zip\\" + name;
+
+    if (!Directory.Exists(savePath))
+    {
+        Directory.CreateDirectory(savePath);
+    }
+
+    var i = 0;
+    foreach (var src in pictures)
+    {
+        if (!string.IsNullOrEmpty(src))
+        {
+            var pic = Server.MapPath("~/" + src);
+            System.IO.File.Copy(pic, savePath + "\\" + i + System.IO.Path.GetExtension(pic));
+
+            i++;
+        }
+    }
+
+
+    CreateZipFile(savePath, savePath + ".zip");
+
+    Directory.Delete(savePath, true);
+
+    Response.Redirect("/content/zip/" + name + ".zip");
+    return;
+}
