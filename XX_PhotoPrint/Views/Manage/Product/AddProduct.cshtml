@@ -22,6 +22,7 @@
         var swf = req.File("swf", true, "缺少3D swf文件", "swf", "请上传swf文件");
         string colors = req.String("colors", false, "缺少商品颜色");
         string sizes = req.String("sizes", false, "缺少商品尺寸");
+        int productType = req.Int("productType");
 
         var sizeList = js.Deserialize<IList<IDictionary<string, object>>>(sizes);
         var colorList = js.Deserialize<IList<IDictionary<string, object>>>(colors);
@@ -50,17 +51,28 @@
         {
             System.IO.Directory.CreateDirectory(dir);
         }
-        if (!System.IO.Directory.Exists(System.IO.Path.GetDirectoryName(swfSavePath)))
-        {
-            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(swfSavePath));
-        }
 
+        if (swf != null && swf.ContentLength != 0)
+        {
+            if (!System.IO.Directory.Exists(System.IO.Path.GetDirectoryName(swfSavePath)))
+            {
+                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(swfSavePath));
+            }
+            swf.SaveAs(swfSavePath);
+            productType = 1;
+        }
+        else
+        {
+            swfSrc = null;
+            swfSavePath = null;
+            productType = 0;
+        }
 
         using (DbService db = new DbService())
         {
             db.BeginTrans();
 
-            db.Execute("insert into Product (ProductName,ProductCode,Price,BaseInfo,Content,Tag,Sort,SubID,CreationDate,Deleted) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,0)", out productId, productName, "", price, baseInfo, content, tag, sort, subId, now);
+            db.Execute("insert into Product (ProductName,ProductCode,Price,BaseInfo,Content,Tag,Sort,SubID,CreationDate,Deleted,ProductType) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,0,@p9)", out productId, productName, "", price, baseInfo, content, tag, sort, subId, now, productType);
 
             string id = "00000000" + productId;
             string code = now.ToString("yyMM") + id.Substring(id.Length - 8, 8);
@@ -94,7 +106,6 @@
         }
         picture.SaveAs(savePath);
         print.SaveAs(printSavePath);
-        swf.SaveAs(swfSavePath);
 
         Output.Write(HtmlService.SubmitResult(callback, new { success = true, productId = productId }));
         return;

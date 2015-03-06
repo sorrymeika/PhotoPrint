@@ -46,20 +46,25 @@ namespace XX_PhotoPrint.Service
 
         public static IList<dynamic> Search(int categoryId, string keywords, int page, int pageSize, string sort, string sortType, out int total)
         {
-            return Search(categoryId, 0, keywords, page, pageSize, sort, sortType, out  total);
+            return Search(categoryId, 0, -1, keywords, page, pageSize, sort, sortType, out  total);
         }
 
         public static IList<dynamic> Search(string keywords, int page, int pageSize, string sort, string sortType, out int total)
         {
-            return Search(0, 0, keywords, page, pageSize, sort, sortType, out  total);
+            return Search(0, 0, -1, keywords, page, pageSize, sort, sortType, out  total);
         }
 
         public static IList<dynamic> Search(string keywords, int page, int pageSize, out int total)
         {
-            return Search(0, 0, keywords, page, pageSize, null, null, out  total);
+            return Search(0, 0, -1, keywords, page, pageSize, null, null, out  total);
         }
 
-        public static IList<dynamic> Search(int categoryId, int subId, string keywords, int page, int pageSize, string sort, string sortType, out int total)
+        public static IList<dynamic> Search(string keywords, int productType, int page, int pageSize, out int total)
+        {
+            return Search(0, 0, productType, keywords, page, pageSize, null, null, out  total);
+        }
+
+        public static IList<dynamic> Search(int categoryId, int subId, int productType, string keywords, int page, int pageSize, string sort, string sortType, out int total)
         {
             string where = "a.Deleted=0 and b.Deleted=0";
             List<object> parameters = new List<object>();
@@ -72,6 +77,12 @@ namespace XX_PhotoPrint.Service
             {
                 where += " and d.CategoryID=@p" + parameters.Count;
                 parameters.Add(categoryId);
+            }
+
+            if (productType >= 0)
+            {
+                where += " and b.ProductType=@p" + parameters.Count;
+                parameters.Add(productType);
             }
 
             if (!string.IsNullOrEmpty(keywords))

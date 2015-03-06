@@ -29,7 +29,7 @@ a:hover { color: #999; }
 .m_header { }
 
 .m_recommend { padding: 149px 0 131px 0; }
-.m_recommend li { float: left; width: 189px; height: 307px; position: relative; }
+.m_recommend li { float: left; width: 189px; height: 307px; position: relative;margin-left: 25px; }
 .m_recommend li .view { width: 100%; height: 100%; overflow: hidden; display: block; background: rgba(0,0,0,.8); opacity: 0; color: #fff; position: absolute; top: 0; left: 0; }
 .m_recommend li .view:hover { opacity: 1; }
 .m_recommend li .view span { display: block; width: 111px; height: 111px; border: 1px solid #fff; margin: 78px auto; text-align: center; }
@@ -206,7 +206,7 @@ a.btn_dlg_r:hover, a.btn_dlg_l:hover { color: #fff; }
 .prod_selector .size i.curr { background-color: #e94b1e; color: #fff; }
 
 .prod_main_info .img_smallist { margin-top: 13px; }
-.prod_main_info .img_smallist li { height: 50px; width: 50px; background: #ddd; float: left; margin-right: 8px; }
+.prod_main_info .img_smallist li { height: 50px; width: 50px; background: #ddd; float: left; margin-right: 8px; margin-bottom: 8px;}
 .prod_main_info .img_smallist li img { height: 50px; width: 50px; }
 .prod_main_info .img_smallist li.curr { height: 42px; width: 42px; border: 4px solid #e94b1e; }
 .prod_main_info .img_smallist li.curr img { height: 42px; width: 42px; }

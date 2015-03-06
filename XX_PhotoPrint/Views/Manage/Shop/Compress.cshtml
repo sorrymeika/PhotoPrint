@@ -89,7 +89,7 @@
     {
         if (!string.IsNullOrEmpty(src))
         {
-            var pic = Server.MapPath("~/" + src);
+            var pic = Server.MapPath("~/" + src.Replace("content/", "").Replace("Content/", ""));
             System.IO.File.Copy(pic, savePath + "\\" + i + System.IO.Path.GetExtension(pic));
 
             i++;

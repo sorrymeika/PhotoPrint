@@ -6,7 +6,7 @@
     SL.Util.RequestUtil req = new SL.Util.RequestUtil();
 
     int total;
-    var products = ProductService.Search(null, 1, 10, out total);
+    var products = ProductService.Search(null, 1, 1, 10, out total);
   
 }
 <div class="main creationwrap">
@@ -22,13 +22,16 @@
         <div class="creationbd">
             <div class="hd">选择你喜欢的 TEE</div>
             <ul class="list clearfix js_list">
-                @for (var i = 0; i < products.Count; i++)
+                @if (products != null)
                 {
-                    var item = products[i];
+                    for (var i = 0; i < products.Count; i++)
+                    {
+                        var item = products[i];
                     <li data-id="@item.WorkID">
                         <p class="img"><img src="@item.Picture" /></p>
                         <p class="con">@item.WorkName@item.ProductName</p>
                     </li>
+                    }
                 }
             </ul>
         </div>

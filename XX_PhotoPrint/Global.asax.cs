@@ -94,20 +94,20 @@ namespace XX_PhotoPrint
             routes.MapRoute(
                 "alipayto",
                 "alipayto/{orderid}",
-                new { controller = "AlipayDouble", action = "alipayto" },
+                new { controller = "AlipayDirect", action = "alipayto" },
                 new { orderid = "^\\d+$" }
             );
 
             routes.MapRoute(
                 "AlipayReturnUrl",
                 "AlipayReturnUrl",
-                new { controller = "AlipayDouble", action = "AlipayReturnUrl" }
+                new { controller = "AlipayDirect", action = "AlipayReturnUrl" }
             );
 
             routes.MapRoute(
                 "AlipayNotifyUrl",
                 "AlipayNotifyUrl",
-                new { controller = "AlipayDouble", action = "AlipayNotifyUrl" }
+                new { controller = "AlipayDirect", action = "AlipayNotifyUrl" }
             );
 
             routes.MapRoute(

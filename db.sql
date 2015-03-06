@@ -362,4 +362,6 @@ Content text
 )
 alter table CreationBill add Express varchar(200)
 
-
+--2015-3-6
+alter table Product add ProductType int
+update Product set ProductType=0

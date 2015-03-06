@@ -23,7 +23,7 @@
         return;
     }
 
-    var data = SQL.QueryOne("select OrderID,OrderCode,Amount,Freight,a.AddTime,a.Status,a.UserID,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName,a.CouponID,f.Title as CouponTitle,f.Price as CouponPrice from OrderInfo a join Users b on a.UserID=b.UserID left join City c on a.CityID=c.CityID left join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID left join Coupon f on a.CouponID=f.CouponID where OrderID=@p0", orderid);
+    var data = SQL.QueryOne("select OrderID,OrderCode,Inv,Message,Amount,Freight,a.AddTime,a.Status,a.UserID,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName,a.CouponID,f.Title as CouponTitle,f.Price as CouponPrice from OrderInfo a join Users b on a.UserID=b.UserID left join City c on a.CityID=c.CityID left join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID left join Coupon f on a.CouponID=f.CouponID where OrderID=@p0", orderid);
 
     if (data == null)
     {
@@ -34,7 +34,7 @@
     var detailList = SQL.Query("select c.OrderID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price,d.[Print],e.StyleName,f.ColorName,f.ColorCode,g.SizeName from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID join UserCustomization d on a.UserWorkID=d.UserWorkID left join Style e on d.StyleID=e.StyleID left join Color f on d.ColorID=f.ColorID left join ProductSize g on d.SizeID=g.SizeID where OrderID=@p0", orderid);
 
     List<Dictionary<string, object>> details;
-    string url = "http://" + Request.Url.Authority + "/";
+    string url = "/";
     details = new List<Dictionary<string, object>>();
     detailList.All(a =>
     {
@@ -100,6 +100,14 @@
         <tr>
             <th>优惠券：</th>
             <td>@data["CouponTitle"] @data["CouponPrice"]</td>
+        </tr>
+        <tr>
+            <th>发票：</th>
+            <td>@(!string.IsNullOrEmpty((string)data["Inv"]) ? (string)data["Inv"] : "不要发票")</td>
+        </tr>
+        <tr>
+            <th>用户留言：</th>
+            <td>@(!string.IsNullOrEmpty((string)data["Message"]) ? (string)data["Message"] : "暂无")</td>
         </tr>
     </table>
 </div>
@@ -187,7 +195,7 @@
                 width: 10,
                 align: 'center',
                 render: function(cell,data){
-                    cell.append('<a href="Compress?id='+data.OrderDetailID+'" target="_blank"><img src="'+data.Print+'" height="100%" /></a>');
+                    cell.append('<a href="Compress?id='+data.OrderDetailID+'" target="_blank"><img src="'+data.Picture+'" height="100%" /></a>');
                 }
             }]
         });

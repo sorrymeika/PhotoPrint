@@ -93,7 +93,7 @@
             <input class="js_size_id" value="@Size.First().SizeID" type="hidden" />
             <input class="js_product_id" value="@Item.ProductID" type="hidden" />
             <input class="js_work_id" value="@Item.WorkID" type="hidden" />
-            <div class="btn_dlg_l js_create"><i class="ico"></i>重新创作</div>
+            @*<div class="btn_dlg_l js_create"><i class="ico"></i>重新创作</div>*@
             <div class="btn_dlg_r js_addtocart"><i class="ico"></i>加入购物车</div>
         </div>
     </div>
@@ -115,10 +115,13 @@
             @for (var i = 0; i < products.Count; i++)
             {
                 var item = products[i];
+                if (item.WorkID != Item.WorkID)
+                {
                 <li data-id="@item.WorkID"><a href="/item/@(item.WorkID).html">
                     <p class="img"><img src="@item.Picture" /></p>
                     <p class="name">@item.WorkName@item.ProductName</p>
                 </a></li>
+                }
             }
         </ul>
     </div>

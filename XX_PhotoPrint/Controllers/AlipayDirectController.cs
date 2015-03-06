@@ -94,7 +94,7 @@ namespace XX_PhotoPrint.Controllers
             //必填
 
             //付款金额
-            string total_fee = orderamount.ToString("0.00");
+            string total_fee = (orderamount + orderfreight).ToString("0.00");
             //必填
 
             //订单描述

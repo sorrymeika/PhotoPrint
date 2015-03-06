@@ -50,6 +50,7 @@
                 <li><span>姓名</span> <i class="js_name">@orderinfo.Receiver</i></li>
                 <li><span>电话</span> <i class="js_mobile">@orderinfo.Mobile</i></li>
                 <li><span>收货地址</span> <i class="js_address">@orderinfo.ProvName@orderinfo.CityName@orderinfo.RegionName@orderinfo.Address</i></li>
+                <li><span>发票</span>@(!string.IsNullOrEmpty(orderinfo.Inv)?orderinfo.Inv:"不要发票")</li>
                 <li><span>金额</span>￥@orderinfo.Amount</li>
                 <li><span>运费</span>￥@orderinfo.Freight</li>
                 <li><span>合计</span>￥@orderinfo.Total</li>
