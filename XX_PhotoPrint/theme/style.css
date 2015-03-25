@@ -414,3 +414,12 @@ a.btn_dlg_r:hover, a.btn_dlg_l:hover { color: #fff; }
 .creationbd .action .btn_dlg_r {  width: 120px; }
 
 .scroll_to_top { width: 50px; height: 50px; right: 20px; bottom: 20px;  background: url(images/site.png) no-repeat 0px -350px; position: fixed; }
+
+.launchwrap { padding-top: 100px; }
+.launchbd { text-align: center; line-height: 25px; font-size: 16px; }
+.launch_logo { text-align: center; margin: 20px; border-bottom: 1px solid #ccc; padding: 20px;}.launch_logo img { margin: 0 auto;}
+.launch_ft { text-align: center; line-height: 25px; font-size: 20px; padding: 20px 0px; }
+.launch_ft_split { display: inline-block; margin: 0 20px; border-left: 1px solid #333; height: 22px; vertical-align: -3px; }
+
+.creation_size_wrap { padding: 50px 0 0 50px; border: 2px solid #333; background:#fff; width: 400px; height: 150px; position: absolute; top: 50%; left: 50%; margin-left: -200px; margin-top: -50px; }
+.creation_size_wrap .action { margin-top: 20px;  margin-left:150px; }

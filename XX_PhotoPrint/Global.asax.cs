@@ -22,6 +22,17 @@ namespace XX_PhotoPrint
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
             routes.MapRoute(
+               "Entrance",
+               "",
+               new { controller = "Home", action = "Index", catalog = "Home", handle = "Home" }
+            );
+            routes.MapRoute(
+               "Index",
+               "Index.html",
+               new { controller = "Home", action = "Index", catalog = "Home", handle = "Index" }
+           );
+
+            routes.MapRoute(
                 "UserHtml",
                 "{handle}.html",
                 new { controller = "Home", action = "Index", catalog = "User" },

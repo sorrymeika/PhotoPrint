@@ -189,7 +189,7 @@ namespace XX_PhotoPrint.Controllers
                     }
 
                     //打印页面
-                    return Content("验证成功<br />");
+                    //return Content("验证成功<br />");
 
                     //——请根据您的业务逻辑来编写程序（以上代码仅作参考）——
 
@@ -197,7 +197,10 @@ namespace XX_PhotoPrint.Controllers
                 }
                 else//验证失败
                 {
-                    return Content("验证失败");
+                    string out_trade_no = Request.QueryString["out_trade_no"];
+                    var orderId = SL.Data.SQL.QueryValue<int>("select OrderID from OrderInfo where OrderCode=@p0", out_trade_no);
+
+                    return Redirect("/Order/" + orderId);
                 }
             }
             else

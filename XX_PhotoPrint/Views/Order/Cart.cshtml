@@ -49,7 +49,7 @@
     <td><input class="js_select" type="checkbox" checked /></td>
     <td class="imgwrap"><img class="img" src="${item.Picture}" /></td>
     <td class="desc"><p class="name"><a href="">${item.ProductName}</a></p>
-        <p class="color">${item.Styles[0].ColorName},${item.Styles[0].SizeName}</p>
+        <p class="color">{%if item.ProductID!=32%}${item.Styles[0].ColorName},{%/if%}${item.Styles[0].SizeName}</p>
     </td>
     <td>￥${item.Price}</td>
     <td><input class="num js_qty" type="text" value="${item.Qty}" data-qty="${item.Qty}" /></td>

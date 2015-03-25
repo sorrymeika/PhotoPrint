@@ -5,8 +5,14 @@
 
     SL.Util.RequestUtil req = new SL.Util.RequestUtil();
 
-  
+    if (!UserService.IsLogin())
+    {
+        Response.Redirect("/login.html?r=" + Request.Url.OriginalString);
+        return;
+    }
+
     int workId = req.Int("id");
+    int sizeid = req.Int("sizeid");
 
     var Item = ProductService.GetByID(workId);
 
@@ -14,13 +20,14 @@
     IList<dynamic> Styles = Item.Styles;
     IList<dynamic> Size = Item.Size;
     IList<dynamic> StyleColorPic = Item.StyleColorPic;
+    
 }
 <script>
+
     function callJS() {
         //flash加载成功 调用函数
-
-        seajs.use(['$'],function($) {
-            thisMovie("myFlash").toflashfun({ "Edit": "1","Order": $('.js_work_id').val()+'_'+$('.js_product_id').val()+'_'+$('.js_color_id').val()+'_'+$('.js_size_id').val(),"swf": $('.js_swf').val(),"Upurl": "/json/shop/upload" });
+        seajs.use('$',function($) {
+            thisMovie("myFlash").toflashfun({ "Edit": "1","Order": $('.js_work_id').val()+'_'+$('.js_product_id').val()+'_'+$('.js_color_id').val()+'_'+$('.js_size_id').val(),'size':$('.js_size_str').val(),"swf": $('.js_swf').val(),"Upurl": "/json/shop/upload" });
         })
 
 
@@ -46,34 +53,13 @@
         }
     }
 </script>
-<input class="js_color_id" value="@Colors.First().ColorID" type="hidden" />
+<input class="js_color_id" value="@(sizeid == 0 ? Colors.First().ColorID : sizeid)" type="hidden" />
 <input class="js_size_id" value="@Size.First().SizeID" type="hidden" />
+<input class="js_size_str" value="@Size.First().SizeName" type="hidden" />
 <input class="js_product_id" value="@Item.ProductID" type="hidden" />
 <input class="js_work_id" value="@Item.WorkID" type="hidden" />
 <input class="js_swf" value="@Item.Swf" type="hidden" />
-<div class="main creationwrap">
-        <div style="height: 700px; width: 1094px;"><a name="create"></a><object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" id="myFlash" width="100%" height="100%" align="middle"><param name="movie" value="Tshirt.swf" />
-            <param name="quality" value="high" />
-            <param name="bgcolor" value="#ffffff" />
-            <param name="play" value="true" />
-            <param name="loop" value="true" />
-            <param name="wmode" value="direct" />
-            <param name="scale" value="showall" />
-            <param name="menu" value="true" />
-            <param name="devicefont" value="false" />
-            <param name="salign" value="" />
-            <param name="allowScriptAccess" value="sameDomain" />
-            <!--[if !IE]>-->
-            <object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" type="application/x-shockwave-flash" id="myFlash" data="Tshirt.swf" width="100%" height="100%" align="middle"><param name="allowScriptAccess" value="sameDomain" />
-                <param name="movie" value="Tshirt.swf" />
-                <param name="quality" value="high" />
-                <embed src="Tshirt.swf" width="100%" height="100%" quality="high" swliveconnect="true" name="myFlash" align="middle" wmode="direct" allowscriptaccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" />
-            </object>
-            <!--<![endif]-->
-            <!--[if !IE]>-->
-        </object>
-        </div>
-        @*
+<div class="main creationwrap" style="height: 750px">@*
         <div class="creationhd"><h2 class="s3"></h2>
         </div>
         <div class="creationbd">
@@ -85,16 +71,69 @@
             </div>
         </div>*@ </div>
 </div>
+<div class="mask"></div>
+<div class="creation_size_wrap">
+    <div class="hd">选择TEE的尺寸</div>
+    <div class="prod_selector"><span>尺码</span><span class="size js_size_con">
+        @for (int i = 0; i < Size.Count; i++)
+        {
+            var item = Size[i];
+            if (sizeid == 0 ? i == 0 : (sizeid == item.SizeID))
+            { 
+            <i class="curr" data-id="@item.SizeID">@item.SizeName</i>
+            }
+            else
+            {
+            <i data-id="@item.SizeID">@item.SizeName</i>
+            }
+        }
+    </span></div>
+    <div class="action"><button class="btn">确定</button>
+    </div>
+</div>
+<script id="flashTemplate" type="text/template">
+    <div style="height: 700px; width: 1094px;"><a name="create"></a><object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" id="myFlash" width="100%" height="100%" align="middle"><param name="movie" value="Tshirt.swf" />
+        <param name="quality" value="high" />
+        <param name="bgcolor" value="#ffffff" />
+        <param name="play" value="true" />
+        <param name="loop" value="true" />
+        <param name="wmode" value="direct" />
+        <param name="scale" value="showall" />
+        <param name="menu" value="true" />
+        <param name="devicefont" value="false" />
+        <param name="salign" value="" />
+        <param name="allowScriptAccess" value="sameDomain" />
+        <!--[if !IE]>-->
+        <object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" type="application/x-shockwave-flash" id="myFlash" data="Tshirt.swf" width="100%" height="100%" align="middle"><param name="allowScriptAccess" value="sameDomain" />
+            <param name="movie" value="Tshirt.swf" />
+            <param name="quality" value="high" />
+            <embed src="Tshirt.swf" width="100%" height="100%" quality="high" swliveconnect="true" name="myFlash" align="middle" wmode="direct" allowscriptaccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" />
+        </object>
+        <!--<![endif]-->
+        <!--[if !IE]>-->
+    </object>
+    </div>
+
+</script>
 <script>
     seajs.use(['$','lib/util','sl/view','sl/validation','extentions/qty'],function($,util,View,Validation,qtyEvents) {
-        var product_id=$('.js_product_id').val(),
-            work_id=$('.js_work_id').val();
+        $('.creation_size_wrap').on('click','.js_size_con i',function(e) {
+            var $el=$(e.currentTarget);
+            if(!$el.hasClass('curr')) {
+                $el.addClass('curr').siblings('.curr').removeClass('curr')
+                var id=$el.data('id');
 
-        $('.js_list').on("click",'[data-id]',function(e) {
-            if(work_id==$(e.currentTarget).data('id'))
-                location.hash="#create";
-            else
-                location.href="?id="+$(e.currentTarget).data('id')+"#create";
+                $('.js_size_id').val(id);
+                $('.js_size_str').val($el.html());
+
+                //location.href="?id=@(workId)&sizeid="+id+"#create";
+            }
+        });
+
+        $('.creation_size_wrap .action').on('click',function(e) {
+            $('.mask,.creation_size_wrap').hide();
+
+            $('.creationwrap').html($('#flashTemplate').html());
         });
     });
 </script>

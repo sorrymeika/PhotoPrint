@@ -23,7 +23,7 @@
     <tr{%if i==data.length-1%} class="noborder"{%/if%} data-rowid="${item.CartID}">
         <td class="imgwrap"><img class="img" src="${item.Picture}" /></td>
         <td class="desc"><p class="name"><a href="">${item.ProductName}</a></p>
-            <p class="color">${item.Styles[0].ColorName},${item.Styles[0].SizeName}</p>
+            <p class="color">{%if item.ProductID!=32%}${item.Styles[0].ColorName},{%/if%}${item.Styles[0].SizeName}</p>
         </td>
         <td>￥${item.Price}</td>
         <td>${item.Qty}</td>
@@ -50,7 +50,7 @@
                 <li><span>姓名</span> <i class="js_name">@orderinfo.Receiver</i></li>
                 <li><span>电话</span> <i class="js_mobile">@orderinfo.Mobile</i></li>
                 <li><span>收货地址</span> <i class="js_address">@orderinfo.ProvName@orderinfo.CityName@orderinfo.RegionName@orderinfo.Address</i></li>
-                <li><span>发票</span>@(!string.IsNullOrEmpty(orderinfo.Inv)?orderinfo.Inv:"不要发票")</li>
+                <li><span>发票</span>@(!string.IsNullOrEmpty(orderinfo.Inv) ? orderinfo.Inv : "不要发票")</li>
                 <li><span>金额</span>￥@orderinfo.Amount</li>
                 <li><span>运费</span>￥@orderinfo.Freight</li>
                 <li><span>合计</span>￥@orderinfo.Total</li>
@@ -487,9 +487,9 @@ else
         {
             <text>
             addressView.set({
-                ProvID: @userInfo.ProvID,
-                CityID: @userInfo.CityID,
-                RegionID: @userInfo.RegionID
+                ProvID: @(userInfo.ProvID ?? new MvcHtmlString("''")),
+                CityID: @(userInfo.CityID ?? new MvcHtmlString("''")),
+                RegionID: @(userInfo.RegionID ?? new MvcHtmlString("''"))
             });
             </text>
         }
