@@ -110,7 +110,7 @@ namespace Alipay.Direct
 
             //过滤空值、sign与sign_type参数
             sPara = Core.FilterPara(inputPara);
-            
+
             //获取待签名字符串
             string preSignStr = Core.CreateLinkString(sPara);
 
@@ -138,7 +138,7 @@ namespace Alipay.Direct
         /// <returns>验证结果</returns>
         private string GetResponseTxt(string notify_id)
         {
-            string veryfy_url = Https_veryfy_url + "partner=" + _partner + "&notify_id=" + notify_id;
+            string veryfy_url = Https_veryfy_url + "partner=" + _partner + "&notify_id=" + HttpUtility.UrlEncode(notify_id);
 
             //获取远程服务器ATN结果，验证是否是支付宝服务器发来的请求
             string responseTxt = Get_Http(veryfy_url, 120000);

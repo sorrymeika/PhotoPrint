@@ -339,6 +339,8 @@ if not exists(select 1 from ActivityCate where CategoryID=3) insert into Activit
 if not exists(select 1 from ActivityCate where CategoryID=2) insert into ActivityCate (CategoryID,CategoryName) values (2,'活动资讯')
 set IDENTITY_INSERT ActivityCate OFF
 
+select * from ActivityCate
+
 
 
 alter table OrderInfo add Inv varchar(400)
@@ -365,3 +367,16 @@ alter table CreationBill add Express varchar(200)
 --2015-3-6
 alter table Product add ProductType int
 update Product set ProductType=0
+
+--2015-3-27
+
+set IDENTITY_INSERT ActivityCate ON
+if not exists(select 1 from ActivityCate where CategoryID=6) insert into ActivityCate (CategoryID,CategoryName) values (6,'网站文案')
+set IDENTITY_INSERT ActivityCate OFF
+
+
+set IDENTITY_INSERT Activity ON
+insert into Activity (ActivityID,CategoryID,Title,CreationDate,Sort) values (1000,6,'{"t":"操作指南","s":""}',GetDate(),0),(999,6,'{"t":"关于速纺","s":""}',GetDate(),0),(998,6,'{"t":"速纺的产品保证","s":""}',GetDate(),0)
+
+set IDENTITY_INSERT Activity OFF
+

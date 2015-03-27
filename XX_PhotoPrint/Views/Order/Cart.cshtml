@@ -28,7 +28,7 @@
     <div class="cartinfo clearfix mainlast">
         <ul class="carttips">
             <li><i>·</i>本清单已包含税费</li>
-            <li><i>·</i>如果您购买100元以上，将提供免费送货服务</li>
+            <li><i>·</i>全场中国大陆地区包邮@*如果您购买79元以上，将提供免费送货服务*@</li>
             <li><i>·</i>本清单支持下列付款方式</li>
             <li class="paylist"><img src="/theme/images/alipay.png" />
             </li>
@@ -125,8 +125,8 @@
                     total+=parseFloat($(this).html().replace('￥',''));
                 });
                 this.$('.js_amount').html('￥'+total);
-                this.$('.js_freight').html('￥'+(total<100?22:0));
-                this.$('.js_total_amount').html('￥'+(total+(total<100?22:0)));
+                this.$('.js_freight').html('￥'+(total<79?22:0));
+                this.$('.js_total_amount').html('￥'+(total+(total<79?22:0)));
                 return total;
             },
 

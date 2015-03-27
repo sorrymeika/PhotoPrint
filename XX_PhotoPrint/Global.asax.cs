@@ -78,7 +78,7 @@ namespace XX_PhotoPrint
                 "News",
                 "{handle}.html",
                 new { controller = "Home", action = "Index", catalog = "News" },
-                new { handle = "^Recruit|Download|AboutUs|Contact|Help$" }
+                new { handle = "^Recruit|Download|AboutUs|Contact|Help|News$" }
             );
 
             routes.MapRoute(

@@ -44,7 +44,7 @@ namespace XX_PhotoPrint.Controllers
                 {
                     temp = coll[i].Split('=');
 
-                    sArray.Add(temp[0], temp[1]);
+                    sArray.Add(temp[0], HttpUtility.UrlDecode(temp[1]));
                 }
             }
             return sArray;
@@ -200,7 +200,8 @@ namespace XX_PhotoPrint.Controllers
                     string out_trade_no = Request.QueryString["out_trade_no"];
                     var orderId = SL.Data.SQL.QueryValue<int>("select OrderID from OrderInfo where OrderCode=@p0", out_trade_no);
 
-                    return Redirect("/Order/" + orderId);
+                    //return Redirect("/Order/" + orderId + "?type=sign_fail");
+                    return Content(System.Web.Helpers.Json.Encode(sPara) + "|" + Request.QueryString["sign"]);
                 }
             }
             else
