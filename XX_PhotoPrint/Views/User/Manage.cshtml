@@ -16,7 +16,7 @@
     int page = req.Int("page", defaultValue: 1);
     int pageSize = req.Int("pageSize", defaultValue: 10);
 
-    var data = UserService.GetOrders(uid, 1, page, pageSize, out total);
+    var data = UserService.GetOrders(uid, new int[] { 1, 2, 3, 4 }, page, pageSize, out total);
 
     int totalPages = total % pageSize == 0 ? total / pageSize : (total / pageSize + 1);
 }

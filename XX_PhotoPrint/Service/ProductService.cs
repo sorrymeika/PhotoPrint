@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Helpers;
+using System.Text.RegularExpressions;
 
 namespace XX_PhotoPrint.Service
 {
@@ -38,7 +39,21 @@ namespace XX_PhotoPrint.Service
                 data["Colors"] = db.Query("select ColorID,ColorName,ColorCode from Color where ProductID=@p0", productId);
                 data["Styles"] = db.Query("select a.StyleID,StyleName,Rect,ColorID,SizeID,[Print],Content from Style a left join Customization b on a.StyleID=b.StyleID where WorkID=@p0 order by a.StyleID", workId);
                 data["Size"] = db.Query("select SizeID,SizeName,StyleID from ProductSize where ProductID=@p0", productId);
-                data["StyleColorPic"] = db.Query("select PicID,StyleID,ColorID,Picture from StyleColorPic where ProductID=@p0", productId);
+
+                var styleColorPic = db.Query("select PicID,StyleID,ColorID,Picture from StyleColorPic where ProductID=@p0", productId);
+                data["StyleColorPic"] = styleColorPic;
+
+                if (styleColorPic != null)
+                {
+                    styleColorPic.All(a =>
+                    {
+                        if (!string.IsNullOrEmpty(a.Picture))
+                        {
+                            a.Picture = Regex.Replace(a.Picture, @"http://([^/])+/", "http://" + Request.Url.Authority + "/");
+                        }
+                        return true;
+                    });
+                }
 
                 return data;
             }
