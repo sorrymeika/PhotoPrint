@@ -59,7 +59,7 @@
         string swfSrc = SQL.QueryScalar<string>("select Swf from Work where WorkID=@p0", workId);
         if (swf != null && swf.ContentLength != 0)
         {
-            if (!string.IsNullOrEmpty(swfSrc))
+            if (!string.IsNullOrEmpty(swfSrc) && System.IO.File.Exists(Server.MapPath("~/" + swfSrc)))
             {
                 System.IO.File.Delete(Server.MapPath("~/" + swfSrc));
             }
@@ -81,8 +81,8 @@
             string printSrc = SQL.QueryScalar<string>("select [Print] from Customization where WorkID=@p0", workId);
             int styleId = SQL.QueryScalar<int>("select StyleId from Style where ProductID=@p0", productId);
 
-            printSrc = "product/" + now.ToString("yyyy") + "/" + (now.Ticks - DateTime.MinValue.Ticks) + picture.FileName.Substring(picture.FileName.LastIndexOf('.'));
-            string savePath = Server.MapPath("~/Content/" + src);
+            printSrc = "product/" + now.ToString("yyyy") + "/" + (now.Ticks - DateTime.MinValue.Ticks) + print.FileName.Substring(picture.FileName.LastIndexOf('.'));
+            string savePath = Server.MapPath("~/" + src);
             string dir = System.IO.Path.GetDirectoryName(savePath);
             if (!System.IO.Directory.Exists(dir))
             {
@@ -95,7 +95,6 @@
             }
             else
             {
-                System.IO.File.Delete(Server.MapPath("~/Content/" + printSrc));
             }
             print.SaveAs(savePath);
         }

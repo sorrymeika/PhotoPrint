@@ -28,7 +28,7 @@
     <div class="cartinfo clearfix mainlast">
         <ul class="carttips">
             <li><i>·</i>本清单已包含税费</li>
-            <li><i>·</i>如果您购买100元以上，将提供免费送货服务</li>
+            <li><i>·</i>全场中国大陆地区包邮@*如果您购买79元以上，将提供免费送货服务*@</li>
             <li><i>·</i>本清单支持下列付款方式</li>
             <li class="paylist"><img src="/theme/images/alipay.png" />
             </li>
@@ -49,7 +49,7 @@
     <td><input class="js_select" type="checkbox" checked /></td>
     <td class="imgwrap"><img class="img" src="${item.Picture}" /></td>
     <td class="desc"><p class="name"><a href="">${item.ProductName}</a></p>
-        <p class="color">${item.Styles[0].ColorName},${item.Styles[0].SizeName}</p>
+        <p class="color">{%if item.ProductID!=32%}${item.Styles[0].ColorName},{%/if%}${item.Styles[0].SizeName}</p>
     </td>
     <td>￥${item.Price}</td>
     <td><input class="num js_qty" type="text" value="${item.Qty}" data-qty="${item.Qty}" /></td>
@@ -125,8 +125,8 @@
                     total+=parseFloat($(this).html().replace('￥',''));
                 });
                 this.$('.js_amount').html('￥'+total);
-                this.$('.js_freight').html('￥'+(total<100?22:0));
-                this.$('.js_total_amount').html('￥'+(total+(total<100?22:0)));
+                this.$('.js_freight').html('￥'+(total<79?22:0));
+                this.$('.js_total_amount').html('￥'+(total+(total<79?22:0)));
                 return total;
             },
 

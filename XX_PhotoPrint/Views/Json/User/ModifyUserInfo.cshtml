@@ -34,7 +34,7 @@
 
     SQL.Execute("update Users set UserName=@p0,Gender=@p1,Birthday=@p2,Mobile=@p3,RealName=@p5 where UserID=@p4", userName ?? user["UserName"],
         gender == null ? user["Gender"] : gender == "" ? null : (bool?)req.Bool("Gender"),
-        birthday == null ? user["Birthday"] : req.DateTime("Birthday"),
+       string.IsNullOrEmpty(birthday) ? user["Birthday"] : req.DateTime("Birthday"),
         mobile ?? user["Mobile"], uid, realName ?? user["RealName"]);
 
     user = SQL.QueryOne("select UserID,UserName,Account,LatestLoginDate,Avatars,Gender,Birthday,Mobile,RealName from Users where UserID=@p0", uid);

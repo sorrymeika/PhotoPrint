@@ -25,7 +25,7 @@ namespace XX_PhotoPrint.Service
 
             if (userId == 0) return null;
 
-            var user = SL.Data.SQL.QuerySingle("select UserID,UserName,Account,LatestLoginDate,Avatars,Gender,Birthday,Mobile,RealName,Address,a.RegionID,b.CityID,CityName,RegionName,c.ProvID,c.ProvName from Users a left join Region d on a.RegionID=d.RegionID inner join City b on d.CityID=b.CityID join Province c on b.ProvID=c.ProvID where UserID=@p0", userId);
+            var user = SL.Data.SQL.QuerySingle("select UserID,UserName,Account,LatestLoginDate,Avatars,Gender,Birthday,Mobile,RealName,Address,a.RegionID,b.CityID,CityName,RegionName,c.ProvID,c.ProvName from Users a left join Region d on a.RegionID=d.RegionID left join City b on d.CityID=b.CityID left join Province c on b.ProvID=c.ProvID where UserID=@p0", userId);
 
             if (user != null)
             {
@@ -114,7 +114,21 @@ namespace XX_PhotoPrint.Service
             return SL.Data.SQL.Query("select AddressID,UserID,Receiver,a.CityID,CityName,a.RegionID,RegionName,c.ProvID,c.ProvName,Zip,Address,TelPhone,Mobile,IsCommonUse from UserAddress a left join City b on a.CityID=b.CityID left join Province c on b.ProvID=c.ProvID left join Region d on a.RegionID=d.RegionID where UserID=@p0", uid);
         }
 
-        public static IList<dynamic> GetOrders(int uid, int? status, int page, int pageSize, out int total)
+        public static IList<dynamic> GetOrders(int uid, int[] status, int page, int pageSize, out int total)
+        {
+            List<object> parameters = new List<object>();
+            string where = "a.UserID=@p0";
+            parameters.Add(uid);
+
+            if (status != null)
+            {
+                where += " and a.Status in (" + string.Join(",", status) + ")";
+            }
+
+            return GetOrders(page, pageSize, out total, where, parameters);
+        }
+
+        public static IList<dynamic> GetOrders(int uid, int status, int page, int pageSize, out int total)
         {
             List<object> parameters = new List<object>();
             string where = "a.UserID=@p0";
@@ -183,7 +197,7 @@ namespace XX_PhotoPrint.Service
         {
             using (SL.Data.Database db = SL.Data.Database.Open())
             {
-                var data = db.QuerySingle("select OrderID,OrderCode,Amount,Freight,a.Discount,a.AddTime,a.Status,a.UserID,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName from OrderInfo a join Users b on a.UserID=b.UserID left join City c on a.CityID=c.CityID left join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID where OrderID=@p0 and a.UserID=@p1", orderid, uid);
+                var data = db.QuerySingle("select OrderID,OrderCode,Inv,Amount,Freight,a.Discount,a.AddTime,a.Status,a.UserID,a.PaymentID,a.Receiver,a.Address,a.Mobile,a.Phone,a.Zip,b.Account,a.CityID,a.RegionID,c.CityName,e.RegionName,d.ProvName from OrderInfo a join Users b on a.UserID=b.UserID left join City c on a.CityID=c.CityID left join Province d on c.ProvID=d.ProvID left join Region e on a.RegionID=e.RegionID where OrderID=@p0 and a.UserID=@p1", orderid, uid);
 
                 var detailList = db.Query("select c.OrderID,c.OrderDetailID,c.UserWorkID,c.Qty,a.ProductID,b.ProductName,a.Picture,b.Price from OrderDetail c join UserWork a on c.UserWorkID=a.UserWorkID join Product b on a.ProductID=b.ProductID where OrderID=@p0", orderid);
 

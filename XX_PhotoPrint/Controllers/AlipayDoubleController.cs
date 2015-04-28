@@ -44,7 +44,7 @@ namespace XX_PhotoPrint.Controllers
                 {
                     temp = coll[i].Split('=');
 
-                    sArray.Add(temp[0], temp[1]);
+                    sArray.Add(temp[0], HttpUtility.UrlDecode(temp[1]));
                 }
             }
             return sArray;

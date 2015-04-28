@@ -1,6 +1,6 @@
 ﻿@using XX_PhotoPrint.Service
 <div class="header clearfix png">
-    <div class="logowrap"><a href="/"><img class="logo" src="/theme/images/logo.png" /></a></div>
+    <div class="logowrap"><a href="/index.html"><img class="logo" src="/theme/images/logo.png" /></a></div>
     <div class="navwrap">
         <div class="navtop">
             @if (UserService.IsLogin())
@@ -14,11 +14,11 @@
         </div>
         <div class="nav">
             <ul>
-                <li><a href="/">首页</a></li>
+                <li><a href="/index.html">首页</a></li>
                 <li><a href="/creation.html">创作</a></li>
                 <li><a href="/eco.html">生态环境</a></li>
                 <li><a href="/gallery.html">画廊</a></li>
-                <li class="last"><a href="/download.html">下载应用</a></li>
+                @*<li class="last"><a href="/download.html">下载应用</a></li>*@
             </ul>
         </div>
     </div>

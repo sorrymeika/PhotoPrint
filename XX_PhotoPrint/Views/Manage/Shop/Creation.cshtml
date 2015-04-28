@@ -58,7 +58,7 @@
     };
     int status = (int)data["Status"];
 
-    var info = SL.Data.SQL.QuerySingle("select * from CreationBill");
+    var info = SL.Data.SQL.QuerySingle("select * from CreationBill where OrderID=@p0", orderid);
     if (info == null)
     {
         info = new SL.Data.DynamicRecord(new Dictionary<string, object>());
@@ -162,7 +162,7 @@
                 <td class="style11" colspan="5" height="1270" rowspan="10" valign="top">
                     @foreach (var src in pictures)
                     {
-                        <img src="/@(src)" />
+                        <img src="/@(!string.IsNullOrEmpty(src) ? src.Replace("content/", "").Replace("Content/", "") : "")" />
                     }
                 </td>
                 <td class="style12" colspan="3">图片质量检测</td>

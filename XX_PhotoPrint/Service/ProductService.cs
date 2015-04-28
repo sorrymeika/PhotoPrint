@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Helpers;
+using System.Text.RegularExpressions;
 
 namespace XX_PhotoPrint.Service
 {
@@ -38,7 +39,21 @@ namespace XX_PhotoPrint.Service
                 data["Colors"] = db.Query("select ColorID,ColorName,ColorCode from Color where ProductID=@p0", productId);
                 data["Styles"] = db.Query("select a.StyleID,StyleName,Rect,ColorID,SizeID,[Print],Content from Style a left join Customization b on a.StyleID=b.StyleID where WorkID=@p0 order by a.StyleID", workId);
                 data["Size"] = db.Query("select SizeID,SizeName,StyleID from ProductSize where ProductID=@p0", productId);
-                data["StyleColorPic"] = db.Query("select PicID,StyleID,ColorID,Picture from StyleColorPic where ProductID=@p0", productId);
+
+                var styleColorPic = db.Query("select PicID,StyleID,ColorID,Picture from StyleColorPic where ProductID=@p0", productId);
+                data["StyleColorPic"] = styleColorPic;
+
+                if (styleColorPic != null)
+                {
+                    styleColorPic.All(a =>
+                    {
+                        if (!string.IsNullOrEmpty(a.Picture))
+                        {
+                            a.Picture = Regex.Replace(a.Picture, @"http://([^/])+/", "http://" + Request.Url.Authority + "/");
+                        }
+                        return true;
+                    });
+                }
 
                 return data;
             }
@@ -46,20 +61,25 @@ namespace XX_PhotoPrint.Service
 
         public static IList<dynamic> Search(int categoryId, string keywords, int page, int pageSize, string sort, string sortType, out int total)
         {
-            return Search(categoryId, 0, keywords, page, pageSize, sort, sortType, out  total);
+            return Search(categoryId, 0, -1, keywords, page, pageSize, sort, sortType, out  total);
         }
 
         public static IList<dynamic> Search(string keywords, int page, int pageSize, string sort, string sortType, out int total)
         {
-            return Search(0, 0, keywords, page, pageSize, sort, sortType, out  total);
+            return Search(0, 0, -1, keywords, page, pageSize, sort, sortType, out  total);
         }
 
         public static IList<dynamic> Search(string keywords, int page, int pageSize, out int total)
         {
-            return Search(0, 0, keywords, page, pageSize, null, null, out  total);
+            return Search(0, 0, -1, keywords, page, pageSize, null, null, out  total);
         }
 
-        public static IList<dynamic> Search(int categoryId, int subId, string keywords, int page, int pageSize, string sort, string sortType, out int total)
+        public static IList<dynamic> Search(string keywords, int productType, int page, int pageSize, out int total)
+        {
+            return Search(0, 0, productType, keywords, page, pageSize, null, null, out  total);
+        }
+
+        public static IList<dynamic> Search(int categoryId, int subId, int productType, string keywords, int page, int pageSize, string sort, string sortType, out int total)
         {
             string where = "a.Deleted=0 and b.Deleted=0";
             List<object> parameters = new List<object>();
@@ -72,6 +92,12 @@ namespace XX_PhotoPrint.Service
             {
                 where += " and d.CategoryID=@p" + parameters.Count;
                 parameters.Add(categoryId);
+            }
+
+            if (productType >= 0)
+            {
+                where += " and b.ProductType=@p" + parameters.Count;
+                parameters.Add(productType);
             }
 
             if (!string.IsNullOrEmpty(keywords))

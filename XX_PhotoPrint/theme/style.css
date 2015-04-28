@@ -29,7 +29,7 @@ a:hover { color: #999; }
 .m_header { }
 
 .m_recommend { padding: 149px 0 131px 0; }
-.m_recommend li { float: left; width: 189px; height: 307px; position: relative; }
+.m_recommend li { float: left; width: 189px; height: 307px; position: relative;margin-left: 25px; }
 .m_recommend li .view { width: 100%; height: 100%; overflow: hidden; display: block; background: rgba(0,0,0,.8); opacity: 0; color: #fff; position: absolute; top: 0; left: 0; }
 .m_recommend li .view:hover { opacity: 1; }
 .m_recommend li .view span { display: block; width: 111px; height: 111px; border: 1px solid #fff; margin: 78px auto; text-align: center; }
@@ -206,7 +206,7 @@ a.btn_dlg_r:hover, a.btn_dlg_l:hover { color: #fff; }
 .prod_selector .size i.curr { background-color: #e94b1e; color: #fff; }
 
 .prod_main_info .img_smallist { margin-top: 13px; }
-.prod_main_info .img_smallist li { height: 50px; width: 50px; background: #ddd; float: left; margin-right: 8px; }
+.prod_main_info .img_smallist li { height: 50px; width: 50px; background: #ddd; float: left; margin-right: 8px; margin-bottom: 8px;}
 .prod_main_info .img_smallist li img { height: 50px; width: 50px; }
 .prod_main_info .img_smallist li.curr { height: 42px; width: 42px; border: 4px solid #e94b1e; }
 .prod_main_info .img_smallist li.curr img { height: 42px; width: 42px; }
@@ -414,3 +414,12 @@ a.btn_dlg_r:hover, a.btn_dlg_l:hover { color: #fff; }
 .creationbd .action .btn_dlg_r {  width: 120px; }
 
 .scroll_to_top { width: 50px; height: 50px; right: 20px; bottom: 20px;  background: url(images/site.png) no-repeat 0px -350px; position: fixed; }
+
+.launchwrap { padding-top: 100px; }
+.launchbd { text-align: center; line-height: 25px; font-size: 16px; }
+.launch_logo { text-align: center; margin: 20px; border-bottom: 1px solid #ccc; padding: 20px;}.launch_logo img { margin: 0 auto;}
+.launch_ft { text-align: center; line-height: 25px; font-size: 20px; padding: 20px 0px; }
+.launch_ft_split { display: inline-block; margin: 0 20px; border-left: 1px solid #333; height: 22px; vertical-align: -3px; }
+
+.creation_size_wrap { padding: 50px 0 0 50px; border: 2px solid #333; background:#fff; width: 400px; height: 150px; position: absolute; top: 50%; left: 50%; margin-left: -200px; margin-top: -50px; }
+.creation_size_wrap .action { margin-top: 20px;  margin-left:150px; }

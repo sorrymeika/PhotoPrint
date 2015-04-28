@@ -14,6 +14,13 @@
             return;
         }
 
+        var cateid = SQL.QueryScalar<int>("select CategoryID from Activity where ActivityID=@p0", activityId);
+        if (cateid == 6)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = "该类下的内容不可删除" }));
+            return;
+        }
+
         using (DbService db = new DbService())
         {
             db.Execute("delete from Activity where ActivityID=@p0", activityId);
@@ -35,6 +42,12 @@
         if (req.HasError)
         {
             Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+            return;
+        }
+
+        if (categoryId == 6)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = "不可给该类添加新内容" }));
             return;
         }
 
@@ -83,6 +96,12 @@
         {
             Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
             return;
+        }
+
+        var cateid = SQL.QueryScalar<int>("select CategoryID from Activity where ActivityID=@p0", activityId);
+        if (cateid == 6 && categoryId != 6)
+        {
+            categoryId = 6;
         }
 
         title = Json.Encode(new { t = title, s = subTitle });
@@ -212,10 +231,13 @@
     },{
         text: '招聘信息',
         value: 5
+    },{
+        text: '网站文案',
+        value: 6
     }];
 </script>
 <script>
-    seajs.use(['jquery','lib/buttons','lib/popup','lib/grid','lib/global.css'],function ($,Buttons,popup) {
+    seajs.use(['jquery','lib/buttons','lib/popup','lib/grid','lib/global.css'],function($,Buttons,popup) {
 
         //添加
         var dialogAddForm=new popup.Form({
@@ -258,13 +280,13 @@
             },
             buttons: [{
                 text: '添加',
-                handle: function () {
+                handle: function() {
                     var $memo=dialogAddForm.control('content');
                     dialogAddForm.submit({
-                        beforeSend: function () {
+                        beforeSend: function() {
                             $memo.val(encodeURIComponent(dialogAddForm.editor('content').html()));
                         },
-                        success: function (res) {
+                        success: function(res) {
                             if(res.success) {
                                 dialogAddForm.hide().reset();
                                 grid.search();
@@ -274,14 +296,14 @@
                                 alert(res.msg);
                             }
                         },
-                        error: function () {
+                        error: function() {
                             $memo.val(decodeURIComponent($memo.val()));
                         }
                     });
                 }
             },{
                 text: '取消',
-                handle: function () {
+                handle: function() {
                     dialogAddForm.hide();
                 }
             }]
@@ -330,13 +352,13 @@
             },
             buttons: [{
                 text: '修改',
-                handle: function () {
+                handle: function() {
                     var $memo=dialogModifyForm.control('content');
                     dialogModifyForm.submit({
-                        beforeSend: function () {
+                        beforeSend: function() {
                             $memo.val(encodeURIComponent(dialogModifyForm.editor('content').html()));
                         },
-                        success: function (res) {
+                        success: function(res) {
                             if(res.success) {
                                 dialogModifyForm.hide().reset();
                                 grid.search();
@@ -344,14 +366,14 @@
                             else
                                 alert(res.msg);
                         },
-                        error: function () {
+                        error: function() {
                             $memo.val(decodeURIComponent($memo.val()));
                         }
                     });
                 }
             },{
                 text: '取消',
-                handle: function () {
+                handle: function() {
                     dialogModifyForm.hide();
                 }
             }]
@@ -362,14 +384,14 @@
             text: "添加",
             ico: "add",
             disabled: false,
-            handle: function () {
+            handle: function() {
                 dialogAddForm.show();
             }
         },{
             text: "修改",
             ico: "modify",
             disabled: true,
-            handle: function () {
+            handle: function() {
                 var data=grid.selectedRow().data;
                 $.ajax({
                     url: '?action=get',
@@ -378,7 +400,7 @@
                         activityId: data.ActivityID
                     },
                     dataType: 'json',
-                    success: function (res) {
+                    success: function(res) {
                         if(res.success) {
                             var data=res.data;
                             dialogModifyForm.control("activityId").val(data.ActivityID);
@@ -396,7 +418,7 @@
             text: "删除",
             ico: "delete",
             disabled: true,
-            handle: function () {
+            handle: function() {
                 if(!window.confirm('确认删除？')) return;
                 var data=grid.selectedRow().data;
 
@@ -407,7 +429,7 @@
                         activityId: data.ActivityID
                     },
                     dataType: 'json',
-                    success: function (res) {
+                    success: function(res) {
                         if(res.success) {
                             alert('删除成功！');
                             grid.search();
@@ -422,7 +444,7 @@
         var grid=$('#grid').grid({
             search: {
                 url: "?action=search",
-                beforeSend: function () {
+                beforeSend: function() {
                     buttons.disable(1,2);
                 },
                 data: {
@@ -438,7 +460,7 @@
                 }
             },
             pageEnabled: true,
-            onRowSelect: function (row,data) {
+            onRowSelect: function(row,data) {
                 buttons.enable(1,2);
             },
             columns: [{

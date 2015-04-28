@@ -22,6 +22,17 @@ namespace XX_PhotoPrint
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
             routes.MapRoute(
+               "Entrance",
+               "",
+               new { controller = "Home", action = "Index", catalog = "Home", handle = "Home" }
+            );
+            routes.MapRoute(
+               "Index",
+               "Index.html",
+               new { controller = "Home", action = "Index", catalog = "Home", handle = "Index" }
+           );
+
+            routes.MapRoute(
                 "UserHtml",
                 "{handle}.html",
                 new { controller = "Home", action = "Index", catalog = "User" },
@@ -67,7 +78,7 @@ namespace XX_PhotoPrint
                 "News",
                 "{handle}.html",
                 new { controller = "Home", action = "Index", catalog = "News" },
-                new { handle = "^Recruit|Download|AboutUs|Contact|Help$" }
+                new { handle = "^Recruit|Download|AboutUs|Contact|Help|News$" }
             );
 
             routes.MapRoute(
@@ -94,20 +105,20 @@ namespace XX_PhotoPrint
             routes.MapRoute(
                 "alipayto",
                 "alipayto/{orderid}",
-                new { controller = "AlipayDouble", action = "alipayto" },
+                new { controller = "AlipayDirect", action = "alipayto" },
                 new { orderid = "^\\d+$" }
             );
 
             routes.MapRoute(
                 "AlipayReturnUrl",
                 "AlipayReturnUrl",
-                new { controller = "AlipayDouble", action = "AlipayReturnUrl" }
+                new { controller = "AlipayDirect", action = "AlipayReturnUrl" }
             );
 
             routes.MapRoute(
                 "AlipayNotifyUrl",
                 "AlipayNotifyUrl",
-                new { controller = "AlipayDouble", action = "AlipayNotifyUrl" }
+                new { controller = "AlipayDirect", action = "AlipayNotifyUrl" }
             );
 
             routes.MapRoute(
