@@ -19,7 +19,7 @@
         string workDesc = req.String("workDesc");
         var picture = req.File("picture", false, "缺少商品图片");
         var print = req.File("print", false, "缺少打印图片");
-        var swf = req.File("swf", false, "缺少3D swf文件", "swf", "请上传swf文件");
+        var swf = req.File("swf", true, "缺少3D swf文件", "swf", "请上传swf文件");
         string colors = req.String("colors", false, "缺少商品颜色");
         string sizes = req.String("sizes", false, "缺少商品尺寸");
 
@@ -46,11 +46,15 @@
         string printSavePath = Server.MapPath("~/Content/" + printSrc);
         string swfSavePath = Server.MapPath("~/" + swfSrc);
         string dir = System.IO.Path.GetDirectoryName(savePath);
+        string swfdir = System.IO.Path.GetDirectoryName(swfSavePath);
         if (!System.IO.Directory.Exists(dir))
         {
             System.IO.Directory.CreateDirectory(dir);
         }
-
+        if (!System.IO.Directory.Exists(swfdir))
+        {
+            System.IO.Directory.CreateDirectory(swfdir);
+        }
 
         using (DbService db = new DbService())
         {
@@ -90,7 +94,13 @@
         }
         picture.SaveAs(savePath);
         print.SaveAs(printSavePath);
-        swf.SaveAs(swfSavePath);
+        if (swf != null && swf.ContentLength != 0)
+        {
+            swf.SaveAs(swfSavePath);
+        }
+        else
+        {
+        }
 
         Output.Write(HtmlService.SubmitResult(callback, new { success = true, productId = productId }));
         return;
@@ -207,8 +217,7 @@
         <th class="vtop">基本信息</th>
         <td>
             <div class="p-color" style="z-index: 0">
-                <div class="J_BaseInfo p-colors">
-                    <p class="bs"><input class="text_short p-size" value="材质" /><i class="bs-text">：</i><input class="text_normal p-size" /><em>×</em></p>
+                <div class="J_BaseInfo p-colors"><p class="bs"><input class="text_short p-size" value="材质" /><i class="bs-text">：</i><input class="text_normal p-size" /><em>×</em></p>
                     <p class="bs"><input class="text_short p-size" value="工艺" /><i class="bs-text">：</i><input class="text_normal p-size" /><em>×</em></p>
                     <span id="addBaseInfo" class="p-color-add"><em class="ico-add"></em></span></div>
                 <input type="hidden" name="baseInfo" />
@@ -232,12 +241,13 @@
 </table>
 </form>
 <div class="action"><button id="add" class="button">添加</button>
-    <a class="button" href="products">取消</a> </div>
+    <a class="button" href="products">取消</a>
+</div>
 <script>
-    seajs.use(['jquery','kindeditor/kindeditor-min','lib/validation','lib/util','colorpicker/colorpicker','lib/global.css','colorpicker/colorpicker.css'],function($,K,V,util) {
+    seajs.use(['jquery','kindeditor/kindeditor-min','lib/validation','lib/util','colorpicker/colorpicker','lib/global.css','colorpicker/colorpicker.css'],function ($,K,V,util) {
         //商品分类
         var $subId=$('#subId');
-        $('#categoryId').on('change',function() {
+        $('#categoryId').on('change',function () {
             var id=this.value;
             $subId[0].length=1;
 
@@ -249,9 +259,9 @@
                         categoryId: id
                     },
                     dataType: 'json',
-                    success: function(res) {
+                    success: function (res) {
                         if(res.success) {
-                            $.each(res.data,function(i,item) {
+                            $.each(res.data,function (i,item) {
                                 $subId.append('<option value="'+item.SubID+'">'+item.SubName+'</option>');
                             });
                         } else
@@ -280,22 +290,22 @@
             $colors=$('.J_colors'),
             $colorAdd=$('#addColor');
 
-        $colors.delegate('p em','click',function() {
+        $colors.delegate('p em','click',function () {
             $(this).parent().remove();
         });
 
-        $colorAdd.click(function() {
+        $colorAdd.click(function () {
             $colorPicker.css({
                 left: Math.min(this.offsetLeft+this.offsetWidth,$(window).width()/2+500-$colorPicker.parent().offset().left-$colorPicker.outerWidth())
 
             }).show(200);
         });
 
-        $('#cpCancel').click(function() {
+        $('#cpCancel').click(function () {
             $colorPicker.hide(200);
         });
 
-        $('#cpOK').click(function() {
+        $('#cpOK').click(function () {
             var colorName=$colorName.val(),
                 colorCode=$colorCode.val();
 
@@ -311,9 +321,9 @@
                 .attr('data-color',colorCode)
                 .insertBefore($colorAdd);
         });
-        var getColors=function() {
+        var getColors=function () {
             var colors=[];
-            $colors.find('[data-name]').each(function(i,item) {
+            $colors.find('[data-name]').each(function (i,item) {
                 item=$(item);
                 colors.push({
                     colorName: item.attr('data-name'),
@@ -326,7 +336,7 @@
         //商品尺寸
         var $sizeName=$('#sizeName');
 
-        $('#addSize').click(function() {
+        $('#addSize').click(function () {
             var sizeName=$sizeName.val();
 
             if(sizeName=='') {
@@ -341,13 +351,13 @@
             $sizeName.val('');
         });
 
-        $('.J_Size,.J_BaseInfo').delegate('p em','click',function() {
+        $('.J_Size,.J_BaseInfo').delegate('p em','click',function () {
             $(this).parent().remove();
         });
 
-        var getSizes=function() {
+        var getSizes=function () {
             var sizes=[];
-            $('.J_Size').find('[data-name]').each(function(i,item) {
+            $('.J_Size').find('[data-name]').each(function (i,item) {
                 item=$(item);
                 sizes.push({
                     sizeName: item.attr('data-name')
@@ -358,14 +368,14 @@
 
         //基本信息
         $baseInfoBtn=$('#addBaseInfo');
-        $baseInfoBtn.click(function() {
+        $baseInfoBtn.click(function () {
             $('<p class="bs"><input class="text_short p-size" /><i class="bs-text">：</i><input class="text_normal p-size" /><em>×</em></p>')
                 .insertBefore($baseInfoBtn);
         });
 
-        var getBaseInfos=function() {
+        var getBaseInfos=function () {
             var infos=[];
-            $('.J_BaseInfo').find('.bs').each(function(i,item) {
+            $('.J_BaseInfo').find('.bs').each(function (i,item) {
                 item=$(item).find('input');
 
                 infos.push({
@@ -402,14 +412,14 @@
         },{
             id: '#addColor',
             top: 0,
-            validate: function() {
+            validate: function () {
                 return getColors().length>0;
             },
             validationText: '请添加商品颜色'
         },{
             id: '#addSize',
             top: 0,
-            validate: function() {
+            validate: function () {
                 return getSizes().length>0;
             },
             validationText: '请添加商品尺寸'
@@ -421,7 +431,7 @@
         }]);
 
         //添加商品
-        $('#add').click(function() {
+        $('#add').click(function () {
             var colors=getColors(),
                 sizes=getSizes(),
                 infos=getBaseInfos();
@@ -433,7 +443,7 @@
                 $('[name="sizes"]').val(util.stringify(sizes));
                 $('[name="baseInfo"]').val(util.stringify(infos));
 
-                util.submitForm('#form1',function(res) {
+                util.submitForm('#form1',function (res) {
                     //alert(util.stringify(res));
                     $content.val(decodeURIComponent($content.val()));
                     if(res.success) {
