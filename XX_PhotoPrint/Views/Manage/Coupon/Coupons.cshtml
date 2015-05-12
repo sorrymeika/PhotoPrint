@@ -45,14 +45,15 @@
         using (DbService db = new DbService())
         {
             int couponId;
-            string code = RandomCode.Create(5);
             DateTime now = DateTime.Now;
 
             db.Execute("insert into Coupon (Title,Memo,Code,Number,CouponDateFrom,CouponDate,CreationDate,CategoryID,Price) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8)", out couponId, title, memo, "", number, couponDateFrom, couponDate, now, categoryId, price);
 
+            int codeid;
             for (var i = 0; i < number; i++)
             {
-                db.Execute("insert into CouponCode (CouponID,Code,UserID,UseTimes,IsUsed) values (@p0,@p1,0,0,0)", couponId, RandomCode.MakeCoupon(couponId, 5));
+                db.Execute("insert into CouponCode (CouponID,Code,UserID,UseTimes,IsUsed) values (@p0,@p1,0,0,0)", out codeid, couponId, RandomCode.MakeCoupon(couponId, 5));
+                System.Threading.Thread.Sleep(1);
             }
         }
 
@@ -80,7 +81,6 @@
 
         using (DbService db = new DbService())
         {
-            string code = RandomCode.Create(5);
             DateTime now = DateTime.Now;
 
             db.Execute("update Coupon set Title=@p0,Memo=@p1,CouponDateFrom=@p2,CouponDate=@p3,EditDate=@p4,CategoryID=@p5,Price=@p6 where CouponID=@p7", title, memo, couponDateFrom, couponDate, now, categoryId, price, couponId);
@@ -124,9 +124,9 @@
 
         var data = SL.Data.SQL.Query("select Code as 优惠券 from CouponCode where UserID=0 and CouponID=@p0", couponId);
 
-        SL.Util.ExcelUtil.Export(data, Server.MapPath("~/upload/download.xls"));
+        SL.Util.ExcelUtil.Export(data, Server.MapPath("~/upload/download.xlsx"));
 
-        Response.Redirect(Url.Content("~/upload/download.xls"));
+        Response.Redirect(Url.Content("~/upload/download.xlsx"));
         return;
 
     }
@@ -479,7 +479,7 @@ var categories=@(new MvcHtmlString(js.Serialize(categories.Select(a => new
                 if(!window.confirm('确认导出？')) return;
                 var data=grid.selectedRow().data;
 
-                window.open("coupons?action=export&couponId="data.CouponID);
+                window.open("coupons?action=export&couponId="+data.CouponID);
             }
         }]);
 
