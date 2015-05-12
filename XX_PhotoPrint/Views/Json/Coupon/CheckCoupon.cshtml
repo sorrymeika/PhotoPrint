@@ -1,0 +1,83 @@
+﻿@using XX_PhotoPrint.Service
+@using System.Web.Script.Serialization
+@{
+    Layout = null;
+
+    int uid;
+
+    if (!AuthHelper.CheckAuth(out uid))
+    {
+        Json.Write(new { success = false, returnCode = "0000", msg = "请先登录" }, Output);
+        return;
+    }
+
+    var req = new Req();
+    String couponCode = req.String("CouponCode", false, "缺少优惠券编码");
+
+    if (req.HasError)
+    {
+        Json.Write(new { success = false, msg = req.FirstError, errors = req.GetErrors() }, Output);
+        return;
+    }
+
+    Dictionary<int, int> couponTryCache;
+    if (Cache["CouponTryTimes"] != null)
+    {
+        couponTryCache = (Dictionary<int, int>)Cache["CouponTryTimes"];
+
+        if (couponTryCache.ContainsKey(uid) && couponTryCache[uid] >= 10)
+        {
+            Json.Write(new { success = false, msg = "您的尝试次数过多" }, Output);
+            return;
+        }
+    }
+    else
+    {
+        Cache["CouponTryTimes"] = couponTryCache = new Dictionary<int, int>();
+    }
+
+    int couponId = SQL.QueryScalar<int>("select CouponID from CouponCode where Code=@p0 and UserID=0", couponCode);
+
+    if (couponId > 0)
+    {
+        var coupon = SQL.QueryOne("select CouponID,Price,CouponDate,CouponDateFrom from Coupon where CouponID=@p0", couponId);
+        if (coupon == null)
+        {
+            Json.Write(new { success = false, msg = "优惠券不存在" }, Output);
+            return;
+        }
+        DateTime dtFrom = DateTime.Parse(coupon["CouponDateFrom"].ToString()).Date;
+        DateTime dtTo = DateTime.Parse(coupon["CouponDate"].ToString()).Date;
+        decimal discount = 0;
+        if (DateTime.Today >= dtFrom && DateTime.Today <= dtTo)
+        {
+            discount = (decimal)coupon["Price"];
+        }
+        else
+        {
+            Json.Write(new { success = false, msg = "优惠券已过期" }, Output);
+            return;
+        }
+
+        if (couponTryCache.ContainsKey(uid))
+        {
+            couponTryCache.Remove(uid);
+        }
+        Json.Write(new { success = true, couponId = couponId, discount = discount }, Output);
+    }
+    else
+    {
+        if (couponTryCache.ContainsKey(uid))
+        {
+            couponTryCache[uid]++;
+        }
+        else
+        {
+            couponTryCache[uid] = 1;
+        }
+
+        Json.Write(new { success = false, msg = "不正确或已被使用的优惠券编码" }, Output);
+    }
+
+    return;
+}

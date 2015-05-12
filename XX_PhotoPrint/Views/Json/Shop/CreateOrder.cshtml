@@ -19,6 +19,7 @@
     int addressId = req.Int("AddressID", false, "缺少地址编号");
     int paymentId = req.Int("PaymentID", false, "缺少支付方式编号");
     int couponId = req.Int("CouponID");
+    string couponCode = req.String("CouponCode");
     string message = req.String("Message");
     string inv = req.String("Inv");
 
@@ -76,24 +77,33 @@
 
     if (couponId != 0)
     {
-        var coupon = SQL.QueryOne("select CouponID,Price,CouponDate,CouponDateFrom from Coupon where CouponID=@p0", couponId);
-        if (coupon == null)
+        if (couponId != SQL.QueryScalar<int>("select CouponID from CouponCode where Code=@p0 and UserID=0", couponCode))
         {
-            Output.Write(js.Serialize(new { success = false, msg = "优惠券不存在" }));
-            return;
-        }
-        DateTime dtFrom = DateTime.Parse(coupon["CouponDateFrom"].ToString()).Date;
-        DateTime dtTo = DateTime.Parse(coupon["CouponDate"].ToString()).Date;
-
-        if (DateTime.Today >= dtFrom && DateTime.Today <= dtTo)
-        {
-            discount = (decimal)coupon["Price"];
-            amount -= discount;
+            couponId = 0;
         }
         else
         {
-            Output.Write(js.Serialize(new { success = false, msg = "优惠券已过期" }));
-            return;
+            var coupon = SQL.QueryOne("select CouponID,Price,CouponDate,CouponDateFrom from Coupon where CouponID=@p0", couponId);
+            if (coupon == null)
+            {
+                Output.Write(js.Serialize(new { success = false, msg = "优惠券不存在" }));
+                return;
+            }
+            DateTime dtFrom = DateTime.Parse(coupon["CouponDateFrom"].ToString()).Date;
+            DateTime dtTo = DateTime.Parse(coupon["CouponDate"].ToString()).Date;
+
+            if (DateTime.Today >= dtFrom && DateTime.Today <= dtTo)
+            {
+                discount = (decimal)coupon["Price"];
+                amount -= discount;
+
+                amount = Math.Max(amount, 0);
+            }
+            else
+            {
+                Output.Write(js.Serialize(new { success = false, msg = "优惠券已过期" }));
+                return;
+            }
         }
     }
 
@@ -112,6 +122,10 @@
         {
             item = data[i];
             db.Execute("insert into OrderDetail (OrderID,UserWorkID,Qty) values (@p0,@p1,@p2)", orderid, item["UserWorkID"], item["Qty"]);
+        }
+        if (couponId != 0)
+        {
+            db.Execute("update CouponCode set IsUsed=1,UserID=@p0 where CouponCode=@p1", uid, couponCode);
         }
         db.Commit();
     }
