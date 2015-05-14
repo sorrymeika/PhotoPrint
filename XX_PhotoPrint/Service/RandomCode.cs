@@ -30,7 +30,7 @@ namespace XX_PhotoPrint.Service
             return i2s(couponId) + Create(couponLength);
         }
 
-        public static string Create(int codeCount)
+        public static string Create(int codeCount, int seq = 0)
         {
             string randomCode = "";
             int temp = -1;

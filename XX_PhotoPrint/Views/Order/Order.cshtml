@@ -183,12 +183,14 @@ else
             </table>
             <div class="cartinfo clearfix mainlast">
                 <div class="leave_msg">
-                    <div class="hd">给速纺留言</div>
+                    <div class="bd">输入优惠券 <input class="text js_coupon" type="text" /></div>
+                    <div class="hd" style="padding-top: 10px;">给速纺留言</div>
                     <div class="bd"><textarea class="txt_leave_msg js_txt_message"></textarea></div>
                     <div class="hd" style="padding-top: 10px;">是否需要发票 <input name="needInv" type="radio" value="1" />是 <input name="needInv" type="radio" value="0" checked />否</div>
                     <div class="bd" style="padding-top: 10px;">发票抬头 <input class="text js_inv" type="text" disabled /></div>
                 </div>
                 <ul class="cartprice">
+                    <li><span class="js_discount">￥0</span>优惠券</li>
                     <li><span class="js_amount"></span>金额</li>
                     <li class="solid"><span class="js_freight">￥22</span>运费</li>
                     <li class="solid"><span class="js_total_amount">￥</span>合计</li>
@@ -201,298 +203,336 @@ else
     </div>
     
     <script type="text/javascript">
-    seajs.use(['$','lib/util','sl/view','sl/validation','extentions/area','sl/tmpl'],function($,util,View,Validation,areaEvents,tmpl) {
-        var CartView=View.extend({
-            events: {
-                'click .js_create_order': 'createOrder',
-                'click .js_edit': 'editAddress',
-                'change [name="needInv"]': function(){
-                    var val=this.$('[name="needInv"]:checked').val();
-                    this.$('.js_inv')[0].disabled=val==1?false:true;
-                    if (val!=1)
-                        this.$('.js_inv')[0].value='';
-                }
-            },
+        seajs.use(['$','lib/util','sl/view','sl/validation','extentions/area','sl/tmpl'],function($,util,View,Validation,areaEvents,tmpl) {
+            var CartView=View.extend({
+                events: {
+                    'click .js_create_order': 'createOrder',
+                    'click .js_edit': 'editAddress',
+                    'change [name="needInv"]': function() {
+                        var val=this.$('[name="needInv"]:checked').val();
+                        this.$('.js_inv')[0].disabled=val==1?false:true;
+                        if(val!=1)
+                            this.$('.js_inv')[0].value='';
+                    },
+                    'blur .js_coupon': function(e) {
+                        var $target=$(e.currentTarget),
+                            code=$target.val(),
+                            that=this;
 
-            editAddress: function(e) {
-                var target=$(e.currentTarget);
+                        if (code){
+                            $.post('/json/coupon/checkcoupon',{ CouponCode:code },function(res){
+                                
+                                if (res.success){
+                                    that.$('.js_discount').html('￥'+res.discount);
+                                    that.couponId=couponId;
 
-                if (target.html()=="编辑") {
-                    $('.js_edit_cont').show();
-                    $('.js_addr_info').hide();
-                    target.html("取消");
+                                } else {
+                                    that.$('.js_discount').html('￥0')
+                                    that.couponId=0;
+                                    $target.val('');
+                                    that.validator.item(0).error(res.msg);
+                                }
 
-                    if (currentAddress) {
-                        addressView.set(currentAddress);
+                            },'json');
+                        } else {
+                            that.$('.js_discount').html('￥0')
+                            that.couponId=0;
+                        }
                     }
+                },
 
-                } else if (currentAddress){
-                    $('.js_edit_cont').hide();
-                    $('.js_addr_info').show();
-                    target.html("编辑");
-                }
-            },
+                editAddress: function(e) {
+                    var target=$(e.currentTarget);
 
-            createOrder: function(e) {
-                var that=this,
+                    if(target.html()=="编辑") {
+                        $('.js_edit_cont').show();
+                        $('.js_addr_info').hide();
+                        target.html("取消");
+
+                        if(currentAddress) {
+                            addressView.set(currentAddress);
+                        }
+
+                    } else if(currentAddress) {
+                        $('.js_edit_cont').hide();
+                        $('.js_addr_info').show();
+                        target.html("编辑");
+                    }
+                },
+
+                createOrder: function(e) {
+                    var that=this,
                     $target=$(e.currentTarget);
 
-                if (!currentAddress||!currentAddress.AddressID){
-                    alert("请填写收货地址");
-                    return;
-                }
-
-                $target.addClass('disabled').val('请稍候');
-
-                $.ajax({
-                    url: '/json/shop/createorder',
-                    data: {
-                        AddressID: currentAddress.AddressID,
-                        PaymentID: 2,
-                        Message: util.encodeHTML(that.$('.js_txt_message').val()),
-                        Inv: util.encodeHTML(that.$('.js_inv').val()),
-                        Carts: util.query('?ids')
-                    },
-                    type: 'POST',
-                    dataType: 'json',
-                    success: function(res){
-                        if (res.success) {
-                            location.href="/order/"+res.orderid+'/'
-                        } else {
-                            alert(res.msg);
-                        }
-                    },
-                    error: function(){
-                            alert("网络错误");
-                    },
-                    complete: function(){
-                        $target.removeClass('disabled').val('确认并付款');
+                    if(!currentAddress||!currentAddress.AddressID) {
+                        alert("请填写收货地址");
+                        return;
                     }
-                });
-            },
 
-            getTotal: function() {
-                var total=0;
-                this.$('tr').find('.js_total').each(function() {
-                    total+=parseFloat($(this).html().replace('￥',''));
-                });
-                this.$('.js_amount').html('￥'+total);
-                this.$('.js_freight').html('￥'+(total<79?22:0));
-                this.$('.js_total_amount').html('￥'+(total+(total<79?22:0)));
-
-                return total;
-            },
-
-            htmlNoData: '<tr class="noborder"><td colspan="7">您的购物车中暂无商品，请去<a href="/">首页</a>选购吧</td></tr>',
-
-            htmlLoading: '<tr class="noborder"><td colspan="7">正在载入...</td></tr>',
-
-            initialize: function() {
-                var that=this;
-
-                that.$list=$('.js_cart_list');
-
-                that.$list.html(that.htmlLoading);
-
-                $.ajax({
-                    url: '/json/shop/getshoppingcart',
-                    data: {
-                        ids: util.query('?ids')
-                    },
-                    dataType: 'json',
-                    success: function(res) {
-                        if(res.success&&res.data&&res.data.length) {
-                            var template=$('#cartItem').html();
-
-                            that.$list.html(tmpl(template,res));
-
-                        } else {
-                            that.$list.html(that.htmlNoData);
-                        }
-                        that.getTotal();
-                    },
-                    error: function() {
-                        that.getTotal();
-                    }
-                });
-            }
-        });
-
-        var AddressView=View.extend({
-            events: $.extend({
-                'click .js_save': 'save',
-                'click .js_add': 'add'
-            },areaEvents),
-
-            add: function(e){
-                var that=this,
-                    $target=$(e.currentTarget);
-
-                if(that.validator.validate()) {
                     $target.addClass('disabled').val('请稍候');
 
                     $.ajax({
-                        url: '/json/user/addaddress',
+                        url: '/json/shop/createorder',
                         data: {
-                            CityID: that.$('[name="city"]').val(),
-                            RegionID: that.$('[name="region"]').val(),
-                            Address: that.$('[name="address"]').val(),
-                            Receiver: that.$('[name="realName"]').val(),
-                            Mobile: that.$('[name="mobile"]').val()
+                            AddressID: currentAddress.AddressID,
+                            PaymentID: 2,
+                            Message: util.encodeHTML(that.$('.js_txt_message').val()),
+                            Inv: util.encodeHTML(that.$('.js_inv').val()),
+                            Carts: util.query('?ids'),
+                            CouponId: that.couponId||0,
+                            CouponCode: that.$('.js_coupon').val()||''
                         },
+                        type: 'POST',
                         dataType: 'json',
-                        success: function(res){
-                            if (res.success) {
-                                currentAddress=res.data;
-                                that.setHtml(currentAddress);
-
-                                $('.js_edit').trigger('click');
+                        success: function(res) {
+                            if(res.success) {
+                                location.href="/order/"+res.orderid+'/'
                             } else {
                                 alert(res.msg);
                             }
                         },
-                        error: function(){
+                        error: function() {
+                            alert("网络错误");
                         },
-                        complete: function(){
-                            $target.removeClass('disabled').val('新增地址');
+                        complete: function() {
+                            $target.removeClass('disabled').val('确认并付款');
+                        }
+                    });
+                },
+
+                getTotal: function() {
+                    var total=0;
+                    this.$('tr').find('.js_total').each(function() {
+                        total+=parseFloat($(this).html().replace('￥',''));
+                    });
+
+                    total-=parseFloat(this.$('.js_discount').html().replace('￥',''));
+
+                    total=Math.max(total,0);
+
+                    this.$('.js_amount').html('￥'+total);
+                    this.$('.js_freight').html('￥'+(total<79?22:0));
+                    this.$('.js_total_amount').html('￥'+(total+(total<79?22:0)));
+
+                    return total;
+                },
+
+                htmlNoData: '<tr class="noborder"><td colspan="7">您的购物车中暂无商品，请去<a href="/">首页</a>选购吧</td></tr>',
+
+                htmlLoading: '<tr class="noborder"><td colspan="7">正在载入...</td></tr>',
+
+                initialize: function() {
+                    var that=this;
+
+                    that.validator=new Validation({
+                        '.js_coupon': {
+                            successText: ''
                         }
                     });
 
+                    that.$list=$('.js_cart_list');
+
+                    that.$list.html(that.htmlLoading);
+
+                    $.ajax({
+                        url: '/json/shop/getshoppingcart',
+                        data: {
+                            ids: util.query('?ids')
+                        },
+                        dataType: 'json',
+                        success: function(res) {
+                            if(res.success&&res.data&&res.data.length) {
+                                var template=$('#cartItem').html();
+
+                                that.$list.html(tmpl(template,res));
+
+                            } else {
+                                that.$list.html(that.htmlNoData);
+                            }
+                            that.getTotal();
+                        },
+                        error: function() {
+                            that.getTotal();
+                        }
+                    });
                 }
-            },
+            });
 
-            setHtml: function(data){
-                var that=this;
-                that.$('.js_name').html(data.Receiver);
-                that.$('.js_mobile').html(data.Mobile);
-                that.$('.js_address').html(data.ProvName+data.CityName+data.RegionName+data.Address);
-            },
+            var AddressView=View.extend({
+                events: $.extend({
+                    'click .js_save': 'save',
+                    'click .js_add': 'add'
+                },areaEvents),
 
-            save: function(e) {
-                var that=this,
+                add: function(e) {
+                    var that=this,
                     $target=$(e.currentTarget);
 
-                if (!currentAddress) {
-                    that.add(e);
-                } else {
                     if(that.validator.validate()) {
                         $target.addClass('disabled').val('请稍候');
 
-
-                        var data={
-                            AddressID: currentAddress.AddressID,
-                            CityID: that.$('[name="city"]').val(),
-                            RegionID: that.$('[name="region"]').val(),
-                            Address: that.$('[name="address"]').val(),
-                            Receiver: that.$('[name="realName"]').val(),
-                            Mobile: that.$('[name="mobile"]').val()
-                        };
-
                         $.ajax({
-                            url: '/json/user/modifyaddress',
-                            data: data,
+                            url: '/json/user/addaddress',
+                            data: {
+                                CityID: that.$('[name="city"]').val(),
+                                RegionID: that.$('[name="region"]').val(),
+                                Address: that.$('[name="address"]').val(),
+                                Receiver: that.$('[name="realName"]').val(),
+                                Mobile: that.$('[name="mobile"]').val()
+                            },
                             dataType: 'json',
-                            success: function(res){
-                                if (res.success) {
-                                    $.extend(currentAddress,data);
+                            success: function(res) {
+                                if(res.success) {
+                                    currentAddress=res.data;
                                     that.setHtml(currentAddress);
+
                                     $('.js_edit').trigger('click');
                                 } else {
                                     alert(res.msg);
                                 }
                             },
-                            error: function(){
+                            error: function() {
                             },
-                            complete: function(){
-                                $target.removeClass('disabled').val('保存');
+                            complete: function() {
+                                $target.removeClass('disabled').val('新增地址');
                             }
                         });
+
                     }
-                }
+                },
 
-            },
+                setHtml: function(data) {
+                    var that=this;
+                    that.$('.js_name').html(data.Receiver);
+                    that.$('.js_mobile').html(data.Mobile);
+                    that.$('.js_address').html(data.ProvName+data.CityName+data.RegionName+data.Address);
+                },
 
-            set: function(data){
-                var that=this;
+                save: function(e) {
+                    var that=this,
+                    $target=$(e.currentTarget);
 
-                if (typeof data.ProvID!=='undefined'&&typeof data.CityID!=='undefined'&&typeof data.RegionID!=='undefined') {
-                    var $prov=this.$('[name="province"]'),
+                    if(!currentAddress) {
+                        that.add(e);
+                    } else {
+                        if(that.validator.validate()) {
+                            $target.addClass('disabled').val('请稍候');
+
+
+                            var data={
+                                AddressID: currentAddress.AddressID,
+                                CityID: that.$('[name="city"]').val(),
+                                RegionID: that.$('[name="region"]').val(),
+                                Address: that.$('[name="address"]').val(),
+                                Receiver: that.$('[name="realName"]').val(),
+                                Mobile: that.$('[name="mobile"]').val()
+                            };
+
+                            $.ajax({
+                                url: '/json/user/modifyaddress',
+                                data: data,
+                                dataType: 'json',
+                                success: function(res) {
+                                    if(res.success) {
+                                        $.extend(currentAddress,data);
+                                        that.setHtml(currentAddress);
+                                        $('.js_edit').trigger('click');
+                                    } else {
+                                        alert(res.msg);
+                                    }
+                                },
+                                error: function() {
+                                },
+                                complete: function() {
+                                    $target.removeClass('disabled').val('保存');
+                                }
+                            });
+                        }
+                    }
+
+                },
+
+                set: function(data) {
+                    var that=this;
+
+                    if(typeof data.ProvID!=='undefined'&&typeof data.CityID!=='undefined'&&typeof data.RegionID!=='undefined') {
+                        var $prov=this.$('[name="province"]'),
                         $city=this.$('[name="city"]'),
                         $region=this.$('[name="region"]');
 
-                    $prov[0].value=data.ProvID;
-                    $prov.trigger('change');
+                        $prov[0].value=data.ProvID;
+                        $prov.trigger('change');
 
-                    $city.one('reload',function(){
-                        $city[0].value=data.CityID;
-                        $city.trigger('change');
+                        $city.one('reload',function() {
+                            $city[0].value=data.CityID;
+                            $city.trigger('change');
 
-                         $region.one('reload',function(){
-                            $region[0].value=data.RegionID;
+                            $region.one('reload',function() {
+                                $region[0].value=data.RegionID;
+                            });
                         });
+                    }
+
+                    if(typeof data.Address!=='undefined') {
+                        this.$('[name="address"]').val(data.Address);
+                    }
+
+                    if(typeof data.Receiver!=='undefined') {
+                        this.$('[name="realName"]').val(data.Receiver);
+                    }
+
+                    if(typeof data.Mobile!=='undefined') {
+                        this.$('[name="mobile"]').val(data.Mobile);
+                    }
+                },
+
+                initialize: function() {
+                    var that=this;
+
+                    that.validator=new Validation({
+                        '[name="region"]': {
+                            emptyAble: false,
+                            emptyText: '<i></i>请输入区',
+                            successText: '',
+                            position: 'dock-after:this.closest("dd")'
+                        },
+                        '[name="address"]': {
+                            emptyAble: false,
+                            emptyText: '<i></i>请输入地址',
+                            successText: '',
+                            position: 'dock-after:this.closest("dd")'
+                        },
+                        '[name="realName"]': {
+                            emptyAble: false,
+                            emptyText: '<i></i>请输入收货人',
+                            successText: '',
+                            position: 'dock-after:this.closest("dd")'
+                        },
+                        '[name="mobile"]': {
+                            emptyAble: false,
+                            emptyText: '<i></i>请输入手机',
+                            regex: /1\d{10}/,
+                            regexText: '<i></i>请输入正确的手机',
+                            successText: '',
+                            position: 'dock-after:this.closest("dd")'
+                        }
                     });
                 }
+            });
 
-                if (typeof data.Address!=='undefined') {
-                    this.$('[name="address"]').val(data.Address);
-                }
+            new CartView('.js_cart_bd');
+            var addressView=new AddressView('.js_address_cont');
 
-                if (typeof data.Receiver!=='undefined') {
-                    this.$('[name="realName"]').val(data.Receiver);
-                }
-
-                if (typeof data.Mobile!=='undefined') {
-                    this.$('[name="mobile"]').val(data.Mobile);
-                }
-            },
-
-            initialize: function() {
-                var that=this;
-
-                that.validator=new Validation({
-                    '[name="region"]': {
-                        emptyAble: false,
-                        emptyText: '<i></i>请输入区',
-                        successText: '',
-                        position: 'dock-after:this.closest("dd")'
-                    },
-                    '[name="address"]': {
-                        emptyAble: false,
-                        emptyText: '<i></i>请输入地址',
-                        successText: '',
-                        position: 'dock-after:this.closest("dd")'
-                    },
-                    '[name="realName"]': {
-                        emptyAble: false,
-                        emptyText: '<i></i>请输入收货人',
-                        successText: '',
-                        position: 'dock-after:this.closest("dd")'
-                    },
-                    '[name="mobile"]': {
-                        emptyAble: false,
-                        emptyText: '<i></i>请输入手机',
-                        regex: /1\d{10}/,
-                        regexText: '<i></i>请输入正确的手机',
-                        successText: '',
-                        position: 'dock-after:this.closest("dd")'
-                    }
+            @if ((address == null || address.Count == 0) && userInfo != null)
+            {
+                <text>
+                addressView.set({
+                    ProvID: @(userInfo.ProvID ?? new MvcHtmlString("''")),
+                    CityID: @(userInfo.CityID ?? new MvcHtmlString("''")),
+                    RegionID: @(userInfo.RegionID ?? new MvcHtmlString("''"))
                 });
+                </text>
             }
         });
-
-        new CartView('.js_cart_bd');
-        var addressView=new AddressView('.js_address_cont');
-
-        @if ((address == null || address.Count == 0) && userInfo != null)
-        {
-            <text>
-            addressView.set({
-                ProvID: @(userInfo.ProvID ?? new MvcHtmlString("''")),
-                CityID: @(userInfo.CityID ?? new MvcHtmlString("''")),
-                RegionID: @(userInfo.RegionID ?? new MvcHtmlString("''"))
-            });
-            </text>
-        }
-    });
     </script>
 }

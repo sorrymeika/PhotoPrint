@@ -59,18 +59,17 @@
         string swfSrc = SQL.QueryScalar<string>("select Swf from Work where WorkID=@p0", workId);
         if (swf != null && swf.ContentLength != 0)
         {
-            if (!string.IsNullOrEmpty(swfSrc) && System.IO.File.Exists(Server.MapPath("~/" + swfSrc)))
-            {
-                System.IO.File.Delete(Server.MapPath("~/" + swfSrc));
-            }
-
-            swfSrc = "swf/" + (now.Ticks - DateTime.MinValue.Ticks) + ".swf";
+            swfSrc = "swf/" + Path.GetFileName(swf.FileName);
 
             string savePath = Server.MapPath("~/" + swfSrc);
             string dir = System.IO.Path.GetDirectoryName(savePath);
             if (!System.IO.Directory.Exists(dir))
             {
                 System.IO.Directory.CreateDirectory(dir);
+            }
+            else if (System.IO.File.Exists(savePath))
+            {
+                System.IO.File.Delete(savePath);
             }
             swf.SaveAs(savePath);
         }

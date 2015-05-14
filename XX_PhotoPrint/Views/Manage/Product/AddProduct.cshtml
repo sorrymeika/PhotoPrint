@@ -42,7 +42,7 @@
         string leftPath = "product/" + now.ToString("yyyy") + "/";
         string printSrc = leftPath + (now.Ticks - DateTime.MinValue.Ticks) + print.FileName.Substring(print.FileName.LastIndexOf('.'));
         string src = leftPath + (now.Ticks + 1 - DateTime.MinValue.Ticks) + picture.FileName.Substring(picture.FileName.LastIndexOf('.'));
-        string swfSrc = "swf/" + leftPath + (now.Ticks - DateTime.MinValue.Ticks) + ".swf";
+        string swfSrc = "swf/" + Path.GetFileName(swf.FileName);
         string savePath = Server.MapPath("~/Content/" + src);
         string printSavePath = Server.MapPath("~/" + printSrc);
         string swfSavePath = Server.MapPath("~/" + swfSrc);

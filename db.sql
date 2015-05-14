@@ -380,3 +380,7 @@ insert into Activity (ActivityID,CategoryID,Title,CreationDate,Sort) values (100
 
 set IDENTITY_INSERT Activity OFF
 
+
+set IDENTITY_INSERT Activity ON
+insert into Activity (ActivityID,CategoryID,Title,CreationDate,Sort) values (997,6,'{"t":"ÃâÔðÉùÃ÷","s":""}',GetDate(),0)
+set IDENTITY_INSERT Activity OFF

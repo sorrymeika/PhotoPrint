@@ -1,174 +1,194 @@
 ﻿@using XX_PhotoPrint.Service
 @{
-	var js = new System.Web.Script.Serialization.JavaScriptSerializer();
-	Req req = new Req();
+    var js = new System.Web.Script.Serialization.JavaScriptSerializer();
+    Req req = new Req();
 
-	if (Request["action"] == "delete")
-	{
-		Layout = null;
-		int couponId = req.Int("couponId", false, "缺少编号");
+    if (Request["action"] == "delete")
+    {
+        Layout = null;
+        int couponId = req.Int("couponId", false, "缺少编号");
 
-		if (req.HasError)
-		{
-			Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
-			return;
-		}
+        if (req.HasError)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+            return;
+        }
 
-		using (DbService db = new DbService())
-		{
-			db.Execute("delete from Coupon where CouponID=@p0", couponId);
-			db.Execute("delete from CouponCode where CouponID=@p0", couponId);
-		}
+        using (DbService db = new DbService())
+        {
+            db.Execute("delete from Coupon where CouponID=@p0", couponId);
+            db.Execute("delete from CouponCode where CouponID=@p0", couponId);
+        }
 
-		Output.Write(js.Serialize(new { success = true }));
-		return;
-	}
-	else if (Request["action"] == "add")
-	{
-		Layout = null;
-		string title = req.String("Title", false, "缺少优惠券标题");
-		string memo = req.String("Memo", false, "缺少优惠券内容");
-		int number = req.Int("Number", false, "缺少优惠券数量");
-		DateTime couponDateFrom = req.DateTime("CouponDateFrom", false, "缺少优惠券开始生效时间");
-		DateTime couponDate = req.DateTime("CouponDate", false, "缺少优惠券失效时间");
-		int categoryId = req.Int("CategoryId", false, "缺少优惠券类别");
-		decimal price = req.Decimal("Price", false, "缺少优惠金额");
+        Output.Write(js.Serialize(new { success = true }));
+        return;
+    }
+    else if (Request["action"] == "add")
+    {
+        Layout = null;
+        string title = req.String("Title", false, "缺少优惠券标题");
+        string memo = req.String("Memo", false, "缺少优惠券内容");
+        int number = req.Int("Number", false, "缺少优惠券数量");
+        DateTime couponDateFrom = req.DateTime("CouponDateFrom", false, "缺少优惠券开始生效时间");
+        DateTime couponDate = req.DateTime("CouponDate", false, "缺少优惠券失效时间");
+        int categoryId = req.Int("CategoryId", false, "缺少优惠券类别");
+        decimal price = req.Decimal("Price", false, "缺少优惠金额");
 
-		if (req.HasError)
-		{
-			Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
-			return;
-		}
+        if (req.HasError)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+            return;
+        }
 
-		memo = HttpUtility.UrlDecode(memo);
+        memo = HttpUtility.UrlDecode(memo);
 
-		using (DbService db = new DbService())
-		{
-			int couponId;
-			string code = RandomCode.Create(5);
-			DateTime now = DateTime.Now;
+        using (DbService db = new DbService())
+        {
+            int couponId;
+            DateTime now = DateTime.Now;
 
-			db.Execute("insert into Coupon (Title,Memo,Code,Number,CouponDateFrom,CouponDate,CreationDate,CategoryID,Price) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8)", out couponId, title, memo, "", number, couponDateFrom, couponDate, now, categoryId, price);
+            db.Execute("insert into Coupon (Title,Memo,Code,Number,CouponDateFrom,CouponDate,CreationDate,CategoryID,Price) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8)", out couponId, title, memo, "", number, couponDateFrom, couponDate, now, categoryId, price);
 
-			for (var i = 0; i < number; i++)
-			{
-				db.Execute("insert into CouponCode (CouponID,Code,UserID,UseTimes,IsUsed) values (@p0,@p1,0,0,0)", couponId, RandomCode.MakeCoupon(couponId, 5));
-			}
-		}
+            int codeid;
+            for (var i = 0; i < number; i++)
+            {
+                db.Execute("insert into CouponCode (CouponID,Code,UserID,UseTimes,IsUsed) values (@p0,@p1,0,0,0)", out codeid, couponId, RandomCode.MakeCoupon(couponId, 5));
+                System.Threading.Thread.Sleep(1);
+            }
+        }
 
-		Output.Write(js.Serialize(new { success = true }));
-		return;
-	}
-	else if (Request["action"] == "modify")
-	{
-		Layout = null;
-		string title = req.String("Title", false, "缺少优惠券标题");
-		string memo = req.String("Memo", false, "缺少优惠券内容");
-		DateTime couponDateFrom = req.DateTime("CouponDateFrom", false, "缺少优惠券开始生效时间");
-		DateTime couponDate = req.DateTime("CouponDate", false, "缺少优惠券失效时间");
-		int categoryId = req.Int("CategoryId", false, "缺少优惠券类别");
-		decimal price = req.Decimal("Price", false, "缺少优惠金额");
-		int couponId = req.Int("couponId", false, "缺少编号");
+        Output.Write(js.Serialize(new { success = true }));
+        return;
+    }
+    else if (Request["action"] == "modify")
+    {
+        Layout = null;
+        string title = req.String("Title", false, "缺少优惠券标题");
+        string memo = req.String("Memo", false, "缺少优惠券内容");
+        DateTime couponDateFrom = req.DateTime("CouponDateFrom", false, "缺少优惠券开始生效时间");
+        DateTime couponDate = req.DateTime("CouponDate", false, "缺少优惠券失效时间");
+        int categoryId = req.Int("CategoryId", false, "缺少优惠券类别");
+        decimal price = req.Decimal("Price", false, "缺少优惠金额");
+        int couponId = req.Int("couponId", false, "缺少编号");
 
-		if (req.HasError)
-		{
-			Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
-			return;
-		}
+        if (req.HasError)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+            return;
+        }
 
-		memo = HttpUtility.UrlDecode(memo);
+        memo = HttpUtility.UrlDecode(memo);
 
-		using (DbService db = new DbService())
-		{
-			string code = RandomCode.Create(5);
-			DateTime now = DateTime.Now;
+        using (DbService db = new DbService())
+        {
+            DateTime now = DateTime.Now;
 
-			db.Execute("update Coupon set Title=@p0,Memo=@p1,CouponDateFrom=@p2,CouponDate=@p3,EditDate=@p4,CategoryID=@p5,Price=@p6 where CouponID=@p7", title, memo, couponDateFrom, couponDate, now, categoryId, price, couponId);
-		}
+            db.Execute("update Coupon set Title=@p0,Memo=@p1,CouponDateFrom=@p2,CouponDate=@p3,EditDate=@p4,CategoryID=@p5,Price=@p6 where CouponID=@p7", title, memo, couponDateFrom, couponDate, now, categoryId, price, couponId);
+        }
 
-		Output.Write(js.Serialize(new { success = true }));
-		return;
-	}
-	else if (Request["action"] == "get")
-	{
-		Layout = null;
-		int couponId = req.Int("couponId", false, "缺少编号");
+        Output.Write(js.Serialize(new { success = true }));
+        return;
+    }
+    else if (Request["action"] == "get")
+    {
+        Layout = null;
+        int couponId = req.Int("couponId", false, "缺少编号");
 
-		if (req.HasError)
-		{
-			Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
-			return;
-		}
+        if (req.HasError)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+            return;
+        }
 
-		var data = SQL.QueryOne("select * from Coupon where CouponID=@p0", couponId);
-		if (data != null)
-		{
-			data["CouponDateFrom"] = data["CouponDateFrom"].ToString().Replace(" 00:00:00", "");
-			data["CouponDate"] = data["CouponDate"].ToString().Replace(" 00:00:00", "");
-		}
+        var data = SQL.QueryOne("select * from Coupon where CouponID=@p0", couponId);
+        if (data != null)
+        {
+            data["CouponDateFrom"] = data["CouponDateFrom"].ToString().Replace(" 00:00:00", "");
+            data["CouponDate"] = data["CouponDate"].ToString().Replace(" 00:00:00", "");
+        }
 
-		Output.Write(js.Serialize(new { success = true, data = data }));
-		return;
-	}
-	else if (Request["action"] == "search")
-	{
-		Layout = null;
+        Output.Write(js.Serialize(new { success = true, data = data }));
+        return;
+    }
+    else if ("export" == Request.QueryString["action"])
+    {
+        Layout = null;
 
-		int categoryId = req.Int("CategoryID");
-		int page = req.Int("Page", defaultValue: 1);
-		int pageSize = req.Int("PageSize", defaultValue: 10);
-		string keywords = req.String("Keywords");
-		string sort = req.String("Sort");
-		bool isAsc = req.Bool("Asc");
+        int couponId = req.Int("couponId", false, "缺少编号");
 
-		if (req.HasError)
-		{
-			Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
-			return;
-		}
+        if (req.HasError)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+            return;
+        }
 
-		string where = "1=1";
-		List<object> parameters = new List<object>();
-		if (categoryId != 0)
-		{
-			where += " and d.CategoryID=@p" + parameters.Count;
-			parameters.Add(categoryId);
-		}
-		if (!string.IsNullOrEmpty(keywords))
-		{
-			where += " and (Title like '%'+@p" + parameters.Count + "+'%')";
-			parameters.Add(keywords);
-		}
+        var data = SL.Data.SQL.Query("select Code as 优惠券 from CouponCode where UserID=0 and CouponID=@p0", couponId);
 
-		IDictionary<string, bool> sortDic = new Dictionary<string, bool>{
+        SL.Util.ExcelUtil.Export(data, Server.MapPath("~/upload/download.xlsx"));
+
+        Response.Redirect(Url.Content("~/upload/download.xlsx"));
+        return;
+
+    }
+    else if (Request["action"] == "search")
+    {
+        Layout = null;
+
+        int categoryId = req.Int("CategoryID");
+        int page = req.Int("Page", defaultValue: 1);
+        int pageSize = req.Int("PageSize", defaultValue: 10);
+        string keywords = req.String("Keywords");
+        string sort = req.String("Sort");
+        bool isAsc = req.Bool("Asc");
+
+        if (req.HasError)
+        {
+            Output.Write(js.Serialize(new { success = false, msg = req.FirstError, errors = req.GetErrors() }));
+            return;
+        }
+
+        string where = "1=1";
+        List<object> parameters = new List<object>();
+        if (categoryId != 0)
+        {
+            where += " and d.CategoryID=@p" + parameters.Count;
+            parameters.Add(categoryId);
+        }
+        if (!string.IsNullOrEmpty(keywords))
+        {
+            where += " and (Title like '%'+@p" + parameters.Count + "+'%')";
+            parameters.Add(keywords);
+        }
+
+        IDictionary<string, bool> sortDic = new Dictionary<string, bool>{
             {"CouponDate",false}
         };
 
-		int total;
-		var data = SQL.QueryPage(new[] { "CouponID" },
-			"CouponID,Title,Number,CouponDateFrom,CouponDate,Price,a.CategoryID,b.CategoryName",
-			"Coupon a join CouponCate b on a.CategoryID=b.CategoryID",
-			where, page, pageSize, parameters.ToArray(), out total, sortDic);
+        int total;
+        var data = SQL.QueryPage(new[] { "CouponID" },
+            "CouponID,Title,Number,CouponDateFrom,CouponDate,Price,a.CategoryID,b.CategoryName",
+            "Coupon a join CouponCate b on a.CategoryID=b.CategoryID",
+            where, page, pageSize, parameters.ToArray(), out total, sortDic);
 
-		if (data != null)
-		{
-			data.All(a =>
-			{
-				a["CouponDate"] = a["CouponDate"].ToString().Replace(" 00:00:00", " 23:59:59");
-				return true;
-			});
-		}
+        if (data != null)
+        {
+            data.All(a =>
+            {
+                a["CouponDate"] = a["CouponDate"].ToString().Replace(" 00:00:00", " 23:59:59");
+                return true;
+            });
+        }
 
-		Output.Write(js.Serialize(new { success = true, data = data, total = total }));
-		return;
-	}
-	Layout = "~/Views/Shared/_ManageLayout.cshtml";
-	var categories = SQL.Query("select CategoryID,CategoryName from CouponCate");
-	if (categories == null)
-	{
-		categories = new List<Dictionary<string, object>>();
-	}
-	categories.Insert(0, new Dictionary<string, object>{
+        Output.Write(js.Serialize(new { success = true, data = data, total = total }));
+        return;
+    }
+    Layout = "~/Views/Shared/_ManageLayout.cshtml";
+    var categories = SQL.Query("select CategoryID,CategoryName from CouponCate");
+    if (categories == null)
+    {
+        categories = new List<Dictionary<string, object>>();
+    }
+    categories.Insert(0, new Dictionary<string, object>{
         { "CategoryID","" },
         { "CategoryName","选择类别" }
     });
@@ -179,334 +199,344 @@
 <script>
 var categories=@(new MvcHtmlString(js.Serialize(categories.Select(a => new
 {
-	value = a["CategoryID"],
-	text = a["CategoryName"]
+    value = a["CategoryID"],
+    text = a["CategoryName"]
 }))));
 </script>
 <script>
-	seajs.use(['jquery','lib/buttons','lib/popup','lib/grid','lib/global.css'],function ($,Buttons,popup) {
+    seajs.use(['jquery','lib/buttons','lib/popup','lib/grid','lib/global.css'],function($,Buttons,popup) {
 
-		//添加优惠券
-		var dialogAddForm=new popup.Form({
-			url: 'coupons?action=add',
-			title: '添加优惠券',
-			width: 820,
-			controls: {
-				title: {
-					label: '优惠券标题',
-					type: 'text',
-					validation: {
-						emptyAble: false,
-						emptyText: '请填写优惠券标题'
-					}
-				},
-				price: {
-					label: '优惠金额',
-					type: 'text',
-					className: 'text_price',
-					validation: {
-						emptyAble: false,
-						emptyText: '请填写优惠金额',
-						regex: /^\d+(\.\d+){0,1}$/,
-						regexText: '金额格式错误'
-					}
-				},
-				number: {
-					label: '优惠券数量',
-					type: 'text',
-					className: 'text_price',
-					validation: {
-						emptyAble: false,
-						emptyText: '请填写优惠券数量',
-						regex: /^\d+$/,
-						regexText: '数量格式错误'
-					}
-				},
-				couponDateFrom: {
-					label: '生效时间',
-					type: 'calendar',
-					validation: {
-						emptyAble: false,
-						emptyText: '请填写优惠券生效时间',
-						regex: /^\d{4}-\d{1,2}-\d{1,2}$/,
-						regexText: '格式错误'
-					}
-				},
-				couponDate: {
-					label: '结束时间',
-					type: 'calendar',
-					validation: {
-						emptyAble: false,
-						emptyText: '请填写优惠券结束时间',
-						regex: /^\d{4}-\d{1,2}-\d{1,2}$/,
-						regexText: '格式错误'
-					}
-				},
-				categoryId: {
-					label: '类别',
-					type: 'select',
-					options: categories,
-					validation: {
-						emptyAble: false,
-						emptyText: '请填写优惠券类别'
-					}
-				},
-				memo: {
-					label: '内容',
-					labelVAlign: 'top',
-					type: 'editor',
-					width: 400,
-					height: 200,
-					validation: {
-						emptyAble: false,
-						emptyText: '请填写优惠内容'
-					}
-				}
-			},
-			buttons: [{
-				text: '添加',
-				handle: function () {
-					var $memo=dialogAddForm.control('memo');
-					dialogAddForm.submit({
-						beforeSend: function () {
-							$memo.val(encodeURIComponent(dialogAddForm.editor('memo').html()));
-						},
-						success: function (res) {
-							if(res.success) {
-								dialogAddForm.hide().reset();
-								grid.search();
-							}
-							else
-								alert(res.msg);
-						},
-						error: function () {
-							$memo.val(decodeURIComponent($memo.val()));
-						}
-					});
-				}
-			},{
-				text: '取消',
-				handle: function () {
-					dialogAddForm.hide();
-				}
-			}]
-		});
+        //添加优惠券
+        var dialogAddForm=new popup.Form({
+            url: 'coupons?action=add',
+            title: '添加优惠券',
+            width: 820,
+            controls: {
+                title: {
+                    label: '优惠券标题',
+                    type: 'text',
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写优惠券标题'
+                    }
+                },
+                price: {
+                    label: '优惠金额',
+                    type: 'text',
+                    className: 'text_price',
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写优惠金额',
+                        regex: /^\d+(\.\d+){0,1}$/,
+                        regexText: '金额格式错误'
+                    }
+                },
+                number: {
+                    label: '优惠券数量',
+                    type: 'text',
+                    className: 'text_price',
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写优惠券数量',
+                        regex: /^\d+$/,
+                        regexText: '数量格式错误'
+                    }
+                },
+                couponDateFrom: {
+                    label: '生效时间',
+                    type: 'calendar',
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写优惠券生效时间',
+                        regex: /^\d{4}-\d{1,2}-\d{1,2}$/,
+                        regexText: '格式错误'
+                    }
+                },
+                couponDate: {
+                    label: '结束时间',
+                    type: 'calendar',
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写优惠券结束时间',
+                        regex: /^\d{4}-\d{1,2}-\d{1,2}$/,
+                        regexText: '格式错误'
+                    }
+                },
+                categoryId: {
+                    label: '类别',
+                    type: 'select',
+                    options: categories,
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写优惠券类别'
+                    }
+                },
+                memo: {
+                    label: '内容',
+                    labelVAlign: 'top',
+                    type: 'editor',
+                    width: 400,
+                    height: 200,
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写优惠内容'
+                    }
+                }
+            },
+            buttons: [{
+                text: '添加',
+                handle: function() {
+                    var $memo=dialogAddForm.control('memo');
+                    dialogAddForm.submit({
+                        beforeSend: function() {
+                            $memo.val(encodeURIComponent(dialogAddForm.editor('memo').html()));
+                        },
+                        success: function(res) {
+                            if(res.success) {
+                                dialogAddForm.hide().reset();
+                                grid.search();
+                            }
+                            else
+                                alert(res.msg);
+                        },
+                        error: function() {
+                            $memo.val(decodeURIComponent($memo.val()));
+                        }
+                    });
+                }
+            },{
+                text: '取消',
+                handle: function() {
+                    dialogAddForm.hide();
+                }
+            }]
+        });
 
-		//修改优惠券
-		var dialogModifyForm=new popup.Form({
-			url: 'coupons?action=modify',
-			title: '修改优惠券',
-			width: 820,
-			controls: {
-				couponId: {
-					type: 'hidden'
-				},
-				title: {
-					label: '优惠券标题',
-					type: 'text',
-					validation: {
-						emptyAble: false,
-						emptyText: '请填写优惠券标题'
-					}
-				},
-				price: {
-					label: '优惠金额',
-					type: 'text',
-					className: 'text_price',
-					validation: {
-						emptyAble: false,
-						emptyText: '请填写优惠金额',
-						regex: /^\d+(\.\d+){0,1}$/,
-						regexText: '金额格式错误'
-					}
-				},
-				couponDateFrom: {
-					label: '生效时间',
-					type: 'calendar',
-					validation: {
-						emptyAble: false,
-						emptyText: '请填写优惠券生效时间',
-						regex: /^\d{4}-\d{1,2}-\d{1,2}$/,
-						regexText: '格式错误'
-					}
-				},
-				couponDate: {
-					label: '结束时间',
-					type: 'calendar',
-					validation: {
-						emptyAble: false,
-						emptyText: '请填写优惠券结束时间',
-						regex: /^\d{4}-\d{1,2}-\d{1,2}$/,
-						regexText: '格式错误'
-					}
-				},
-				categoryId: {
-					label: '类别',
-					type: 'select',
-					options: categories,
-					validation: {
-						emptyAble: false,
-						emptyText: '请填写优惠券类别'
-					}
-				},
-				memo: {
-					label: '内容',
-					labelVAlign: 'top',
-					type: 'editor',
-					width: 400,
-					height: 200,
-					validation: {
-						emptyAble: false,
-						emptyText: '请填写优惠内容'
-					}
-				}
-			},
-			buttons: [{
-				text: '修改',
-				handle: function () {
-					var $memo=dialogModifyForm.control('memo');
-					dialogModifyForm.submit({
-						beforeSend: function () {
-							$memo.val(encodeURIComponent(dialogModifyForm.editor('memo').html()));
-						},
-						success: function (res) {
-							if(res.success) {
-								dialogModifyForm.hide().reset();
-								grid.search();
-							}
-							else
-								alert(res.msg);
-						},
-						error: function () {
-							$memo.val(decodeURIComponent($memo.val()));
-						}
-					});
-				}
-			},{
-				text: '取消',
-				handle: function () {
-					dialogModifyForm.hide();
-				}
-			}]
-		});
+        //修改优惠券
+        var dialogModifyForm=new popup.Form({
+            url: 'coupons?action=modify',
+            title: '修改优惠券',
+            width: 820,
+            controls: {
+                couponId: {
+                    type: 'hidden'
+                },
+                title: {
+                    label: '优惠券标题',
+                    type: 'text',
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写优惠券标题'
+                    }
+                },
+                price: {
+                    label: '优惠金额',
+                    type: 'text',
+                    className: 'text_price',
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写优惠金额',
+                        regex: /^\d+(\.\d+){0,1}$/,
+                        regexText: '金额格式错误'
+                    }
+                },
+                couponDateFrom: {
+                    label: '生效时间',
+                    type: 'calendar',
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写优惠券生效时间',
+                        regex: /^\d{4}-\d{1,2}-\d{1,2}$/,
+                        regexText: '格式错误'
+                    }
+                },
+                couponDate: {
+                    label: '结束时间',
+                    type: 'calendar',
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写优惠券结束时间',
+                        regex: /^\d{4}-\d{1,2}-\d{1,2}$/,
+                        regexText: '格式错误'
+                    }
+                },
+                categoryId: {
+                    label: '类别',
+                    type: 'select',
+                    options: categories,
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写优惠券类别'
+                    }
+                },
+                memo: {
+                    label: '内容',
+                    labelVAlign: 'top',
+                    type: 'editor',
+                    width: 400,
+                    height: 200,
+                    validation: {
+                        emptyAble: false,
+                        emptyText: '请填写优惠内容'
+                    }
+                }
+            },
+            buttons: [{
+                text: '修改',
+                handle: function() {
+                    var $memo=dialogModifyForm.control('memo');
+                    dialogModifyForm.submit({
+                        beforeSend: function() {
+                            $memo.val(encodeURIComponent(dialogModifyForm.editor('memo').html()));
+                        },
+                        success: function(res) {
+                            if(res.success) {
+                                dialogModifyForm.hide().reset();
+                                grid.search();
+                            }
+                            else
+                                alert(res.msg);
+                        },
+                        error: function() {
+                            $memo.val(decodeURIComponent($memo.val()));
+                        }
+                    });
+                }
+            },{
+                text: '取消',
+                handle: function() {
+                    dialogModifyForm.hide();
+                }
+            }]
+        });
 
-		//工具栏
-		var buttons=new Buttons('#toolbar',[{
-			text: "添加",
-			ico: "add",
-			disabled: false,
-			handle: function () {
-				dialogAddForm.show();
-			}
-		},{
-			text: "修改",
-			ico: "modify",
-			disabled: true,
-			handle: function () {
-				var data=grid.selectedRow().data;
-				$.ajax({
-					url: 'coupons?action=get',
-					type: 'post',
-					data: {
-						couponId: data.CouponID
-					},
-					dataType: 'json',
-					success: function (res) {
-						if(res.success) {
-							var data=res.data;
-							$.each(['couponId','title','price','couponDateFrom','couponDate','categoryId'],function (j,name) {
-								dialogModifyForm.control(name).val(data[name.replace(/^\w/,function (r1) {
-									return r1.toUpperCase();
-								}).replace(/Id$/,'ID')]);
-							});
-							dialogModifyForm.editor('memo').html(data.Memo);
-							dialogModifyForm.show();
-						} else
-							alert(res.msg);
-					}
-				});
-			}
-		},{
-			text: "删除",
-			ico: "delete",
-			disabled: true,
-			handle: function () {
-				if(!window.confirm('确认删除？')) return;
-				var data=grid.selectedRow().data;
+        //工具栏
+        var buttons=new Buttons('#toolbar',[{
+            text: "添加",
+            ico: "add",
+            disabled: false,
+            handle: function() {
+                dialogAddForm.show();
+            }
+        },{
+            text: "修改",
+            ico: "modify",
+            disabled: true,
+            handle: function() {
+                var data=grid.selectedRow().data;
+                $.ajax({
+                    url: 'coupons?action=get',
+                    type: 'post',
+                    data: {
+                        couponId: data.CouponID
+                    },
+                    dataType: 'json',
+                    success: function(res) {
+                        if(res.success) {
+                            var data=res.data;
+                            $.each(['couponId','title','price','couponDateFrom','couponDate','categoryId'],function(j,name) {
+                                dialogModifyForm.control(name).val(data[name.replace(/^\w/,function(r1) {
+                                    return r1.toUpperCase();
+                                }).replace(/Id$/,'ID')]);
+                            });
+                            dialogModifyForm.editor('memo').html(data.Memo);
+                            dialogModifyForm.show();
+                        } else
+                            alert(res.msg);
+                    }
+                });
+            }
+        },{
+            text: "删除",
+            ico: "delete",
+            disabled: true,
+            handle: function() {
+                if(!window.confirm('确认删除？')) return;
+                var data=grid.selectedRow().data;
 
-				$.ajax({
-					url: 'coupons?action=delete',
-					type: 'post',
-					data: {
-						couponId: data.CouponID
-					},
-					dataType: 'json',
-					success: function (res) {
-						if(res.success) {
-							alert('删除成功！');
-							grid.search();
-						} else
-							alert(res.msg);
-					}
-				});
+                $.ajax({
+                    url: 'coupons?action=delete',
+                    type: 'post',
+                    data: {
+                        couponId: data.CouponID
+                    },
+                    dataType: 'json',
+                    success: function(res) {
+                        if(res.success) {
+                            alert('删除成功！');
+                            grid.search();
+                        } else
+                            alert(res.msg);
+                    }
+                });
 
-			}
-		}]);
+            }
+        },{
+            text: "导出选中优惠券",
+            ico: "modify",
+            disabled: true,
+            handle: function() {
+                if(!window.confirm('确认导出？')) return;
+                var data=grid.selectedRow().data;
 
-		//优惠券列表
-		var grid=$('#grid').grid({
-			search: {
-				url: "coupons?action=search",
-				beforeSend: function () {
-					buttons.disable(1,2);
-				},
-				data: {
-					categoryId: {
-						label: "类别：",
-						type: 'select',
-						options: categories
-					},
-					keywords: {
-						label: "关键字：",
-						type: 'text'
-					}
-				}
-			},
-			pageEnabled: true,
-			onRowSelect: function (row,data) {
-				buttons.enable(1,2);
-			},
-			columns: [{
-				text: "编号",
-				bind: "CouponID",
-				width: 5
-			},{
-				text: "优惠券名称",
-				bind: "Title",
-				width: 14
-			},{
-				text: "券数量",
-				bind: "Number",
-				width: 6
-			},{
-				text: "优惠金额",
-				bind: "Price",
-				width: 10
-			},{
-				text: "优惠时间从",
-				bind: "CouponDateFrom",
-				width: 10
-			},{
-				text: "到",
-				bind: "CouponDate",
-				width: 10
-			},{
-				text: "类别",
-				bind: "CategoryName",
-				width: 10
-			}]
-		})
+                window.open("coupons?action=export&couponId="+data.CouponID);
+            }
+        }]);
+
+        //优惠券列表
+        var grid=$('#grid').grid({
+            search: {
+                url: "coupons?action=search",
+                beforeSend: function() {
+                    buttons.disable(1,2,3);
+                },
+                data: {
+                    categoryId: {
+                        label: "类别：",
+                        type: 'select',
+                        options: categories
+                    },
+                    keywords: {
+                        label: "关键字：",
+                        type: 'text'
+                    }
+                }
+            },
+            pageEnabled: true,
+            onRowSelect: function(row,data) {
+                buttons.enable(1,2,3);
+            },
+            columns: [{
+                text: "编号",
+                bind: "CouponID",
+                width: 5
+            },{
+                text: "优惠券名称",
+                bind: "Title",
+                width: 14
+            },{
+                text: "券数量",
+                bind: "Number",
+                width: 6
+            },{
+                text: "优惠金额",
+                bind: "Price",
+                width: 10
+            },{
+                text: "优惠时间从",
+                bind: "CouponDateFrom",
+                width: 10
+            },{
+                text: "到",
+                bind: "CouponDate",
+                width: 10
+            },{
+                text: "类别",
+                bind: "CategoryName",
+                width: 10
+            }]
+        })
         .search();
 
-	});
+    });
 </script>
