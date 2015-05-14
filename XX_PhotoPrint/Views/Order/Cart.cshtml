@@ -30,8 +30,7 @@
             <li><i>·</i>本清单已包含税费</li>
             <li><i>·</i>全场中国大陆地区包邮@*如果您购买79元以上，将提供免费送货服务*@</li>
             <li><i>·</i>本清单支持下列付款方式</li>
-            <li class="paylist"><img src="/theme/images/alipay.png" />
-            </li>
+            <li class="paylist"><img src="/theme/images/alipay.png" /> </li>
         </ul>
         <ul class="cartprice">
             <li><span class="js_amount"></span>金额</li>
@@ -52,23 +51,38 @@
         <p class="color">{%if item.ProductID!=32%}${item.Styles[0].ColorName},{%/if%}${item.Styles[0].SizeName}</p>
     </td>
     <td>￥${item.Price}</td>
-    <td><input class="num js_qty" type="text" value="${item.Qty}" data-qty="${item.Qty}" /></td>
+    <td><input class="num js_qty" type="text" value="${item.Qty}" data-qty="${item.Qty}" data-id="${item.CartID}" /></td>
     <td class="js_total" data-price="${item.Price}">￥${item.Price*item.Qty}</td>
     <td><input data-id="${item.CartID}" class="btn_del js_del" type="button" /></td>
 </tr>
 {%/each%}
 </script>
 <script type="text/javascript">
-    seajs.use(['$','lib/util','sl/view','sl/validation','extentions/qty','sl/tmpl'],function($,util,View,Validation,qtyEvents,tmpl) {
+    seajs.use(['$','lib/util','sl/view','sl/validation','extentions/qty','sl/tmpl'],function ($,util,View,Validation,qtyEvents,tmpl) {
         var CartView=View.extend({
             events: $.extend({
                 'click .js_select_all': 'selectAll',
                 'click .js_select': 'getTotal',
-                'changeQty .js_qty': function(e,qty) {
+                'changeQty .js_qty': function (e,qty) {
                     var $target=$(e.currentTarget),
                         $total=$target.closest('tr').find('.js_total');
 
                     $total.html(qty*parseFloat($total.data('price')));
+
+                    $.ajax({
+                        url: '/json/shop/modifyQty',
+                        data: {
+                            CartID: $target.attr('data-id'),
+                            Qty: $target.val()
+                        },
+                        dataType: 'json',
+                        success: function (res) {
+                            if(res.success) {
+                            }
+                        },
+                        error: function () {
+                        }
+                    });
 
                     this.getTotal();
                 },
@@ -76,18 +90,18 @@
                 'click .js_create_order': 'createOrder'
             },qtyEvents),
 
-            createOrder: function(e) {
+            createOrder: function (e) {
                 var that=this,
                     ids=[];
 
-                that.$('.js_select:checked').closest('tr').each(function() {
+                that.$('.js_select:checked').closest('tr').each(function () {
                     ids.push($(this).data('rowid'));
                 });
 
                 location.href="/order?ids="+ids.join(',');
             },
 
-            deleteSingle: function(e) {
+            deleteSingle: function (e) {
                 var that=this,
                     $target=$(e.currentTarget),
                     cartId=$target.data('id');
@@ -99,7 +113,7 @@
                             CartID: cartId
                         },
                         dataType: 'json',
-                        success: function(res) {
+                        success: function (res) {
                             if(res.success) {
                                 console.log(res)
 
@@ -112,16 +126,16 @@
                                 alert('删除失败！');
                             }
                         },
-                        error: function() {
+                        error: function () {
                             alert('网络错误！');
                         }
                     });
                 }
             },
 
-            getTotal: function() {
+            getTotal: function () {
                 var total=0;
-                this.$('.js_select:checked').closest('tr').find('.js_total').each(function() {
+                this.$('.js_select:checked').closest('tr').find('.js_total').each(function () {
                     total+=parseFloat($(this).html().replace('￥',''));
                 });
                 this.$('.js_amount').html('￥'+total);
@@ -130,7 +144,7 @@
                 return total;
             },
 
-            selectAll: function(e) {
+            selectAll: function (e) {
                 var $target=$(e.currentTarget);
 
                 this.$('.js_cart_list .js_select')
@@ -143,7 +157,7 @@
 
             htmlLoading: '<tr class="noborder"><td colspan="7">正在载入...</td></tr>',
 
-            initialize: function() {
+            initialize: function () {
                 var that=this;
 
                 that.$list=$('.js_cart_list');
@@ -154,7 +168,7 @@
                     url: '/json/shop/getshoppingcart',
                     data: {},
                     dataType: 'json',
-                    success: function(res) {
+                    success: function (res) {
                         if(res.success&&res.data&&res.data.length) {
                             var template=$('#cartItem').html();
 
@@ -165,7 +179,7 @@
                         }
                         that.getTotal();
                     },
-                    error: function() {
+                    error: function () {
                         that.getTotal();
                     }
                 });
