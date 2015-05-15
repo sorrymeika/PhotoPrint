@@ -224,7 +224,8 @@ else
                                 
                                 if (res.success){
                                     that.$('.js_discount').html('￥'+res.discount);
-                                    that.couponId=couponId;
+                                    that.couponId=res.couponId;
+                                    that.getTotal();
 
                                 } else {
                                     that.$('.js_discount').html('￥0')

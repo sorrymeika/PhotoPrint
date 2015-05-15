@@ -125,7 +125,7 @@
         }
         if (couponId != 0)
         {
-            db.Execute("update CouponCode set IsUsed=1,UserID=@p0 where CouponCode=@p1", uid, couponCode);
+            db.Execute("update CouponCode set IsUsed=1,UserID=@p0 where Code=@p1", uid, couponCode);
         }
         db.Commit();
     }
