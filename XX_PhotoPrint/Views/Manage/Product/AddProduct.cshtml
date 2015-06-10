@@ -111,7 +111,7 @@
         }
         picture.SaveAs(savePath);
         print.SaveAs(printSavePath);
-<<<<<<< HEAD
+        
         if (swf != null && swf.ContentLength != 0)
         {
             swf.SaveAs(swfSavePath);
@@ -119,8 +119,6 @@
         else
         {
         }
-=======
->>>>>>> bf5741738d21c2cfecdf7f71aee7fc5e6ed30c77
 
         Output.Write(HtmlService.SubmitResult(callback, new { success = true, productId = productId }));
         return;
