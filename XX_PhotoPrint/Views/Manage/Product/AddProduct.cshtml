@@ -52,11 +52,10 @@
         {
             System.IO.Directory.CreateDirectory(dir);
         }
-<<<<<<< HEAD
         if (!System.IO.Directory.Exists(swfdir))
         {
             System.IO.Directory.CreateDirectory(swfdir);
-=======
+        }
 
         if (swf != null && swf.ContentLength != 0)
         {
@@ -72,7 +71,6 @@
             swfSrc = null;
             swfSavePath = null;
             productType = 0;
->>>>>>> bf5741738d21c2cfecdf7f71aee7fc5e6ed30c77
         }
 
         using (DbService db = new DbService())
