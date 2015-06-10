@@ -69,7 +69,7 @@
         userWorkIDs[i] = (int)item["UserWorkID"];
     }
 
-    freight = amount >= 79 ? 0 : 22;
+    freight = amount >= 0 ? 0 : 22;
 
     int orderid;
     DateTime now = DateTime.Now;

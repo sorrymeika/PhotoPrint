@@ -139,8 +139,8 @@
                     total+=parseFloat($(this).html().replace('￥',''));
                 });
                 this.$('.js_amount').html('￥'+total);
-                this.$('.js_freight').html('￥'+(total<79?22:0));
-                this.$('.js_total_amount').html('￥'+(total+(total<79?22:0)));
+                this.$('.js_freight').html('￥'+(total<0?22:0));
+                this.$('.js_total_amount').html('￥'+(total+(total<0?22:0)));
                 return total;
             },
 
